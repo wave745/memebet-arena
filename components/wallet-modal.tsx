@@ -385,7 +385,8 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
       const instruction = buildRedeemInstruction(
         marketPdaPubkey,
         positionPda,
-        userPubkey
+        userPubkey,
+        position.outcome
       )
 
       const transaction = new Transaction().add(instruction)
