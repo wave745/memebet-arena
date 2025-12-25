@@ -3,7 +3,6 @@ import * as anchor from "@coral-xyz/anchor"
 import { createRequire } from "module"
 import { fileURLToPath } from "url"
 import { dirname, join } from "path"
-import BN from "bn.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -81,14 +80,14 @@ async function seedMarkets() {
       console.log(`\n📊 Creating market ${market.marketId}: ${market.description}`)
       
       const [marketPda, bump] = PublicKey.findProgramAddressSync(
-        [Buffer.from("market"), new BN(market.marketId).toArrayLike(Buffer, "le", 8)],
+        [Buffer.from("market"), new anchor.BN(market.marketId).toArrayLike(Buffer, "le", 8)],
         PROGRAM_ID
       )
       
       const tokenMintPubkey = new PublicKey(market.tokenMint)
-      const targetMarketCapBN = new BN(market.targetMarketCap)
-      const endTimestampBN = new BN(market.endTimestamp)
-      const marketIdBN = new BN(market.marketId)
+      const targetMarketCapBN = new anchor.BN(market.targetMarketCap)
+      const endTimestampBN = new anchor.BN(market.endTimestamp)
+      const marketIdBN = new anchor.BN(market.marketId)
 
       console.log(`  Market PDA: ${marketPda.toString()}`)
       console.log(`  Token: ${tokenMintPubkey.toString()}`)
