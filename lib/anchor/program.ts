@@ -271,9 +271,9 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
     allKeys: Object.keys(idlCopy),
     })
   
-  // Step 11: Create Program (old way, no cleverness)
+  // Step 11: Create Program (Anchor 0.32.1: idl, provider - programId from IDL metadata)
   try {
-    return new anchor.Program(idlCopy as anchor.Idl, PROGRAM_ID, provider) as anchor.Program<any>
+    return new anchor.Program(idlCopy as anchor.Idl, provider) as anchor.Program<any>
   } catch (error: any) {
     console.error("❌ Failed to create Program:", error)
     console.error("Error message:", error?.message)
