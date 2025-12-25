@@ -945,7 +945,7 @@ function TransactionsTab({
   return (
     <div className="space-y-2 sm:space-y-3">
       {transactions.map((tx) => {
-        const txType = getTransactionType(tx)
+        const txType = getTransactionType(tx.signature, tx.err)
         const Icon = txType.icon
         const market = tx.marketPda ? markets.get(tx.marketPda) : null
 
