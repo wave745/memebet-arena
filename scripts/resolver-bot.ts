@@ -140,7 +140,7 @@ async function resolveMarket(
 
   // resolve_market takes final_market_cap (u64), not outcome (bool)
   // The program computes the outcome internally: final_market_cap >= target_market_cap
-  const tx = await program.methods
+  const tx = await (program.methods as any)
     .resolveMarket(new anchor.BN(Math.floor(marketCap)))
     .accounts({
       market: marketPda,
