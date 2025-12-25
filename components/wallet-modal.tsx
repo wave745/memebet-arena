@@ -23,6 +23,11 @@ interface WalletModalProps {
 
 type Tab = "active" | "history" | "transactions"
 
+const formatAddress = (addr: PublicKey | string) => {
+  const str = typeof addr === "string" ? addr : addr.toString()
+  return `${str.slice(0, 4)}...${str.slice(-4)}`
+}
+
 interface TransactionData {
   signature: string
   slot: number
@@ -212,11 +217,6 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
     // If market data unavailable but position has zero amount, show in history
     return !hasAmount
   })
-
-  const formatAddress = (addr: PublicKey | string) => {
-    const str = typeof addr === "string" ? addr : addr.toString()
-    return `${str.slice(0, 4)}...${str.slice(-4)}`
-  }
 
   const copyAddress = (addr: string) => {
     navigator.clipboard.writeText(addr)
