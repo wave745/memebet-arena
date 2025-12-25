@@ -1346,10 +1346,10 @@ Resolution time is final — no appeals. The market will automatically resolve b
                         tradeLoading || 
                         tradeSubmitted || 
                         (tradeAction === "sell" && !sellSide) ||
-                        (tradeAction === "sell" && sellSide && (() => {
+                        (tradeAction === "sell" && sellSide ? (() => {
                           const selectedPosition = sellSide === "YES" ? userYesPosition : userNoPosition
-                          return selectedPosition && parseFloat(tradeAmount || "0") >= Number(selectedPosition.amount) / LAMPORTS_PER_SOL
-                        })())
+                          return !!(selectedPosition && parseFloat(tradeAmount || "0") >= Number(selectedPosition.amount) / LAMPORTS_PER_SOL)
+                        })() : false)
                       }
                     >
                       +0.1
@@ -1361,10 +1361,10 @@ Resolution time is final — no appeals. The market will automatically resolve b
                         tradeLoading || 
                         tradeSubmitted || 
                         (tradeAction === "sell" && !sellSide) ||
-                        (tradeAction === "sell" && sellSide && (() => {
+                        (tradeAction === "sell" && sellSide ? (() => {
                           const selectedPosition = sellSide === "YES" ? userYesPosition : userNoPosition
-                          return selectedPosition && parseFloat(tradeAmount || "0") >= Number(selectedPosition.amount) / LAMPORTS_PER_SOL
-                        })())
+                          return !!(selectedPosition && parseFloat(tradeAmount || "0") >= Number(selectedPosition.amount) / LAMPORTS_PER_SOL)
+                        })() : false)
                       }
                     >
                       +0.5
@@ -1376,10 +1376,10 @@ Resolution time is final — no appeals. The market will automatically resolve b
                         tradeLoading || 
                         tradeSubmitted || 
                         (tradeAction === "sell" && !sellSide) ||
-                        (tradeAction === "sell" && sellSide && (() => {
+                        (tradeAction === "sell" && sellSide ? (() => {
                           const selectedPosition = sellSide === "YES" ? userYesPosition : userNoPosition
-                          return selectedPosition && parseFloat(tradeAmount || "0") >= Number(selectedPosition.amount) / LAMPORTS_PER_SOL
-                        })())
+                          return !!(selectedPosition && parseFloat(tradeAmount || "0") >= Number(selectedPosition.amount) / LAMPORTS_PER_SOL)
+                        })() : false)
                       }
                     >
                       +1
