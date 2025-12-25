@@ -108,11 +108,11 @@ async function seedMarkets() {
         connection,
         {
           publicKey: wallet.publicKey,
-          signTransaction: async (tx) => {
+          signTransaction: async (tx: Transaction) => {
             tx.sign(wallet)
             return tx
           },
-          signAllTransactions: async (txs) => {
+          signAllTransactions: async (txs: Transaction[]) => {
             return txs.map((tx) => {
               tx.sign(wallet)
               return tx
