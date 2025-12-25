@@ -84,7 +84,8 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <div className="text-6xl animate-pulse">👾</div>
         <p className="text-muted-foreground">Loading markets from chain...</p>
       </div>
     )

@@ -307,7 +307,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
             return {
               signature: sig.signature,
               slot: sig.slot,
-              blockTime: sig.blockTime,
+              blockTime: sig.blockTime ?? null,
               err: sig.err,
               memo: sig.memo || null,
               marketPda,
@@ -327,7 +327,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
                 txData.push({
                   signature: sig.signature,
                   slot: sig.slot,
-                  blockTime: sig.blockTime,
+                  blockTime: sig.blockTime ?? null,
                   err: sig.err,
                   memo: sig.memo || null,
                   sortIndex: i + batchIndex,
@@ -349,7 +349,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
         const txData: TransactionData[] = signatures.map((sig, index) => ({
           signature: sig.signature,
           slot: sig.slot,
-          blockTime: sig.blockTime,
+          blockTime: sig.blockTime ?? null,
           err: sig.err,
           memo: sig.memo || null,
           sortIndex: index,

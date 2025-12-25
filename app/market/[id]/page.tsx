@@ -751,7 +751,8 @@ export default function MarketPage() {
         onSearchModalOpen={() => router.push("/")}
       />
       {loading ? (
-        <main className="flex items-center justify-center py-16">
+        <main className="flex flex-col items-center justify-center py-16 space-y-4">
+          <div className="text-6xl animate-pulse">👾</div>
           <p className="text-muted-foreground">Loading market from chain...</p>
         </main>
       ) : error ? (
@@ -864,7 +865,10 @@ export default function MarketPage() {
                     </div>
                   ) : (
                     <div className="h-[240px] sm:h-[320px] flex items-center justify-center bg-[#0B0B0D] rounded border border-border/20">
-                      <p className="text-muted-foreground text-xs sm:text-sm">Loading chart...</p>
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <div className="text-4xl animate-pulse">👾</div>
+                        <p className="text-muted-foreground text-xs sm:text-sm">Loading chart...</p>
+                      </div>
                     </div>
                   )}
                 </div>
