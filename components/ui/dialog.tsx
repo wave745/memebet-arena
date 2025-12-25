@@ -16,6 +16,7 @@ interface DialogContentProps {
 }
 
 interface DialogHeaderProps {
+  className?: string
   children: React.ReactNode
 }
 
@@ -48,8 +49,8 @@ export function DialogContent({ className = "", children }: DialogContentProps) 
   )
 }
 
-export function DialogHeader({ children }: DialogHeaderProps) {
-  return <div className="px-6 py-4 border-b border-border">{children}</div>
+export function DialogHeader({ className = "", children }: DialogHeaderProps) {
+  return <div className={`px-6 py-4 border-b border-border ${className}`}>{children}</div>
 }
 
 export function DialogTitle({ className = "", children }: DialogTitleProps) {
