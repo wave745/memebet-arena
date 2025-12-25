@@ -77,12 +77,6 @@ export default function MarketPage() {
   // Fetch market from chain
   const fetchMarket = async (isInitialLoad = false) => {
     if (!id || !connection) return
-    
-    const readWallet = wallet || {
-      publicKey: PublicKey.default,
-      signTransaction: async () => { throw new Error("Read-only") },
-      signAllTransactions: async () => { throw new Error("Read-only") },
-    } as anchor.Wallet
 
     try {
       // Only show loading state on initial load, not on polling updates
@@ -92,7 +86,7 @@ export default function MarketPage() {
       setError(null)
       
       const marketPda = new PublicKey(id)
-      const marketData = await fetchMarketByPda(connection, readWallet, marketPda)
+      const marketData = await fetchMarketByPda(connection, wallet, marketPda)
       
       if (!marketData) {
         if (isInitialLoad) {
