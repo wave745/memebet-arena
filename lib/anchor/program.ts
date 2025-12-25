@@ -244,7 +244,15 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
     }
   }
   
-  // Step 9: Log final IDL before passing to Anchor
+  // Step 9: Ensure IDL has address in metadata (required by Anchor)
+  if (!idlCopy.metadata) {
+    idlCopy.metadata = {}
+  }
+  if (!idlCopy.metadata.address) {
+    idlCopy.metadata.address = PROGRAM_ID.toString()
+  }
+  
+  // Step 10: Log final IDL before passing to Anchor
   console.log("FINAL IDL CHECK (before Anchor):", {
     version: idlCopy.version,
     name: idlCopy.name,
@@ -263,9 +271,9 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
     allKeys: Object.keys(idlCopy),
     })
   
-  // Step 10: Create Program (old way, no cleverness)
+  // Step 11: Create Program (old way, no cleverness)
   try {
-    return new anchor.Program(idlCopy as anchor.Idl, provider, PROGRAM_ID) as anchor.Program<any>
+    return new anchor.Program(idlCopy as anchor.Idl, PROGRAM_ID, provider) as anchor.Program<any>
   } catch (error: any) {
     console.error("❌ Failed to create Program:", error)
     console.error("Error message:", error?.message)
