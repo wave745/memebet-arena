@@ -921,8 +921,8 @@ function TransactionsTab({
   }
 
   const getTransactionType = (signature: string, err: any) => {
-    if (err) return { label: "Failed", color: "text-red-500", icon: ArrowDownRight }
-    return { label: "Transaction", color: "text-green-500", icon: ArrowUpRight }
+    if (err) return { label: "Failed", color: "text-red-500", bgColor: "bg-red-500/10", icon: ArrowDownRight }
+    return { label: "Transaction", color: "text-green-500", bgColor: "bg-green-500/10", icon: ArrowUpRight }
   }
 
   if (loading) {
