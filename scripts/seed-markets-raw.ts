@@ -126,6 +126,10 @@ async function seedMarkets() {
       // Add account sizes to IDL for program creation
       const idlWithSizes = {
         ...idl,
+        metadata: {
+          ...(idl.metadata || {}),
+          address: PROGRAM_ID.toString(),
+        },
         accounts: [
           {
             name: "Market",
@@ -140,7 +144,7 @@ async function seedMarkets() {
         ],
       }
 
-      const program = new anchor.Program(idlWithSizes as any, PROGRAM_ID, provider) as any
+      const program = new anchor.Program(idlWithSizes as any, provider) as any
 
       // PDA seeds for signing
       const seeds = [

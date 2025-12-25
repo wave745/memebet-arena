@@ -142,7 +142,7 @@ async function seedMarkets() {
         metadata: { address: PROGRAM_ID.toString() }
       }
       
-      const program = new anchor.Program(minimalIdl as any, PROGRAM_ID, provider) as any
+      const program = new anchor.Program(minimalIdl as any, provider) as any
       
       // IDL uses snake_case: create_market, but Anchor converts to camelCase
       // Try both just in case
