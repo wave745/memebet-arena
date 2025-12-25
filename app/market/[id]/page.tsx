@@ -758,7 +758,7 @@ export default function MarketPage() {
         <main className="flex items-center justify-center py-16">
           <div className="text-center space-y-2">
             <p className="text-red-500">{error}</p>
-            <Button onClick={fetchMarket} variant="outline">Retry</Button>
+            <Button onClick={() => fetchMarket(true)} variant="outline">Retry</Button>
           </div>
         </main>
       ) : !market ? (
