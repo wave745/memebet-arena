@@ -34,6 +34,7 @@ interface TransactionData {
   amount?: number
   outcome?: boolean
   fee?: number
+  sortIndex?: number
 }
 
 export function WalletModal({ isOpen, onClose }: WalletModalProps) {
