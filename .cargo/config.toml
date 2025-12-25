@@ -1,0 +1,5 @@
+[build]
+rustflags = ["--cfg=proc_macro_span"]
+
+[env]
+PROC_MACRO2_SEMVER_EXEMPT = "1"

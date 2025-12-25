@@ -1,0 +1,5 @@
+/home/caesa/memebet-arena/target/debug/deps/borsh_derive-e79836f2290807e4.d: /home/caesa/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/borsh-derive-0.10.4/src/lib.rs
+
+/home/caesa/memebet-arena/target/debug/deps/libborsh_derive-e79836f2290807e4.so: /home/caesa/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/borsh-derive-0.10.4/src/lib.rs
+
+/home/caesa/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/borsh-derive-0.10.4/src/lib.rs:

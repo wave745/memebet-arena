@@ -1,0 +1,186 @@
+import { Connection, Keypair, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js"
+import * as anchor from "@coral-xyz/anchor"
+import { createRequire } from "module"
+import { fileURLToPath } from "url"
+import { dirname, join } from "path"
+import BN from "bn.js"
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const require = createRequire(import.meta.url)
+
+const PROGRAM_ID = new PublicKey("6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV")
+const RPC_URL = process.env.RPC_URL || "https://api.devnet.solana.com"
+const WALLET_PATH = process.env.WALLET_PATH || "~/.config/solana/id.json"
+
+interface MarketSeed {
+  marketId: number
+  tokenMint: string
+  targetMarketCap: number
+  endTimestamp: number
+  description: string
+}
+
+const MARKETS: MarketSeed[] = [
+  {
+    marketId: 1,
+    tokenMint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // BONK
+    targetMarketCap: 5_000_000_000,
+    endTimestamp: Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000),
+    description: "Will $BONK reach $5B market cap by 2026-06-30 23:59 UTC?",
+  },
+  {
+    marketId: 2,
+    tokenMint: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm", // WIF
+    targetMarketCap: 10_000_000_000,
+    endTimestamp: Math.floor(new Date("2026-03-31T23:59:59Z").getTime() / 1000),
+    description: "Will $WIF hit $10B market cap by 2026-03-31 23:59 UTC?",
+  },
+  {
+    marketId: 3,
+    tokenMint: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr", // POPCAT
+    targetMarketCap: 2_000_000_000,
+    endTimestamp: Math.floor(new Date("2026-01-31T23:59:59Z").getTime() / 1000),
+    description: "Will $POPCAT reach $2B market cap by 2026-01-31 23:59 UTC?",
+  },
+]
+
+function loadWallet(): Keypair {
+  const fs = require("fs")
+  const os = require("os")
+  const walletPath = WALLET_PATH.replace("~", os.homedir())
+  const keyData = JSON.parse(fs.readFileSync(walletPath, "utf-8"))
+  return Keypair.fromSecretKey(Uint8Array.from(keyData))
+}
+
+async function seedMarkets() {
+  console.log("🌱 Seeding markets on devnet...")
+  console.log(`Program ID: ${PROGRAM_ID.toString()}`)
+  console.log(`RPC: ${RPC_URL}\n`)
+
+  const connection = new Connection(RPC_URL, "confirmed")
+  const wallet = loadWallet()
+
+  console.log(`Wallet: ${wallet.publicKey.toString()}`)
+  const balance = await connection.getBalance(wallet.publicKey)
+  console.log(`Balance: ${(balance / LAMPORTS_PER_SOL).toFixed(4)} SOL\n`)
+
+  if (balance < 2 * LAMPORTS_PER_SOL) {
+    console.error("❌ Insufficient balance. Need at least 2 SOL for seeding.")
+    process.exit(1)
+  }
+
+  // Load IDL to get instruction discriminator
+  const idlPath = join(__dirname, "../lib/anchor/idl.json")
+  const idl = require(idlPath)
+  const createMarketIx = idl.instructions.find((ix: any) => ix.name === "create_market")
+  const discriminator = Buffer.from(createMarketIx.discriminator)
+
+  for (const market of MARKETS) {
+    try {
+      console.log(`\n📊 Creating market ${market.marketId}: ${market.description}`)
+      
+      const [marketPda, bump] = PublicKey.findProgramAddressSync(
+        [Buffer.from("market"), new BN(market.marketId).toArrayLike(Buffer, "le", 8)],
+        PROGRAM_ID
+      )
+      
+      const tokenMintPubkey = new PublicKey(market.tokenMint)
+      const targetMarketCapBN = new BN(market.targetMarketCap)
+      const endTimestampBN = new BN(market.endTimestamp)
+      const marketIdBN = new BN(market.marketId)
+
+      console.log(`  Market PDA: ${marketPda.toString()}`)
+      console.log(`  Token: ${tokenMintPubkey.toString()}`)
+      console.log(`  Target: $${market.targetMarketCap.toLocaleString()}`)
+      console.log(`  End: ${new Date(market.endTimestamp * 1000).toISOString()}`)
+
+      // Build instruction data
+      const instructionData = Buffer.concat([
+        discriminator,
+        marketIdBN.toArrayLike(Buffer, "le", 8),
+        tokenMintPubkey.toBuffer(),
+        targetMarketCapBN.toArrayLike(Buffer, "le", 8),
+        endTimestampBN.toArrayLike(Buffer, "le", 8),
+      ])
+
+      // Use Anchor program - need to manually handle PDA signing
+      const provider = new anchor.AnchorProvider(
+        connection,
+        {
+          publicKey: wallet.publicKey,
+          signTransaction: async (tx) => {
+            tx.sign(wallet)
+            return tx
+          },
+          signAllTransactions: async (txs) => {
+            return txs.map((tx) => {
+              tx.sign(wallet)
+              return tx
+            })
+          },
+        } as any,
+        { commitment: "confirmed" }
+      )
+
+      // Add account sizes to IDL for program creation
+      const idlWithSizes = {
+        ...idl,
+        accounts: [
+          {
+            name: "Market",
+            discriminator: [219, 190, 213, 55, 0, 227, 198, 154],
+            size: 113, // 8 + 32 + 32 + 8 + 8 + 8 + 8 + 1 + 1
+          },
+          {
+            name: "Position",
+            discriminator: [170, 188, 143, 228, 122, 64, 247, 208],
+            size: 73, // 8 + 32 + 32 + 1 + 8 + 1
+          },
+        ],
+      }
+
+      const program = new anchor.Program(idlWithSizes as any, PROGRAM_ID, provider) as any
+
+      // PDA seeds for signing
+      const seeds = [
+        Buffer.from("market"),
+        marketIdBN.toArrayLike(Buffer, "le", 8),
+      ]
+
+      // Use program.invoke with explicit seeds for PDA signing
+      const signature = await program.methods
+        .createMarket(
+          marketIdBN,
+          tokenMintPubkey,
+          targetMarketCapBN,
+          endTimestampBN
+        )
+        .accounts({
+          market: marketPda,
+          creator: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        } as any)
+        .signers([])
+        .rpc()
+
+      console.log(`  ✅ Created! Signature: ${signature}`)
+      console.log(`  🔗 https://solscan.io/tx/${signature}?cluster=devnet`)
+      
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+    } catch (error: any) {
+      console.error(`  ❌ Failed to create market ${market.marketId}:`, error.message)
+      if (error.logs) {
+        console.error("  Logs:", error.logs)
+      }
+    }
+  }
+
+  console.log("\n✅ Market seeding complete!")
+}
+
+seedMarkets().catch((error) => {
+  console.error("Fatal error:", error)
+  process.exit(1)
+})
+

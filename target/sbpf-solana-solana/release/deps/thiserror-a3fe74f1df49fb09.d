@@ -1,0 +1,15 @@
+/home/caesa/memebet-arena/target/sbpf-solana-solana/release/deps/libthiserror-a3fe74f1df49fb09.rmeta: /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/lib.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/aserror.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/display.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/provide.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/var.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/private.rs /home/caesa/memebet-arena/target/sbpf-solana-solana/release/build/thiserror-acc6238aefe002cf/out/private.rs
+
+/home/caesa/memebet-arena/target/sbpf-solana-solana/release/deps/libthiserror-a3fe74f1df49fb09.rlib: /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/lib.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/aserror.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/display.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/provide.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/var.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/private.rs /home/caesa/memebet-arena/target/sbpf-solana-solana/release/build/thiserror-acc6238aefe002cf/out/private.rs
+
+/home/caesa/memebet-arena/target/sbpf-solana-solana/release/deps/thiserror-a3fe74f1df49fb09.d: /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/lib.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/aserror.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/display.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/provide.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/var.rs /home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/private.rs /home/caesa/memebet-arena/target/sbpf-solana-solana/release/build/thiserror-acc6238aefe002cf/out/private.rs
+
+/home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/lib.rs:
+/home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/aserror.rs:
+/home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/display.rs:
+/home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/provide.rs:
+/home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/var.rs:
+/home/caesa/.cargo/registry/src/index.crates.io-6f17d22bba15001f/thiserror-2.0.17/src/private.rs:
+/home/caesa/memebet-arena/target/sbpf-solana-solana/release/build/thiserror-acc6238aefe002cf/out/private.rs:
+
+# env-dep:OUT_DIR=/home/caesa/memebet-arena/target/sbpf-solana-solana/release/build/thiserror-acc6238aefe002cf/out

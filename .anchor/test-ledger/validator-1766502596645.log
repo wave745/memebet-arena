@@ -1,0 +1,349 @@
+[2025-12-23T15:09:56.645764811Z INFO  solana_test_validator] agave-validator 3.0.13 (src:90098d26; feat:3604001754, client:Agave)
+[2025-12-23T15:09:56.645846628Z INFO  solana_test_validator] Starting validator with: ArgsOs {
+        inner: [
+            "solana-test-validator",
+            "--ledger",
+            ".anchor/test-ledger",
+            "--mint",
+            "3zAjK7AzN7Wdor2i3kzcNrdRJc8PzysspjbgG8awp5NB",
+            "--bpf-program",
+            "3wXWKcLGThMWG94F12R4WP6joxnNv7yY4rUb7Jcp5k5J",
+            "/home/caesa/memebet-arena/target/deploy/memebet_arena.so",
+        ],
+    }
+[2025-12-23T15:09:56.645917626Z WARN  solana_perf] CUDA is disabled
+[2025-12-23T15:09:56.645944039Z INFO  solana_perf] AVX detected
+[2025-12-23T15:09:56.645949812Z INFO  solana_perf] AVX2 detected
+[2025-12-23T15:09:56.651421599Z INFO  solana_faucet::faucet] Faucet started. Listening on: 0.0.0.0:9900
+[2025-12-23T15:09:56.651491875Z INFO  solana_faucet::faucet] Faucet account address: 4ZTXgbqMJRJSdd38ygkEou9MAdFQY4q4B5BfQ68bwho8
+[2025-12-23T15:09:56.658229010Z INFO  agave_validator::admin_rpc_service] started admin rpc service!
+[2025-12-23T15:09:56.660976578Z INFO  solana_test_validator] Feature for mustRekeyVm2QHYB3JPefBiU4BY3Z6JkW2k3Scw5GWP deactivated
+[2025-12-23T15:09:56.692088088Z INFO  solana_ledger::blockstore] Maximum open file descriptors: 1048576
+[2025-12-23T15:09:56.692793912Z INFO  solana_ledger::blockstore] Opening blockstore at ".anchor/test-ledger/rocksdb"
+[2025-12-23T15:09:56.696984170Z WARN  solana_ledger::blockstore_db] Unable to detect Rocks columns: Error { message: "IO error: No such file or directory: While opening a file for sequentially reading: .anchor/test-ledger/rocksdb/CURRENT: No such file or directory" }
+[2025-12-23T15:09:57.826505711Z INFO  solana_ledger::blockstore] Opening blockstore done; blockstore open took 1.1s
+[2025-12-23T15:09:57.867755914Z INFO  solana_metrics::metrics] metrics disabled: environment variable not found
+[2025-12-23T15:09:57.869121875Z INFO  solana_metrics::metrics] datapoint: shred_insert_is_full slot=0i total_time_ms=1i last_index=31i num_repaired=0i num_recovered=0i
+[2025-12-23T15:09:58.418476616Z INFO  solana_accounts_db::hardened_unpack] Extracting ".anchor/test-ledger/genesis.tar.bz2"...
+[2025-12-23T15:09:58.419721728Z INFO  agave_io_uring] io_uring supported
+[2025-12-23T15:09:58.706192552Z INFO  solana_accounts_db::io_uring::file_creator] files creation stats - large buf headroom: 0, no buf count: 5, avg pending writes at no buf: 338534
+[2025-12-23T15:09:58.706352694Z INFO  solana_accounts_db::hardened_unpack] unpacked 1 entries total
+[2025-12-23T15:09:58.706519002Z INFO  solana_accounts_db::hardened_unpack] Extracted ".anchor/test-ledger/genesis.tar.bz2" in 287.997317ms
+[2025-12-23T15:09:58.732643373Z INFO  solana_gossip::node] vortexor_receivers is None
+[2025-12-23T15:09:58.732870520Z INFO  solana_gossip::node] Bound all network sockets as follows: Sockets {
+        gossip: [
+            UdpSocket {
+                addr: 127.0.0.1:8000,
+                fd: 22,
+            },
+        ],
+        ip_echo: Some(
+            TcpListener {
+                addr: 127.0.0.1:8000,
+                fd: 23,
+            },
+        ),
+        tvu: [
+            UdpSocket {
+                addr: 127.0.0.1:8001,
+                fd: 25,
+            },
+        ],
+        tvu_quic: UdpSocket {
+            addr: 127.0.0.1:8002,
+            fd: 26,
+        },
+        tpu: [
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 27,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 32,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 33,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 34,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 35,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 36,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 38,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 39,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 40,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 41,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 42,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 51,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 53,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 54,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 55,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 56,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 57,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 58,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 59,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 60,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 61,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 62,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 63,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 64,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 65,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 66,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 67,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 68,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 69,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 70,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 71,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8003,
+                fd: 72,
+            },
+        ],
+        tpu_forwards: [
+            UdpSocket {
+                addr: 127.0.0.1:8004,
+                fd: 73,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8004,
+                fd: 75,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8004,
+                fd: 76,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8004,
+                fd: 77,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8004,
+                fd: 78,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8004,
+                fd: 79,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8004,
+                fd: 80,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8004,
+                fd: 81,
+            },
+        ],
+        tpu_vote: [
+            UdpSocket {
+                addr: 127.0.0.1:8005,
+                fd: 82,
+            },
+        ],
+        broadcast: [
+            UdpSocket {
+                addr: 127.0.0.1:8014,
+                fd: 89,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8014,
+                fd: 90,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8014,
+                fd: 91,
+            },
+            UdpSocket {
+                addr: 127.0.0.1:8014,
+                fd: 92,
+            },
+        ],
+        repair: UdpSocket {
+            addr: 127.0.0.1:8008,
+            fd: 85,
+        },
+        repair_quic: UdpSocket {
+            addr: 127.0.0.1:8011,
+            fd: 86,
+        },
+        retransmit_sockets: [
+            UdpSocket {
+                addr: 127.0.0.1:8007,
+                fd: 84,
+            },
+        ],
+        serve_repair: UdpSocket {
+            addr: 127.0.0.1:8012,
+            fd: 87,
+        },
+        serve_repair_quic: UdpSocket {
+            addr: 127.0.0.1:8013,
+            fd: 88,
+        },
+        ancestor_hashes_requests: UdpSocket {
+            addr: 127.0.0.1:8015,
+            fd: 93,
+        },
+        ancestor_hashes_requests_quic: UdpSocket {
+            addr: 127.0.0.1:8016,
+            fd: 94,
+        },
+        tpu_quic: [
+            UdpSocket {
+                addr: 127.0.0.1:8009,
+                fd: 29,
+            },
+        ],
+        tpu_forwards_quic: [
+            UdpSocket {
+                addr: 127.0.0.1:8010,
+                fd: 74,
+            },
+        ],
+        tpu_vote_quic: [
+            UdpSocket {
+                addr: 127.0.0.1:8006,
+                fd: 83,
+            },
+        ],
+        tpu_vote_forwarding_client: UdpSocket {
+            addr: 127.0.0.1:8018,
+            fd: 96,
+        },
+        tpu_transaction_forwarding_client: UdpSocket {
+            addr: 127.0.0.1:8019,
+            fd: 97,
+        },
+        alpenglow: Some(
+            UdpSocket {
+                addr: 127.0.0.1:8017,
+                fd: 95,
+            },
+        ),
+        quic_vote_client: UdpSocket {
+            addr: 127.0.0.1:8020,
+            fd: 98,
+        },
+        rpc_sts_client: UdpSocket {
+            addr: 127.0.0.1:8021,
+            fd: 99,
+        },
+        vortexor_receivers: None,
+    }
+[2025-12-23T15:09:58.734999208Z WARN  solana_accounts_db::utils] Failed to delete contents of '.anchor/test-ledger/accounts': No such file or directory (os error 2)
+[2025-12-23T15:09:58.738727095Z INFO  solana_core::validator] debug-assertion status: disabled
+[2025-12-23T15:09:58.751688576Z INFO  solana_core::validator] identity pubkey: 7akgTH8kQwccH92HwBTY5EDqivh7UiP99VSMCyJqZXac
+[2025-12-23T15:09:58.751820365Z INFO  solana_core::validator] vote account pubkey: 87uT5CXxDUQDM56D6ZzSvE9btTF6mdQ78JGt7qxQjPay
+[2025-12-23T15:09:58.751923583Z WARN  solana_core::validator] authorized voter: 87uT5CXxDUQDM56D6ZzSvE9btTF6mdQ78JGt7qxQjPay
+[2025-12-23T15:09:58.751937041Z INFO  solana_core::validator] Initializing sigverify...
+[2025-12-23T15:09:58.751945067Z INFO  solana_core::validator] Initializing sigverify done.
+[2025-12-23T15:09:58.759099521Z INFO  solana_core::validator] genesis hash: 7XxxFPfzcYPzJPE7C3BrWhuvwKxhJgBJ9SxhDwyeCtLr
+[2025-12-23T15:09:58.760012500Z INFO  solana_core::validator] Cleaning accounts paths..
+[2025-12-23T15:09:58.765244448Z INFO  solana_core::validator] Cleaning accounts paths done. clean_accounts_paths took 5ms
+[2025-12-23T15:09:58.765514211Z INFO  solana_runtime::snapshot_utils] Unable to read bank snapshots directory '.anchor/test-ledger/snapshots': No such file or directory (os error 2)
+[2025-12-23T15:09:58.765573255Z INFO  solana_runtime::snapshot_utils] Unable to read bank snapshots directory '.anchor/test-ledger/snapshots': No such file or directory (os error 2)
+[2025-12-23T15:09:58.765599330Z INFO  solana_runtime::snapshot_utils] Unable to read bank snapshots directory '.anchor/test-ledger/snapshots': No such file or directory (os error 2)
+[2025-12-23T15:09:58.765759115Z INFO  solana_core::validator] Cleaning orphaned account snapshot directories..
+[2025-12-23T15:09:58.765921296Z INFO  solana_runtime::snapshot_utils] Unable to read bank snapshots directory '.anchor/test-ledger/snapshots': No such file or directory (os error 2)
+[2025-12-23T15:09:58.765953315Z INFO  solana_core::validator] Cleaning orphaned account snapshot directories done. clean_orphaned_account_snapshot_dirs took 170us
+[2025-12-23T15:09:58.766236355Z INFO  solana_core::validator] Geyser plugin: accounts_update_notifier: false, transaction_notifier: false, entry_notifier: false
+[2025-12-23T15:09:58.766285869Z INFO  solana_core::system_monitor_service] Starting SystemMonitorService
+[2025-12-23T15:09:58.766627396Z INFO  solana_core::validator] loading ledger from ".anchor/test-ledger"...
+[2025-12-23T15:09:58.766671179Z INFO  solana_ledger::blockstore] Maximum open file descriptors: 1048576
+[2025-12-23T15:09:58.766680723Z INFO  solana_ledger::blockstore] Opening blockstore at ".anchor/test-ledger/rocksdb"
+[2025-12-23T15:09:59.085146462Z INFO  solana_ledger::blockstore] Opening blockstore done; blockstore open took 318ms
+[2025-12-23T15:09:59.086109209Z INFO  solana_rpc::transaction_status_service] TransactionStatusService has started
+[2025-12-23T15:09:59.087645614Z WARN  solana_ledger::bank_forks_utils] No snapshot package found in directory: .anchor/test-ledger; will load from genesis
+[2025-12-23T15:09:59.087739283Z INFO  solana_ledger::bank_forks_utils] Processing ledger from genesis
+[2025-12-23T15:09:59.106553175Z INFO  solana_accounts_db::read_only_accounts_cache] AccountsReadCacheEvictor has started
+[2025-12-23T15:09:59.144185997Z INFO  solana_metrics::metrics] datapoint: bank-timestamp get_timestamp_estimate_us=366i
+[2025-12-23T15:09:59.144511744Z INFO  solana_metrics::metrics] datapoint: bank-timestamp-correction slot=0i from_genesis=1766502596i corrected=0i ancestor_timestamp=0i
+[2025-12-23T15:09:59.147194488Z INFO  solana_ledger::blockstore_processor] Processing ledger for slot 0...
+[2025-12-23T15:09:59.181009018Z INFO  solana_runtime::bank] bank frozen: 0 hash: 3wVsBe9oVcgxTNiX8MagnSk4G9RRKbFJSHA9oHCAxcrn signature_count: 0 last_blockhash: 7XxxFPfzcYPzJPE7C3BrWhuvwKxhJgBJ9SxhDwyeCtLr capitalization: 503000513891646093, accounts_lt_hash checksum: ApNgpufbz9qdiNEc9U8cg7AzX9WLQMkcxVwT9pFPcRdK, stats: BankHashStats { num_updated_accounts: 280, num_removed_accounts: 0, num_lamports_stored: 503000513934352653, total_data_len: 1829234, num_executable_accounts: 22 }
+[2025-12-23T15:09:59.185882029Z INFO  solana_metrics::metrics] datapoint: bank-accounts_lt_hash slot=0i num_accounts_total=279i num_accounts_modified=279i num_accounts_unmodified=0i num_cache_misses=279i total_us=9082i loading_accounts_curr_us=211i par_loading_accounts_prev_us=1449i par_comparing_accounts_us=0i par_computing_hashes_us=7414i par_mixing_hashes_us=149i num_inspect_account_hits=0i num_inspect_account_misses=0i num_inspect_account_after_frozen=0i inspect_account_lookup_ns=0i inspect_account_insert_ns=0i
+[2025-12-23T15:09:59.186225279Z INFO  solana_metrics::metrics] datapoint: bank-hash_internal_state slot=0i total_us=196i
+[2025-12-23T15:09:59.186242842Z INFO  solana_metrics::metrics] datapoint: slot_repeated_writes same_account_writes=1i same_account_writes_size=6008i unique_account_writes_size=1823226i size=1823226i accounts_count=279i
+[2025-12-23T15:09:59.186330867Z INFO  solana_metrics::metrics] datapoint: accounts_cache_size num_roots=0i num_slots=1i total_size=1823226i total_accounts_count=279i

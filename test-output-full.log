@@ -1,0 +1,137 @@
+Error: Function _ZN14regex_automata4meta8strategy3new17ha104b0cc43f3a3fcE Stack offset of 5984 exceeded max offset of 4096 by 1888 bytes, please minimize large stack variables. Estimated function frame size: 10304 bytes. Exceeding the maximum stack offset may cause undefined behavior during execution.
+
+warning: unexpected `cfg` condition value: `custom-heap`
+ --> programs/memebet-arena/src/lib.rs:6:1
+  |
+6 | #[program]
+  | ^^^^^^^^^^
+  |
+  = note: expected values for `feature` are: `cpi`, `default`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+  = help: consider adding `custom-heap` as a feature in `Cargo.toml`
+  = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+  = note: `#[warn(unexpected_cfgs)]` on by default
+  = note: this warning originates in the macro `$crate::custom_heap_default` which comes from the expansion of the attribute macro `program` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `custom-panic`
+ --> programs/memebet-arena/src/lib.rs:6:1
+  |
+6 | #[program]
+  | ^^^^^^^^^^
+  |
+  = note: expected values for `feature` are: `cpi`, `default`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+  = help: consider adding `custom-panic` as a feature in `Cargo.toml`
+  = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+  = note: this warning originates in the macro `$crate::custom_panic_default` which comes from the expansion of the attribute macro `program` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `anchor-debug`
+ --> programs/memebet-arena/src/lib.rs:6:1
+  |
+6 | #[program]
+  | ^^^^^^^^^^
+  |
+  = note: expected values for `feature` are: `cpi`, `default`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+  = help: consider adding `anchor-debug` as a feature in `Cargo.toml`
+  = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+  = note: this warning originates in the attribute macro `program` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `anchor-debug`
+ --> programs/memebet-arena/src/lib.rs:6:1
+  |
+6 | #[program]
+  | ^^^^^^^^^^
+  |
+  = note: expected values for `feature` are: `cpi`, `default`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+  = help: consider adding `anchor-debug` as a feature in `Cargo.toml`
+  = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+  = note: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `anchor-debug`
+   --> programs/memebet-arena/src/lib.rs:180:10
+    |
+180 | #[derive(Accounts)]
+    |          ^^^^^^^^
+    |
+    = note: expected values for `feature` are: `cpi`, `default`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    = help: consider adding `anchor-debug` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `anchor-debug`
+   --> programs/memebet-arena/src/lib.rs:190:10
+    |
+190 | #[derive(Accounts)]
+    |          ^^^^^^^^
+    |
+    = note: expected values for `feature` are: `cpi`, `default`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    = help: consider adding `anchor-debug` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `anchor-debug`
+   --> programs/memebet-arena/src/lib.rs:203:10
+    |
+203 | #[derive(Accounts)]
+    |          ^^^^^^^^
+    |
+    = note: expected values for `feature` are: `cpi`, `default`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    = help: consider adding `anchor-debug` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unexpected `cfg` condition value: `anchor-debug`
+   --> programs/memebet-arena/src/lib.rs:210:10
+    |
+210 | #[derive(Accounts)]
+    |          ^^^^^^^^
+    |
+    = note: expected values for `feature` are: `cpi`, `default`, `idl-build`, `no-entrypoint`, `no-idl`, and `no-log-ix-name`
+    = help: consider adding `anchor-debug` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: this warning originates in the derive macro `Accounts` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `memebet-arena` (lib) generated 13 warnings (5 duplicates)
+    Finished `release` profile [optimized] target(s) in 2.15s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.83s
+     Running unittests src/lib.rs (/home/caesa/memebet-arena/target/debug/deps/memebet_arena-72d3cac5dc3e5120)
+Deploying cluster: https://api.devnet.solana.com
+Upgrade authority: /home/caesa/.config/solana/id.json
+Deploying program "memebet_arena"...
+Program path: /home/caesa/memebet-arena/target/deploy/memebet_arena.so...
+Program Id: 6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV
+
+Signature: 31PaFYwEYXnhBGrSL4CZktUYE5YugECbyJYyUdUJtnFugFrwiJB97JzFvWEdYxV4MEpH1qMKxMiSXHa4GzoXmxEZ
+
+Deploy success
+
+Found a 'test' script in the Anchor.toml. Running it as a test suite!
+
+Running test suite: "/home/caesa/memebet-arena/Anchor.toml"
+
+
+ Exception during run: TypeError: anchor.BN is not a constructor
+    at Suite.<anonymous> (file:///home/caesa/memebet-arena/tests/memebet-arena.ts:28:27)
+    at Object.create (/home/caesa/memebet-arena/node_modules/mocha/lib/interfaces/common.js:153:19)
+    at context.describe.context.context (/home/caesa/memebet-arena/node_modules/mocha/lib/interfaces/bdd.js:46:27)
+    at exports.describe (/home/caesa/memebet-arena/node_modules/mocha/lib/mocha.js:119:60)
+    at file:///home/caesa/memebet-arena/tests/memebet-arena.ts:8:1
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:514:37)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:425:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1577:24)
+    at Module._compile (node:internal/modules/cjs/loader:1742:5)
+    at Module.m._compile (/home/caesa/memebet-arena/node_modules/ts-node/src/index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1892:10
+    at Object.require.extensions.<computed> [as .ts] (/home/caesa/memebet-arena/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1480:32)
+    at Module._load (node:internal/modules/cjs/loader:1299:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.require (node:internal/modules/cjs/loader:1503:12)
+    at require (node:internal/modules/helpers:152:16)
+    at Object.requireModule [as requireOrImport] (/home/caesa/memebet-arena/node_modules/mocha/lib/nodejs/esm-utils.js:98:12)
+    at Object.exports.loadFilesAsync (/home/caesa/memebet-arena/node_modules/mocha/lib/nodejs/esm-utils.js:152:34)
+    at Mocha.loadFilesAsync (/home/caesa/memebet-arena/node_modules/mocha/lib/mocha.js:429:19)
+    at singleRun (/home/caesa/memebet-arena/node_modules/mocha/lib/cli/run-helpers.js:168:15)
+    at exports.runMocha (/home/caesa/memebet-arena/node_modules/mocha/lib/cli/run-helpers.js:245:10)
+    at Object.exports.handler (/home/caesa/memebet-arena/node_modules/mocha/lib/cli/run.js:379:11)
+    at /home/caesa/memebet-arena/node_modules/yargs/build/index.cjs:1:8993
+    at /home/caesa/memebet-arena/node_modules/yargs/build/index.cjs:1:4949

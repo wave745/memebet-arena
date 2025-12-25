@@ -1,3 +1,7 @@
+# Trenchmarket
+
+Trenchmarket is a Solana-based prediction market platform for memecoins. Built with Next.js and Anchor.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
