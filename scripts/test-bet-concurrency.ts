@@ -1,6 +1,5 @@
 import * as anchor from "@coral-xyz/anchor"
 import { PublicKey, Keypair, Transaction } from "@solana/web3.js"
-import BN from "bn.js"
 
 // Set provider
 anchor.setProvider(anchor.AnchorProvider.env())
@@ -16,8 +15,8 @@ async function testConcurrency() {
 
   // Market setup
   const tokenMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263")
-  const targetMarketCap = new BN(5_000_000_000)
-  const endTimestamp = new BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
+  const targetMarketCap = new anchor.BN(5_000_000_000)
+  const endTimestamp = new anchor.BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
   const [marketPda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("market"),
@@ -56,7 +55,7 @@ async function testConcurrency() {
   const { blockhash } = await connection.getLatestBlockhash()
 
   // Build transactions for both wallets simultaneously
-  const amountLamports = new BN(0.05 * anchor.web3.LAMPORTS_PER_SOL)
+  const amountLamports = new anchor.BN(0.05 * anchor.web3.LAMPORTS_PER_SOL)
   const outcome = true // Both betting YES
 
   // Wallet 1 transaction
@@ -131,7 +130,7 @@ async function testBoundaries() {
 
   // Test market with near-expiration timestamp
   const tokenMint = new PublicKey("EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm") // WIF
-  const targetMarketCap = new BN(10_000_000_000)
+  const targetMarketCap = new anchor.BN(10_000_000_000)
   const now = Math.floor(Date.now() / 1000)
   const nearExpiration = now + 10 // 10 seconds from now
 
@@ -140,7 +139,7 @@ async function testBoundaries() {
       Buffer.from("market"),
       tokenMint.toBuffer(),
       targetMarketCap.toArrayLike(Buffer, "le", 8),
-      new BN(nearExpiration).toArrayLike(Buffer, "le", 8),
+      new anchor.BN(nearExpiration).toArrayLike(Buffer, "le", 8),
     ],
     program.programId
   )
@@ -162,7 +161,7 @@ async function testBoundaries() {
       program.programId
     )
 
-    const tinyAmount = new BN(1) // 1 lamport
+    const tinyAmount = new anchor.BN(1) // 1 lamport
     const tx = await program.methods
       .placeBet(true, tinyAmount)
       .accounts({
@@ -189,8 +188,8 @@ async function testStatePoisoning() {
 
   // Use a valid market
   const tokenMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263")
-  const targetMarketCap = new BN(5_000_000_000)
-  const endTimestamp = new BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
+  const targetMarketCap = new anchor.BN(5_000_000_000)
+  const endTimestamp = new anchor.BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
   const [marketPda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("market"),
@@ -211,7 +210,7 @@ async function testStatePoisoning() {
 
     const wrongEscrow = Keypair.generate().publicKey
     await program.methods
-      .placeBet(true, new BN(1000000))
+      .placeBet(true, new anchor.BN(1000000))
       .accounts({
         market: marketPda,
         position: positionPda,
@@ -231,7 +230,7 @@ async function testStatePoisoning() {
   try {
     const wrongPosition = Keypair.generate().publicKey
     await program.methods
-      .placeBet(true, new BN(1000000))
+      .placeBet(true, new anchor.BN(1000000))
       .accounts({
         market: marketPda,
         position: wrongPosition, // Wrong PDA!
@@ -256,8 +255,8 @@ async function testEscrowInvariant() {
 
   // Use the first market
   const tokenMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263")
-  const targetMarketCap = new BN(5_000_000_000)
-  const endTimestamp = new BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
+  const targetMarketCap = new anchor.BN(5_000_000_000)
+  const endTimestamp = new anchor.BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
   const [marketPda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("market"),

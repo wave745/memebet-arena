@@ -1,6 +1,5 @@
 import * as anchor from "@coral-xyz/anchor"
 import { PublicKey } from "@solana/web3.js"
-import BN from "bn.js"
 
 // Set provider
 anchor.setProvider(anchor.AnchorProvider.env())
@@ -16,8 +15,8 @@ async function testBoundaries() {
 
   // Use existing market
   const tokenMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263")
-  const targetMarketCap = new BN(5_000_000_000)
-  const endTimestamp = new BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
+  const targetMarketCap = new anchor.BN(5_000_000_000)
+  const endTimestamp = new anchor.BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
   const [marketPda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("market"),
@@ -40,7 +39,7 @@ async function testBoundaries() {
     if (positionInfo) {
       console.log("  ⚠️  Position already exists, cannot test")
     } else {
-      const tinyAmount = new BN(1)
+      const tinyAmount = new anchor.BN(1)
       const tx = await program.methods
         .placeBet(true, tinyAmount)
         .accounts({
@@ -66,7 +65,7 @@ async function testBoundaries() {
       program.programId
     )
 
-    const zeroAmount = new BN(0)
+    const zeroAmount = new anchor.BN(0)
     await program.methods
       .placeBet(true, zeroAmount)
       .accounts({
@@ -100,7 +99,7 @@ async function testBoundaries() {
         // Try to resolve (will fail if not expired)
         try {
           await program.methods
-            .resolveMarket(new BN(6_000_000_000)) // Above target
+            .resolveMarket(new anchor.BN(6_000_000_000)) // Above target
             .accounts({
               market: marketPda,
               resolver: wallet.publicKey,
@@ -119,7 +118,7 @@ async function testBoundaries() {
       )
 
       await program.methods
-        .placeBet(true, new BN(1000000))
+        .placeBet(true, new anchor.BN(1000000))
         .accounts({
           market: marketPda,
           position: positionPda,

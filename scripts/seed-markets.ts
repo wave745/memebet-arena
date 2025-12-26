@@ -2,7 +2,6 @@ import * as anchor from "@coral-xyz/anchor"
 import { Program } from "@coral-xyz/anchor"
 import { PublicKey } from "@solana/web3.js"
 import type { MemebetArena } from "../target/types/memebet_arena"
-import BN from "bn.js"
 
 // Set provider from environment (devnet)
 anchor.setProvider(anchor.AnchorProvider.env())
@@ -71,8 +70,8 @@ async function seedMarkets() {
       console.log(`\n📊 Creating market: ${market.description}`)
       
       const tokenMintPubkey = new PublicKey(market.tokenMint)
-      const targetMarketCapBN = new BN(market.targetMarketCap)
-      const endTimestampBN = new BN(market.endTimestamp)
+      const targetMarketCapBN = new anchor.BN(market.targetMarketCap)
+      const endTimestampBN = new anchor.BN(market.endTimestamp)
       
       // Derive market PDA: [b"market", token_mint, target_market_cap, end_timestamp]
       const seeds = [

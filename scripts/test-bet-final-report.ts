@@ -1,6 +1,5 @@
 import * as anchor from "@coral-xyz/anchor"
 import { PublicKey } from "@solana/web3.js"
-import BN from "bn.js"
 
 // Final adversarial test report
 anchor.setProvider(anchor.AnchorProvider.env())
@@ -16,8 +15,8 @@ async function generateReport() {
 
   // Test market
   const tokenMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263")
-  const targetMarketCap = new BN(5_000_000_000)
-  const endTimestamp = new BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
+  const targetMarketCap = new anchor.BN(5_000_000_000)
+  const endTimestamp = new anchor.BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
   const [marketPda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("market"),

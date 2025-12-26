@@ -1,6 +1,5 @@
 import * as anchor from "@coral-xyz/anchor"
 import { PublicKey } from "@solana/web3.js"
-import BN from "bn.js"
 
 // Set provider
 anchor.setProvider(anchor.AnchorProvider.env())
@@ -18,8 +17,8 @@ async function testAdversarialBets() {
 
   // Use the first market we seeded
   const tokenMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263") // BONK
-  const targetMarketCap = new BN(5_000_000_000)
-  const endTimestamp = new BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
+  const targetMarketCap = new anchor.BN(5_000_000_000)
+  const endTimestamp = new anchor.BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
 
   // Derive market PDA
   const seeds = [
@@ -55,7 +54,7 @@ async function testAdversarialBets() {
   // Test 2: Tiny amount
   console.log("\n🧪 Test 2: Tiny amount validation")
   const betAmount = 0.01 // 0.01 SOL
-  const amountLamports = new BN(betAmount * anchor.web3.LAMPORTS_PER_SOL)
+  const amountLamports = new anchor.BN(betAmount * anchor.web3.LAMPORTS_PER_SOL)
   
   // Test 3: Verify minimum bet amount (program enforces amount > 0)
   console.log("\n🧪 Test 3: Minimum bet amount validation")

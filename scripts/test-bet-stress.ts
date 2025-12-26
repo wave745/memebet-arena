@@ -1,6 +1,5 @@
 import * as anchor from "@coral-xyz/anchor"
 import { PublicKey, Keypair } from "@solana/web3.js"
-import BN from "bn.js"
 
 // Set provider
 anchor.setProvider(anchor.AnchorProvider.env())
@@ -18,8 +17,8 @@ async function stressTest() {
 
   // Use the first market
   const tokenMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263")
-  const targetMarketCap = new BN(5_000_000_000)
-  const endTimestamp = new BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
+  const targetMarketCap = new anchor.BN(5_000_000_000)
+  const endTimestamp = new anchor.BN(Math.floor(new Date("2026-06-30T23:59:59Z").getTime() / 1000))
 
   const [marketPda] = PublicKey.findProgramAddressSync(
     [
@@ -71,7 +70,7 @@ async function stressTest() {
     const testWallet = wallets[i]
     const outcome = outcomes[i]
     const amount = amounts[i]
-    const amountLamports = new BN(amount * anchor.web3.LAMPORTS_PER_SOL)
+    const amountLamports = new anchor.BN(amount * anchor.web3.LAMPORTS_PER_SOL)
 
     try {
       const [positionPda] = PublicKey.findProgramAddressSync(
