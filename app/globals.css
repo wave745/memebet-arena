@@ -124,8 +124,26 @@
     @apply bg-background text-foreground;
   }
   html, body {
-    overflow: hidden;
     height: 100%;
+  }
+  
+  /* Allow scrolling on mobile */
+  @media (max-width: 640px) {
+    html, body {
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Ensure touch events work properly */
+    * {
+      touch-action: manipulation;
+    }
+    
+    /* Allow scrolling in specific containers */
+    button, a, input, textarea, select {
+      touch-action: manipulation;
+    }
   }
 }
 

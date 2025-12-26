@@ -231,22 +231,22 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
               </div>
             )
           ) : (
-            <div className="px-5 py-4">
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Browse</h3>
-              <div className="flex flex-wrap gap-2">
-                {BROWSE_CATEGORIES.map((category) => (
-                  <Button
-                    key={category.label}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCategoryClick(category.value)}
-                    className="h-9 gap-2 bg-background/50 hover:bg-accent"
-                  >
-                    <category.icon className="h-4 w-4" />
-                    {category.label}
-                  </Button>
-                ))}
-              </div>
+        <div className="px-5 py-4">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Browse</h3>
+          <div className="flex flex-wrap gap-2">
+            {BROWSE_CATEGORIES.map((category) => (
+              <Button
+                key={category.label}
+                variant="outline"
+                size="sm"
+                onClick={() => handleCategoryClick(category.value)}
+                className="h-9 gap-2 bg-background/50 hover:bg-accent"
+              >
+                <category.icon className="h-4 w-4" />
+                {category.label}
+              </Button>
+            ))}
+          </div>
               {markets.length > 0 && (
                 <>
                   <h3 className="mt-6 mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

@@ -767,11 +767,11 @@ export default function MarketPage() {
           <p className="text-muted-foreground">Market not found</p>
         </main>
       ) : (
-        <main className="fixed inset-0 top-[140px] sm:top-[140px] overflow-hidden">
-          <div className="mx-auto max-w-7xl px-3 sm:px-4 h-full">
-            <div className="grid gap-4 sm:gap-6 lg:grid-cols-3 h-full">
+        <main className="relative sm:fixed sm:inset-0 sm:top-[140px] min-h-screen sm:overflow-hidden">
+          <div className="mx-auto max-w-7xl px-3 sm:px-4 sm:h-full py-4 sm:py-0">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-3 sm:h-full">
               {/* Left: Chart and Details */}
-              <div className="lg:col-span-2 flex flex-col h-full overflow-hidden">
+              <div className="lg:col-span-2 flex flex-col sm:h-full sm:overflow-hidden">
                 {/* Fixed Question Header - Does not scroll, spans only left column */}
               <div className="flex-shrink-0 z-30 bg-[#0F0F11] border-b border-border/30 py-3 mb-4">
                 <div className="flex items-start justify-between">
@@ -815,7 +815,7 @@ export default function MarketPage() {
               </div>
 
               {/* Scrollable Content Area */}
-              <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 pb-4 sm:pb-6 scrollbar-hide">
+              <div className="flex-1 sm:overflow-y-auto space-y-4 sm:space-y-6 pb-4 sm:pb-6 scrollbar-hide">
                 {/* Resolution UI - Show if market expired and not resolved, or if resolved show outcome */}
                 {isAdmin && !market.resolved && Math.floor(Date.now() / 1000) >= Number(market.endTimestamp) && (
                   <div className="border border-amber-500/30 bg-amber-500/10 rounded-lg p-4">
@@ -862,7 +862,7 @@ export default function MarketPage() {
                         title="DexScreener Chart"
                         allowFullScreen
                       />
-                    </div>
+                </div>
                   ) : (
                     <div className="h-[240px] sm:h-[320px] flex items-center justify-center bg-[#0B0B0D] rounded border border-border/20">
                       <div className="flex flex-col items-center justify-center space-y-2">
@@ -1154,7 +1154,7 @@ Resolution time is final — no appeals. The market will automatically resolve b
 
               {/* Right: Fixed Trade Panel */}
               <div className="lg:col-span-1">
-                <div className="sticky top-0 border border-border/30 bg-[#0F0F11] rounded-lg p-3 sm:p-4">
+                <div className="sm:sticky sm:top-0 border border-border/30 bg-[#0F0F11] rounded-lg p-3 sm:p-4">
                 {/* Buy/Sell Tabs and Market Dropdown */}
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-border/20">
                   <div className="flex items-center gap-4">
