@@ -23,7 +23,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>
+      <body className={`font-sans antialiased shining-bg`}>
+        {/* Background Effects */}
+        <div className="fixed inset-0 glass-grid opacity-20 pointer-events-none z-[-2]" />
+        <div className="noise-filter" />
+
+        {/* Background Shine Orbs */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-neon-green/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neon-magenta/10 rounded-full blur-[120px] animate-pulse [animation-delay:1s]" />
+          <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] bg-neon-cyan/5 rounded-full blur-[100px] animate-pulse [animation-delay:2s]" />
+        </div>
         <WalletProvider>{children}</WalletProvider>
       </body>
     </html>

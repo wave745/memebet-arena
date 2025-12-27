@@ -837,7 +837,7 @@ export default function MarketPage() {
                           />
                         </div>
                         <div className="flex-1">
-                          <h1 className="text-base sm:text-lg font-semibold text-[#E5E5E5] flex-1 leading-tight inline">
+                          <h1 className="text-base sm:text-lg font-bold text-[#E5E5E5] flex-1 leading-tight inline neon-text-green">
                             {question}
                           </h1>
                           <button
@@ -845,7 +845,7 @@ export default function MarketPage() {
                             className="inline-flex ml-2 p-0.5 text-[#8A8A8A] hover:text-[#E5E5E5] transition-colors align-middle"
                             title="Copy token address"
                           >
-                            {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                            {copied ? <Check className="h-3 w-3 neon-text-green" /> : <Copy className="h-3 w-3" />}
                           </button>
                         </div>
                       </div>
@@ -865,31 +865,31 @@ export default function MarketPage() {
                             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                               {/* YES Percentage */}
                               <div className="flex items-center gap-1.5 text-xs">
-                                <span className="text-[#6B9E78] font-semibold">YES {yesPercent.toFixed(1)}%</span>
+                                <span className="neon-text-green font-black text-[14px] transform-gpu">YES {yesPercent.toFixed(1)}%</span>
                                 {yesHasIncreased && (
-                                  <div className="flex items-center gap-0.5 text-[#6B9E78]">
-                                    <TrendingUp className="h-3 w-3" />
-                                    <span className="text-[10px]">{Math.abs(yesPercentChange).toFixed(1)}%</span>
+                                  <div className="flex items-center gap-0.5 neon-text-green animate-pulse">
+                                    <TrendingUp className="h-4 w-4" />
+                                    <span className="text-[11px] font-bold">{Math.abs(yesPercentChange).toFixed(1)}%</span>
                                   </div>
                                 )}
                                 {yesHasDecreased && (
-                                  <div className="flex items-center gap-0.5 text-[#A67C7C]">
-                                    <TrendingDown className="h-3 w-3" />
-                                    <span className="text-[10px]">{Math.abs(yesPercentChange).toFixed(1)}%</span>
+                                  <div className="flex items-center gap-0.5 neon-text-magenta animate-pulse">
+                                    <TrendingDown className="h-4 w-4" />
+                                    <span className="text-[11px] font-bold">{Math.abs(yesPercentChange).toFixed(1)}%</span>
                                   </div>
                                 )}
                               </div>
                               {/* NO Percentage */}
                               <div className="flex items-center gap-1.5 text-xs">
-                                <span className="text-[#A67C7C] font-semibold">NO {noPercent.toFixed(1)}%</span>
+                                <span className="text-[#A67C7C] font-semibold transform-gpu">NO {noPercent.toFixed(1)}%</span>
                                 {noHasIncreased && (
-                                  <div className="flex items-center gap-0.5 text-[#A67C7C]">
+                                  <div className="flex items-center gap-0.5 text-[#A67C7C] animate-pulse">
                                     <TrendingUp className="h-3 w-3" />
                                     <span className="text-[10px]">{Math.abs(noPercentChange).toFixed(1)}%</span>
                                   </div>
                                 )}
                                 {noHasDecreased && (
-                                  <div className="flex items-center gap-0.5 text-[#6B9E78]">
+                                  <div className="flex items-center gap-0.5 text-[#6B9E78] animate-pulse">
                                     <TrendingDown className="h-3 w-3" />
                                     <span className="text-[10px]">{Math.abs(noPercentChange).toFixed(1)}%</span>
                                   </div>
@@ -956,9 +956,10 @@ export default function MarketPage() {
                       <div className="rounded-xl overflow-hidden border border-white/10">
                         <iframe
                           src={`https://dexscreener.com/solana/${market.tokenMint.toString()}?embed=1&theme=dark&trades=0&info=0`}
-                          className="w-full h-[240px] sm:h-[320px] border-0"
+                          className="w-full h-[240px] sm:h-[320px] border-0 transform-gpu"
                           title="DexScreener Chart"
                           allowFullScreen
+                          loading="lazy"
                         />
                       </div>
                     ) : (
@@ -1035,7 +1036,7 @@ Resolution time is final — no appeals. The market will automatically resolve b
 
                             <button
                               onClick={() => setShowRulesMore(!showRulesMore)}
-                              className="text-[#3BA4FF] text-sm mt-3 flex items-center gap-1 hover:text-[#5BB5FF] transition-colors"
+                              className="neon-text-cyan text-sm mt-3 flex items-center gap-1 hover:brightness-125 transition-all"
                             >
                               {showRulesMore ? "Show less" : "Show more"}
                               <span className="text-xs">{showRulesMore ? "▲" : "▼"}</span>
@@ -1118,7 +1119,7 @@ Resolution time is final — no appeals. The market will automatically resolve b
                           return (
                             <div
                               key={comment.id}
-                              className="glass rounded-lg p-3 transition-all hover:translate-y-[-2px]"
+                              className="glass rounded-lg p-3 transition-all hover:translate-y-[-2px] transform-gpu will-change-transform"
                             >
                               <div className="flex items-start justify-between gap-2 mb-2">
                                 <div className="flex items-center gap-2 min-w-0">
@@ -1313,18 +1314,18 @@ Resolution time is final — no appeals. The market will automatically resolve b
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <button
                         onClick={() => setTradeSide("YES")}
-                        className={`px-3 sm:px-4 py-2 sm:py-3 rounded text-xs sm:text-sm font-medium transition-colors ${tradeSide === "YES"
-                          ? "bg-[#6B9E78] text-white"
-                          : "glass-button text-[#8A8A8A]"
+                        className={`px-3 sm:px-4 py-2 sm:py-3 rounded text-xs sm:text-sm font-bold transition-all ${tradeSide === "YES"
+                          ? "bg-neon-green text-black neon-glow-green"
+                          : "glass-button text-[#8A8A8A] hover:neon-border-green hover:neon-text-green"
                           }`}
                       >
                         Yes {yesPercent.toFixed(1)}%
                       </button>
                       <button
                         onClick={() => setTradeSide("NO")}
-                        className={`px-3 sm:px-4 py-2 sm:py-3 rounded text-xs sm:text-sm font-medium transition-colors ${tradeSide === "NO"
-                          ? "bg-[#A67C7C] text-white"
-                          : "glass-button text-[#8A8A8A]"
+                        className={`px-3 sm:px-4 py-2 sm:py-3 rounded text-xs sm:text-sm font-bold transition-all ${tradeSide === "NO"
+                          ? "bg-neon-magenta text-white neon-glow-magenta"
+                          : "glass-button text-[#8A8A8A] hover:neon-border-magenta hover:neon-text-magenta"
                           }`}
                       >
                         No {noPercent.toFixed(1)}%
@@ -1344,9 +1345,9 @@ Resolution time is final — no appeals. The market will automatically resolve b
                                     setSellSide("YES")
                                     setTradeAmount("") // Reset amount when switching
                                   }}
-                                  className={`px-3 sm:px-4 py-2 rounded text-xs sm:text-sm font-medium transition-colors ${sellSide === "YES"
-                                    ? "bg-[#6B9E78] text-white"
-                                    : "glass-button text-[#8A8A8A]"
+                                  className={`px-3 sm:px-4 py-2 rounded text-xs sm:text-sm font-bold transition-all ${sellSide === "YES"
+                                    ? "bg-neon-green text-black neon-glow-green"
+                                    : "glass-button text-[#8A8A8A] hover:neon-border-green hover:neon-text-green"
                                     }`}
                                 >
                                   YES: {(Number(userYesPosition.amount) / LAMPORTS_PER_SOL).toFixed(4)} SOL
@@ -1356,9 +1357,9 @@ Resolution time is final — no appeals. The market will automatically resolve b
                                     setSellSide("NO")
                                     setTradeAmount("") // Reset amount when switching
                                   }}
-                                  className={`px-3 sm:px-4 py-2 rounded text-xs sm:text-sm font-medium transition-colors ${sellSide === "NO"
-                                    ? "bg-[#A67C7C] text-white"
-                                    : "glass-button text-[#8A8A8A]"
+                                  className={`px-3 sm:px-4 py-2 rounded text-xs sm:text-sm font-bold transition-all ${sellSide === "NO"
+                                    ? "bg-neon-magenta text-white neon-glow-magenta"
+                                    : "glass-button text-[#8A8A8A] hover:neon-border-magenta hover:neon-text-magenta"
                                     }`}
                                 >
                                   NO: {(Number(userNoPosition.amount) / LAMPORTS_PER_SOL).toFixed(4)} SOL
@@ -1371,12 +1372,12 @@ Resolution time is final — no appeals. The market will automatically resolve b
                               <label className="text-xs text-[#8A8A8A] mb-2 block">Your position to sell:</label>
                               <div className="flex gap-3">
                                 {userYesPosition && userYesPosition.amount > 0n && (
-                                  <div className="flex-1 px-4 py-2 rounded text-sm font-medium bg-[#6B9E78] text-white text-center">
+                                  <div className="flex-1 px-4 py-2 rounded text-sm font-bold bg-neon-green text-black neon-glow-green text-center">
                                     YES: {(Number(userYesPosition.amount) / LAMPORTS_PER_SOL).toFixed(4)} SOL
                                   </div>
                                 )}
                                 {userNoPosition && userNoPosition.amount > 0n && (
-                                  <div className="flex-1 px-4 py-2 rounded text-sm font-medium bg-[#A67C7C] text-white text-center">
+                                  <div className="flex-1 px-4 py-2 rounded text-sm font-bold bg-neon-magenta text-white neon-glow-magenta text-center">
                                     NO: {(Number(userNoPosition.amount) / LAMPORTS_PER_SOL).toFixed(4)} SOL
                                   </div>
                                 )}
@@ -1535,16 +1536,15 @@ Resolution time is final — no appeals. The market will automatically resolve b
                     </div>
                   )}
 
-                  {/* Trade Button */}
                   <Button
                     onClick={handleTrade}
-                    className={`w-full py-2.5 sm:py-3 text-xs sm:text-sm font-medium mb-3 ${tradeAction === "buy"
+                    className={`w-full py-2.5 sm:py-3 text-xs sm:text-sm font-bold mb-3 transition-all ${tradeAction === "buy"
                       ? tradeSide === "YES"
-                        ? "bg-[#6B9E78] hover:bg-[#6B9E78]/90 text-white"
+                        ? "bg-neon-green hover:bg-neon-green/90 text-black neon-glow-green"
                         : tradeSide === "NO"
-                          ? "bg-[#A67C7C] hover:bg-[#A67C7C]/90 text-white"
+                          ? "bg-neon-magenta hover:bg-neon-magenta/90 text-white neon-glow-magenta"
                           : "bg-blue-600 hover:bg-blue-700 text-white"
-                      : "bg-orange-600 hover:bg-orange-700 text-white"
+                      : "bg-neon-magenta hover:bg-neon-magenta/90 text-white neon-glow-magenta"
                       }`}
                     disabled={
                       tradeAction === "buy"

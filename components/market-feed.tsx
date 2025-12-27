@@ -36,31 +36,32 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
     }
 
     console.log("Fetching markets from chain...")
-    const marketData = []
-    for (const { pda, ticker } of SEEDED_MARKETS) {
-      try {
-        const marketPda = new PublicKey(pda)
-        // Pass null for wallet - read-only operation
-        const market = await fetchMarketByPda(connection, null, marketPda)
-        if (market) {
-          marketData.push({
-            pda: marketPda.toString(),
-            tokenMint: market.tokenMint.toString(),
-            targetMarketCap: market.targetMarketCap,
-            endTimestamp: market.endTimestamp,
-            resolved: market.resolved,
-            yesPool: market.yesPool,
-            noPool: market.noPool,
-            outcome: market.outcome,
-            ticker,
-          })
+    const marketData = await Promise.all(
+      SEEDED_MARKETS.map(async ({ pda, ticker }) => {
+        try {
+          const marketPda = new PublicKey(pda)
+          const market = await fetchMarketByPda(connection, null, marketPda)
+          if (market) {
+            return {
+              pda: marketPda.toString(),
+              tokenMint: market.tokenMint.toString(),
+              targetMarketCap: market.targetMarketCap,
+              endTimestamp: market.endTimestamp,
+              resolved: market.resolved,
+              yesPool: market.yesPool,
+              noPool: market.noPool,
+              outcome: market.outcome,
+              ticker,
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to fetch market ${pda}:`, error)
         }
-      } catch (error) {
-        console.error(`Failed to fetch market ${pda}:`, error)
-      }
-    }
+        return null
+      })
+    )
 
-    setMarkets(marketData)
+    setMarkets(marketData.filter(m => m !== null))
     setLoading(false)
   }
 
@@ -149,19 +150,20 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
   return (
     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       {filteredMarkets.map((market) => (
-        <MarketCard
-          key={market.pda}
-          pda={market.pda}
-          tokenMint={market.tokenMint}
-          targetMarketCap={market.targetMarketCap}
-          endTimestamp={market.endTimestamp}
-          resolved={market.resolved}
-          yesPool={market.yesPool}
-          noPool={market.noPool}
-          outcome={market.outcome}
-          ticker={market.ticker}
-          onBetPlaced={handleBetPlaced}
-        />
+        <div key={market.pda} className="market-card-container">
+          <MarketCard
+            pda={market.pda}
+            tokenMint={market.tokenMint}
+            targetMarketCap={market.targetMarketCap}
+            endTimestamp={market.endTimestamp}
+            resolved={market.resolved}
+            yesPool={market.yesPool}
+            noPool={market.noPool}
+            outcome={market.outcome}
+            ticker={market.ticker}
+            onBetPlaced={handleBetPlaced}
+          />
+        </div>
       ))}
     </div>
   )

@@ -241,7 +241,7 @@ export function MarketCard({
   const potentialPayout = calculatePayout(selectedSide || "YES", betAmount)
 
   return (
-    <div className="relative glass-card overflow-hidden">
+    <div className="relative glass-card overflow-hidden neon-card-shine transform-gpu will-change-transform border border-white/5 hover:border-white/10 transition-all duration-300">
       {/* Status indicator */}
       {isClosingSoon && !resolved && (
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-amber-500/40 z-10" />
@@ -268,7 +268,7 @@ export function MarketCard({
 
         <div className="flex-1">
           <h3
-            className="text-xs sm:text-sm font-medium text-[#E5E5E5] leading-tight cursor-pointer hover:text-[#E5E5E5]/80 transition-colors pt-0.5 inline"
+            className="text-xs sm:text-sm font-medium text-[#E5E5E5] leading-tight cursor-pointer hover:text-white fluorescent-interactive transition-colors pt-0.5 inline"
             onClick={() => {
               if (typeof window !== 'undefined') {
                 window.location.href = `/market/${pda}`
@@ -282,7 +282,7 @@ export function MarketCard({
             className="inline-flex ml-2 p-0.5 text-[#8A8A8A] hover:text-[#E5E5E5] transition-colors align-middle"
             title="Copy token address"
           >
-            {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+            {copied ? <Check className="h-3 w-3 neon-text-green" /> : <Copy className="h-3 w-3" />}
           </button>
         </div>
       </div>
@@ -304,7 +304,7 @@ export function MarketCard({
                 {yesPoolSol.toFixed(2)}
               </span>
             </div>
-            <span className="text-[10px] sm:text-xs font-mono text-[#8A8A8A] tabular-nums">
+            <span className="text-[10px] sm:text-xs font-black text-white transform-gpu">
               {yesPercent.toFixed(0)}%
             </span>
           </div>
@@ -317,7 +317,7 @@ export function MarketCard({
                 {noPoolSol.toFixed(2)}
               </span>
             </div>
-            <span className="text-[10px] sm:text-xs font-mono text-[#8A8A8A] tabular-nums">
+            <span className="text-[10px] sm:text-xs font-black text-white transform-gpu">
               {noPercent.toFixed(0)}%
             </span>
           </div>
@@ -328,14 +328,14 @@ export function MarketCard({
           <button
             onClick={() => handleSideSelect("YES")}
             disabled={resolved || !walletConnected}
-            className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-[#6B9E78] border border-[#6B9E78]/20 rounded bg-[#6B9E78]/5 hover:bg-[#6B9E78]/10 hover:border-[#6B9E78]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold neon-text-green border neon-border-green rounded bg-neon-green/5 hover:bg-neon-green/20 hover:neon-glow-green transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             YES
           </button>
           <button
             onClick={() => handleSideSelect("NO")}
             disabled={resolved || !walletConnected}
-            className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-[#A67C7C] border border-[#A67C7C]/20 rounded bg-[#A67C7C]/5 hover:bg-[#A67C7C]/10 hover:border-[#A67C7C]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-bold neon-text-magenta border neon-border-magenta rounded bg-neon-magenta/5 hover:bg-neon-magenta/20 hover:neon-glow-magenta transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             NO
           </button>
@@ -435,9 +435,9 @@ export function MarketCard({
               <Button
                 onClick={handleBet}
                 disabled={loading || !amount || !walletConnected || submitted || resolved}
-                className={`w-full font-medium pt-1 pb-3 text-[10px] sm:text-xs mt-3 flex flex-col items-center justify-center gap-0.5 min-h-[44px] ${selectedSide === "YES"
-                  ? "bg-[#6B9E78] hover:bg-[#6B9E78]/90 text-white"
-                  : "bg-[#A67C7C] hover:bg-[#A67C7C]/90 text-white"
+                className={`w-full font-bold pt-1 pb-3 text-[10px] sm:text-xs mt-3 flex flex-col items-center justify-center gap-0.5 min-h-[44px] transition-all ${selectedSide === "YES"
+                  ? "bg-neon-green hover:bg-neon-green/90 text-black neon-glow-green border-none"
+                  : "bg-neon-magenta hover:bg-neon-magenta/90 text-white neon-glow-magenta border-none"
                   }`}
               >
                 <span className="whitespace-nowrap">{loading ? "Processing..." : submitted ? "Submitted..." : `Buy ${selectedSide}`}</span>

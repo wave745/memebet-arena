@@ -44,9 +44,9 @@ export function TopBar({
     <header className="fixed top-0 left-0 right-0 w-full z-50 glass-header">
       <div className="mx-auto max-w-7xl flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4 py-2 sm:py-3">
         {/* Left: Logo */}
-        <div className="flex items-baseline gap-2 flex-shrink-0">
-          <Link href="/">
-            <h1 className="text-lg sm:text-xl font-bold hover:opacity-80 transition-opacity">Trenchmarket</h1>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link href="/" className="glass-text-wrapper hover:scale-105 transition-transform">
+            <h1 className="text-lg sm:text-xl font-black shining-text tracking-tighter">Trenchmarket</h1>
           </Link>
         </div>
 
@@ -80,12 +80,13 @@ export function TopBar({
               <div className="flex items-center gap-2 sm:gap-3">
                 <button
                   onClick={onWalletClick}
-                  className="text-right px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-border bg-[#0B0B0D] hover:bg-[#151518] hover:border-border/80 transition-all cursor-pointer"
+                  className="text-right px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl backdrop-blur-md bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition-all cursor-pointer shadow-lg group relative overflow-hidden"
                 >
-                  <div className="text-xs sm:text-sm font-mono text-foreground">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-neon-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="text-xs sm:text-sm font-black text-foreground/90 tracking-tighter relative z-10">
                     {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
                   </div>
-                  <div className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1">
+                  <div className="text-[10px] sm:text-xs flex items-center gap-1 justify-end relative z-10 font-bold shining-text">
                     <SolanaLogo size={10} gray={false} />
                     {solBalance.toFixed(2)}
                   </div>

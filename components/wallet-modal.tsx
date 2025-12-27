@@ -459,7 +459,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl w-[95vw] sm:w-[85vw] md:w-[75vw] h-[65vh] sm:h-[70vh] max-h-[600px] flex flex-col p-0 gap-0 opaque-panel">
+      <DialogContent className="max-w-3xl w-[95vw] sm:w-[85vw] md:w-[75vw] h-[65vh] sm:h-[70vh] max-h-[600px] flex flex-col p-0 gap-0 opaque-panel shining-modal">
         <DialogHeader className="px-4 sm:px-6 pt-3 pb-2 flex-shrink-0 border-b border-border">
           <div className="flex items-center justify-between gap-2">
             <div className="flex-1 min-w-0">
@@ -644,16 +644,16 @@ function ActiveBetsTab({
         return (
           <div
             key={position.positionPda.toString()}
-            className="border border-border rounded-lg p-3 sm:p-4 hover:bg-background/50 transition-colors cursor-pointer"
+            className="border border-border rounded-lg p-3 sm:p-4 hover:bg-background/50 transition-all cursor-pointer transform-gpu will-change-transform active:scale-[0.98]"
             onClick={() => onPositionClick(position.marketPda)}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span
-                    className={`text-xs font-medium px-2 py-0.5 sm:py-1 rounded flex-shrink-0 ${position.outcome
-                      ? "bg-green-500/20 text-green-500"
-                      : "bg-red-500/20 text-red-500"
+                    className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 sm:py-1 rounded flex-shrink-0 transition-all ${position.outcome
+                      ? "bg-neon-green/10 neon-text-green neon-border-green border"
+                      : "bg-neon-magenta/10 neon-text-magenta neon-border-magenta border"
                       }`}
                   >
                     {position.outcome ? "YES" : "NO"}
@@ -663,14 +663,14 @@ function ActiveBetsTab({
                     {amountSol.toFixed(4)} SOL
                   </span>
                   {pnl !== 0 && (
-                    <span className={`text-xs font-medium flex items-center gap-1 ${pnl > 0 ? "text-green-500" : "text-red-500"
+                    <span className={`text-[10px] sm:text-xs font-bold flex items-center gap-1 ${pnl > 0 ? "neon-text-green" : "neon-text-magenta"
                       }`}>
                       {pnl > 0 ? "+" : ""}{pnl.toFixed(4)} SOL ({pnlPercent > 0 ? "+" : ""}{pnlPercent.toFixed(1)}%)
                     </span>
                   )}
                 </div>
                 {market && (
-                  <div className="text-xs sm:text-sm text-foreground mb-1 truncate">
+                  <div className="text-xs sm:text-sm text-[#E5E5E5] font-medium mb-1 truncate">
                     {(() => {
                       const ticker = (market as any)?.ticker
                       const tokenMintStr = market?.tokenMint?.toString() || ""
@@ -717,11 +717,12 @@ function ActiveBetsTab({
                       amount: amountSol,
                       pnl: pnl,
                       pnlPercent: pnlPercent,
-                      currentValue: currentValue
+                      currentValue: currentValue,
+                      tokenMint: market?.tokenMint?.toString()
                     }, pdaStr)
                   }}
                   disabled={sharingLoading === position.positionPda.toString()}
-                  className="text-xs flex-shrink-0 h-8 w-8 p-0"
+                  className="text-xs flex-shrink-0 h-8 w-8 p-0 hover:neon-text-cyan hover:bg-neon-cyan/10 transition-all"
                   title="Share PnL"
                 >
                   <Share2 className={`h-3.5 w-3.5 ${sharingLoading === position.positionPda.toString() ? "animate-pulse" : ""}`} />
@@ -736,7 +737,7 @@ function ActiveBetsTab({
                       "_blank"
                     )
                   }}
-                  className="text-xs flex-shrink-0 h-8 w-8 p-0"
+                  className="text-xs flex-shrink-0 h-8 w-8 p-0 hover:neon-text-green hover:bg-neon-green/10 transition-all"
                   title="View on Solscan"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />

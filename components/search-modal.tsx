@@ -57,7 +57,7 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
 
   const fetchMarkets = async () => {
     if (!connection) return
-    
+
     setLoading(true)
     try {
       const marketData: MarketResult[] = []
@@ -90,14 +90,14 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
   // Filter markets based on search query
   const filteredMarkets = useMemo(() => {
     if (!searchQuery.trim()) return []
-    
+
     const query = searchQuery.toLowerCase().trim()
     return markets.filter((market) => {
       const tokenMintStr = market.tokenMint.toLowerCase()
       const tokenDisplay = `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}`
       const targetCap = Number(market.targetMarketCap) / 1_000_000_000
       const targetCapStr = targetCap.toString()
-      
+
       return (
         tokenMintStr.includes(query) ||
         tokenDisplay.includes(query) ||
@@ -122,7 +122,7 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return
-      
+
       if (e.key === "ArrowDown") {
         e.preventDefault()
         setSelectedIndex((prev) => Math.min(prev + 1, filteredMarkets.length - 1))
@@ -169,7 +169,7 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
   return (
     <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="fixed left-1/2 top-16 w-full max-w-2xl -translate-x-1/2 rounded-lg border border-border bg-card shadow-2xl max-h-[80vh] flex flex-col"
+        className="fixed left-1/2 top-16 w-full max-w-2xl -translate-x-1/2 rounded-lg border border-border bg-card shadow-2xl max-h-[80vh] flex flex-col shining-modal"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input */}
@@ -201,9 +201,8 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
                   <button
                     key={market.pda}
                     onClick={() => handleMarketSelect(market)}
-                    className={`w-full px-5 py-3 text-left hover:bg-accent/50 transition-colors flex items-center justify-between ${
-                      index === selectedIndex ? "bg-accent/30" : ""
-                    }`}
+                    className={`w-full px-5 py-3 text-left hover:bg-accent/50 transition-colors flex items-center justify-between ${index === selectedIndex ? "bg-accent/30" : ""
+                      }`}
                     onMouseEnter={() => setSelectedIndex(index)}
                   >
                     <div className="flex-1 min-w-0">
@@ -231,22 +230,22 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
               </div>
             )
           ) : (
-        <div className="px-5 py-4">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Browse</h3>
-          <div className="flex flex-wrap gap-2">
-            {BROWSE_CATEGORIES.map((category) => (
-              <Button
-                key={category.label}
-                variant="outline"
-                size="sm"
-                onClick={() => handleCategoryClick(category.value)}
-                className="h-9 gap-2 bg-background/50 hover:bg-accent"
-              >
-                <category.icon className="h-4 w-4" />
-                {category.label}
-              </Button>
-            ))}
-          </div>
+            <div className="px-5 py-4">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Browse</h3>
+              <div className="flex flex-wrap gap-2">
+                {BROWSE_CATEGORIES.map((category) => (
+                  <Button
+                    key={category.label}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCategoryClick(category.value)}
+                    className="h-9 gap-2 bg-background/50 hover:bg-accent"
+                  >
+                    <category.icon className="h-4 w-4" />
+                    {category.label}
+                  </Button>
+                ))}
+              </div>
               {markets.length > 0 && (
                 <>
                   <h3 className="mt-6 mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
