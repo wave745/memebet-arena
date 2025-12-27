@@ -9,12 +9,13 @@ import { MarketCard } from "@/components/market-card"
 import * as anchor from "@coral-xyz/anchor"
 
 // Hardcoded seeded market PDAs (until indexer exists)
-const SEEDED_MARKET_PDAS = [
-  "7PtZBSzh8LN9oeQMi3uUhQRaQ7yBDs4skWcZMtGmVhcc", // BONK $5B
-  "ERwWqoCH2NDuT25eeG8uGruVGH9qpFX6bU47SUBgJ11E", // WIF $10B
-  "7SiMKeNgReui2NdMgodxGCogRumYf2Bob4NfuhVrC84h", // POPCAT $2B
-  "2jvKsrAkRbTqXiffcerA7sWhau3SDYCnoec2BtNiQDRE", // BONK $3B
-  "5mwSAmNfF6ddY4KHmVN9DwgxaFbPEUuxpBxJfu2hnH3a", // WIF $8B
+// Hardcoded seeded market PDAs (until indexer exists)
+export const SEEDED_MARKETS = [
+  { pda: "7PtZBSzh8LN9oeQMi3uUhQRaQ7yBDs4skWcZMtGmVhcc", ticker: "BONK" },
+  { pda: "ERwWqoCH2NDuT25eeG8uGruVGH9qpFX6bU47SUBgJ11E", ticker: "WIF" },
+  { pda: "7SiMKeNgReui2NdMgodxGCogRumYf2Bob4NfuhVrC84h", ticker: "POPCAT" },
+  { pda: "2jvKsrAkRbTqXiffcerA7sWhau3SDYCnoec2BtNiQDRE", ticker: "BONK" },
+  { pda: "5mwSAmNfF6ddY4KHmVN9DwgxaFbPEUuxpBxJfu2hnH3a", ticker: "WIF" },
 ]
 
 interface MarketFeedProps {
@@ -36,9 +37,9 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
     console.log("Fetching markets from chain...")
     const marketData = []
-    for (const pdaStr of SEEDED_MARKET_PDAS) {
+    for (const { pda, ticker } of SEEDED_MARKETS) {
       try {
-        const marketPda = new PublicKey(pdaStr)
+        const marketPda = new PublicKey(pda)
         // Pass null for wallet - read-only operation
         const market = await fetchMarketByPda(connection, null, marketPda)
         if (market) {
@@ -51,10 +52,11 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
             yesPool: market.yesPool,
             noPool: market.noPool,
             outcome: market.outcome,
+            ticker,
           })
         }
       } catch (error) {
-        console.error(`Failed to fetch market ${pdaStr}:`, error)
+        console.error(`Failed to fetch market ${pda}:`, error)
       }
     }
 
@@ -105,9 +107,9 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
       const tokenMintStr = market.tokenMint.toString()
       const searchLower = searchQuery.toLowerCase().trim()
       const tokenDisplay = `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}`
-      
-      if (!tokenDisplay.toLowerCase().includes(searchLower) && 
-          !tokenMintStr.toLowerCase().includes(searchLower)) {
+
+      if (!tokenDisplay.toLowerCase().includes(searchLower) &&
+        !tokenMintStr.toLowerCase().includes(searchLower)) {
         return false
       }
     }
@@ -127,7 +129,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
       // Consider "new" if market ends in more than 7 days (recently created)
       return daysUntilEnd > 7 && !market.resolved
     }
-    
+
     // "All" or null: show all markets
     return true
   })
@@ -136,8 +138,8 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
     return (
       <div className="flex items-center justify-center py-16">
         <p className="text-muted-foreground">
-          {searchQuery.trim() || categoryFilter 
-            ? "No markets match your filters" 
+          {searchQuery.trim() || categoryFilter
+            ? "No markets match your filters"
             : "No markets found"}
         </p>
       </div>
@@ -157,6 +159,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
           yesPool={market.yesPool}
           noPool={market.noPool}
           outcome={market.outcome}
+          ticker={market.ticker}
           onBetPlaced={handleBetPlaced}
         />
       ))}

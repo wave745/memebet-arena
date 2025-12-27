@@ -10,11 +10,13 @@ import { Button } from "@/components/ui/button"
 import { fetchUserPositions, type PositionData } from "@/lib/solana/positions"
 import { fetchMarketByPda } from "@/lib/anchor/markets"
 import { useWallet } from "./wallet-provider"
-import { Copy, ExternalLink, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { Copy, ExternalLink, ArrowUpRight, ArrowDownRight, Share2 } from "lucide-react"
 import { SolanaLogo } from "./solana-logo"
+import { generatePnLImage, type PnLData } from "@/lib/pnl-generator"
 import { Transaction } from "@solana/web3.js"
 import { buildRedeemInstruction } from "@/lib/solana/instructions"
 import { useRouter } from "next/navigation"
+import { SEEDED_MARKETS } from "@/components/market-feed"
 
 interface WalletModalProps {
   isOpen: boolean
@@ -56,19 +58,35 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   // Track if this is the initial load
   const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const [sharingLoading, setSharingLoading] = useState<string | null>(null)
+
+  const handleShare = async (data: PnLData, positionId: string) => {
+    setSharingLoading(positionId)
+    try {
+      const dataUrl = await generatePnLImage(data)
+      const link = document.createElement("a")
+      link.download = `pnl-${positionId.slice(0, 8)}.png`
+      link.href = dataUrl
+      link.click()
+    } catch (error) {
+      console.error("Failed to generate PnL image:", error)
+    } finally {
+      setSharingLoading(null)
+    }
+  }
 
   useEffect(() => {
     if (isOpen && walletAddress && connection) {
       setIsInitialLoad(true)
       loadPositions(true) // Initial load with loading state
       loadTransactions(true) // Initial load with loading state if on transactions tab
-      
+
       // Poll positions every 15 seconds when modal is open (reduced frequency)
       const interval = setInterval(() => {
         loadPositions(false) // Polling updates without loading state
         loadTransactions(false) // Polling updates without loading state
       }, 15000) // Increased to 15 seconds
-      
+
       return () => clearInterval(interval)
     } else {
       setPositions([])
@@ -80,22 +98,22 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   const loadPositions = async (showLoading = false) => {
     if (!walletAddress || !connection) return
-    
+
     if (showLoading) {
       setLoading(true)
       setIsInitialLoad(true)
     }
-    
+
     try {
       // Fetch all positions for this user
       const userPositions = await fetchUserPositions(connection, new PublicKey(walletAddress))
-      
+
       // Always update positions (amounts may have changed)
       setPositions(userPositions)
-      
+
       // Get unique market PDAs (avoid fetching same market multiple times)
       const uniqueMarketPdas = Array.from(new Set(userPositions.map(p => p.marketPda.toString())))
-      
+
       // Fetch all market data in parallel (much faster than sequential)
       // Always refresh to get latest pool data
       const marketPromises = uniqueMarketPdas.map(async (marketPdaStr) => {
@@ -108,15 +126,19 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
           return null
         }
       })
-      
+
       const marketResults = await Promise.all(marketPromises)
       const marketMap = new Map<string, any>()
       marketResults.forEach((result) => {
         if (result) {
-          marketMap.set(result[0], result[1])
+          const [pdaStr, marketData] = result
+          // Find ticker from SEEDED_MARKETS
+          const ticker = SEEDED_MARKETS.find(m => m.pda === pdaStr)?.ticker
+          // Enrich market data with ticker
+          marketMap.set(pdaStr, { ...marketData, ticker })
         }
       })
-      
+
       // Update markets map, preserving existing entries for markets not in current positions
       setMarkets((prevMarkets) => {
         const newMap = new Map(prevMarkets)
@@ -140,7 +162,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
   // For sorting: use slot numbers from signatures (higher = newer)
   const positionTimestamps = useMemo(() => {
     const timestamps = new Map<string, { slot: number; sortIndex: number }>()
-    
+
     // Match positions to transactions by marketPda if available
     transactions.forEach((tx, txIndex) => {
       if (tx.marketPda) {
@@ -149,7 +171,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
             const current = timestamps.get(pos.positionPda.toString())
             const currentSortIndex = current?.sortIndex ?? 999999
             const txSortIndex = (tx as any).sortIndex ?? txIndex
-            
+
             // Lower sortIndex = newer (transactions are sorted newest first)
             if (txSortIndex < currentSortIndex) {
               timestamps.set(pos.positionPda.toString(), {
@@ -161,7 +183,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
         })
       }
     })
-    
+
     // For positions without matching transactions, use a default sort order
     // This ensures all positions get sorted
     positions.forEach((pos, posIndex) => {
@@ -173,7 +195,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
         })
       }
     })
-    
+
     return timestamps
   }, [transactions, positions])
 
@@ -191,16 +213,16 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
     return filtered.sort((a, b) => {
       const dataA = positionTimestamps.get(a.positionPda.toString())
       const dataB = positionTimestamps.get(b.positionPda.toString())
-      
+
       // Use sortIndex as primary (lower = newer, since transactions are sorted newest first)
       if (dataA && dataB) {
         return dataA.sortIndex - dataB.sortIndex // Lower index first (newer)
       }
-      
+
       // If only one has data, prioritize it
       if (dataA && !dataB) return -1
       if (dataB && !dataA) return 1
-      
+
       // If neither has data, maintain original order
       return 0
     })
@@ -224,16 +246,16 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   const loadTransactions = async (showLoading = false) => {
     if (!walletAddress || !connection) return
-    
+
     if (showLoading && activeTab === "transactions") {
       setTxLoading(true)
     }
-    
+
     try {
       const userPubkey = new PublicKey(walletAddress)
       // Fetch last 50 transaction signatures (lightweight, no RPC calls for details)
       const signatures = await connection.getSignaturesForAddress(userPubkey, { limit: 50 })
-      
+
       // For sorting: use signatures with slot numbers (no expensive RPC calls)
       // Only fetch full transaction details if we're on transactions tab
       if (activeTab === "transactions") {
@@ -242,10 +264,10 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
         const txData: TransactionData[] = []
         const BATCH_SIZE = 5
         const DELAY_MS = 500
-        
+
         for (let i = 0; i < signatures.length; i += BATCH_SIZE) {
           const batch = signatures.slice(i, i + BATCH_SIZE)
-          
+
           const batchPromises = batch.map(async (sig, batchIndex) => {
             let marketPda: string | undefined
 
@@ -259,7 +281,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
               if (tx?.transaction?.message) {
                 const message = tx.transaction.message
                 const accountKeys = message.staticAccountKeys || []
-                
+
                 // Try to get instructions
                 let instructions: any[] = []
                 if ('instructions' in message && Array.isArray(message.instructions)) {
@@ -271,12 +293,12 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     accountKeyIndexes: cix.accountKeyIndexes || [],
                   }))
                 }
-                
+
                 // Check each instruction
                 for (const ix of instructions) {
                   let programId: PublicKey | null = null
                   let firstAccount: PublicKey | null = null
-                  
+
                   if ('programId' in ix && ix.programId) {
                     programId = ix.programId instanceof PublicKey ? ix.programId : new PublicKey(ix.programId)
                     if (ix.accounts && ix.accounts.length > 0) {
@@ -291,7 +313,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
                       firstAccount = accountKeys[ix.accountKeyIndexes[0]]
                     }
                   }
-                  
+
                   if (programId && programId.equals && programId.equals(PROGRAM_ID) && firstAccount) {
                     marketPda = firstAccount.toString()
                     break
@@ -336,7 +358,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
               })
             }
           }
-          
+
           // Delay between batches
           if (i + BATCH_SIZE < signatures.length) {
             await new Promise(resolve => setTimeout(resolve, DELAY_MS))
@@ -408,7 +430,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
       // Refresh positions
       await loadPositions()
-      
+
       setClaiming(null)
     } catch (error: any) {
       console.error("Claim error:", error)
@@ -437,7 +459,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl w-[95vw] sm:w-[90vw] md:w-[85vw] h-[65vh] sm:h-[70vh] max-h-[600px] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-3xl w-[95vw] sm:w-[85vw] md:w-[75vw] h-[65vh] sm:h-[70vh] max-h-[600px] flex flex-col p-0 gap-0 opaque-panel">
         <DialogHeader className="px-4 sm:px-6 pt-3 pb-2 flex-shrink-0 border-b border-border">
           <div className="flex items-center justify-between gap-2">
             <div className="flex-1 min-w-0">
@@ -473,21 +495,19 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
         <div className="flex border-b border-border px-4 sm:px-6 flex-shrink-0 overflow-x-auto">
           <button
             onClick={() => setActiveTab("active")}
-            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === "active"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === "active"
+              ? "border-foreground text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
           >
             Active ({activePositions.length})
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === "history"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === "history"
+              ? "border-foreground text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
           >
             History ({historyPositions.length})
           </button>
@@ -499,11 +519,10 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
                 loadTransactions(true) // Show loading on first load
               }
             }}
-            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === "transactions"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === "transactions"
+              ? "border-foreground text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
           >
             Transactions ({transactions.length})
           </button>
@@ -516,24 +535,26 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
               Loading positions...
             </div>
           ) : activeTab === "active" ? (
-            <ActiveBetsTab 
-              positions={activePositions} 
+            <ActiveBetsTab
+              positions={activePositions}
               markets={markets}
               onPositionClick={(marketPda) => {
                 router.push(`/market/${marketPda.toString()}`)
                 onClose() // Close modal when navigating
               }}
+              onShare={handleShare}
+              sharingLoading={sharingLoading}
             />
           ) : activeTab === "history" ? (
-            <HistoryTab 
-              positions={historyPositions} 
+            <HistoryTab
+              positions={historyPositions}
               markets={markets}
               onClaim={handleClaim}
               claiming={claiming}
               claimError={claimError}
             />
           ) : (
-            <TransactionsTab 
+            <TransactionsTab
               transactions={transactions}
               loading={txLoading}
               markets={markets}
@@ -553,10 +574,14 @@ function ActiveBetsTab({
   positions,
   markets,
   onPositionClick,
+  onShare,
+  sharingLoading,
 }: {
   positions: PositionData[]
   markets: Map<string, any>
   onPositionClick: (marketPda: PublicKey) => void
+  onShare: (data: PnLData, positionId: string) => void
+  sharingLoading: string | null
 }) {
   if (positions.length === 0) {
     return (
@@ -579,21 +604,21 @@ function ActiveBetsTab({
         let pnlPercent = 0
         let probability = 50
         let potentialPayout = amountSol
-        
+
         if (market) {
           const yesPoolSol = Number(market.yesPool) / LAMPORTS_PER_SOL
           const noPoolSol = Number(market.noPool) / LAMPORTS_PER_SOL
           const totalPool = yesPoolSol + noPoolSol
           const yourPool = position.outcome ? yesPoolSol : noPoolSol
           const otherPool = position.outcome ? noPoolSol : yesPoolSol
-          
+
           // Calculate probability
           if (totalPool > 0) {
-            probability = position.outcome 
-              ? (yesPoolSol / totalPool) * 100 
+            probability = position.outcome
+              ? (yesPoolSol / totalPool) * 100
               : (noPoolSol / totalPool) * 100
           }
-          
+
           if (yourPool > 0 && otherPool > 0) {
             // Current value = what you'd get if market resolved now
             const shareOfOther = (amountSol * otherPool) / yourPool
@@ -603,16 +628,16 @@ function ActiveBetsTab({
             pnlPercent = amountSol > 0 ? (pnl / amountSol) * 100 : 0
           }
         }
-        
+
         // Format resolve date
-        const resolveDate = market?.endTimestamp 
+        const resolveDate = market?.endTimestamp
           ? new Date(Number(market.endTimestamp) * 1000)
           : null
         const formatDate = (date: Date) => {
-          return date.toLocaleDateString("en-US", { 
-            month: "short", 
-            day: "numeric", 
-            year: date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined 
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined
           })
         }
 
@@ -626,11 +651,10 @@ function ActiveBetsTab({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span
-                    className={`text-xs font-medium px-2 py-0.5 sm:py-1 rounded flex-shrink-0 ${
-                      position.outcome
-                        ? "bg-green-500/20 text-green-500"
-                        : "bg-red-500/20 text-red-500"
-                    }`}
+                    className={`text-xs font-medium px-2 py-0.5 sm:py-1 rounded flex-shrink-0 ${position.outcome
+                      ? "bg-green-500/20 text-green-500"
+                      : "bg-red-500/20 text-red-500"
+                      }`}
                   >
                     {position.outcome ? "YES" : "NO"}
                   </span>
@@ -639,18 +663,24 @@ function ActiveBetsTab({
                     {amountSol.toFixed(4)} SOL
                   </span>
                   {pnl !== 0 && (
-                    <span className={`text-xs font-medium flex items-center gap-1 ${
-                      pnl > 0 ? "text-green-500" : "text-red-500"
-                    }`}>
+                    <span className={`text-xs font-medium flex items-center gap-1 ${pnl > 0 ? "text-green-500" : "text-red-500"
+                      }`}>
                       {pnl > 0 ? "+" : ""}{pnl.toFixed(4)} SOL ({pnlPercent > 0 ? "+" : ""}{pnlPercent.toFixed(1)}%)
                     </span>
                   )}
                 </div>
+                {market && (
+                  <div className="text-xs sm:text-sm text-foreground mb-1 truncate">
+                    {(() => {
+                      const ticker = (market as any)?.ticker
+                      const tokenMintStr = market?.tokenMint?.toString() || ""
+                      const tokenDisplay = ticker || (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
+                      return `Will ${tokenDisplay} hit $${(Number(market.targetMarketCap) / 1e9).toFixed(1)}B?`
+                    })()}
+                  </div>
+                )}
                 {market ? (
                   <>
-                    <div className="text-xs sm:text-sm text-foreground mb-1 truncate">
-                      Target: ${(Number(market.targetMarketCap) / 1e9).toFixed(1)}B
-                    </div>
                     <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-muted-foreground">
                       <span>Probability: {probability.toFixed(1)}%</span>
                       <span>•</span>
@@ -669,25 +699,54 @@ function ActiveBetsTab({
                   </div>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation() // Prevent card click when clicking external link
-                  window.open(
-                    `https://solscan.io/account/${position.marketPda.toString()}?cluster=devnet`,
-                    "_blank"
-                  )
-                }}
-                className="text-xs flex-shrink-0 h-8 w-8 p-0"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Button>
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const pdaStr = position.positionPda.toString()
+                    const ticker = (market as any)?.ticker
+                    const tokenMintStr = market?.tokenMint?.toString() || ""
+                    const tokenDisplay = ticker || (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
+                    const question = `Will ${tokenDisplay} hit $${(Number(market?.targetMarketCap || 0) / 1e9).toFixed(1)}B?`
+
+                    onShare({
+                      marketQuestion: question,
+                      side: position.outcome ? "YES" : "NO",
+                      amount: amountSol,
+                      pnl: pnl,
+                      pnlPercent: pnlPercent,
+                      currentValue: currentValue
+                    }, pdaStr)
+                  }}
+                  disabled={sharingLoading === position.positionPda.toString()}
+                  className="text-xs flex-shrink-0 h-8 w-8 p-0"
+                  title="Share PnL"
+                >
+                  <Share2 className={`h-3.5 w-3.5 ${sharingLoading === position.positionPda.toString() ? "animate-pulse" : ""}`} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation() // Prevent card click when clicking external link
+                    window.open(
+                      `https://solscan.io/account/${position.marketPda.toString()}?cluster=devnet`,
+                      "_blank"
+                    )
+                  }}
+                  className="text-xs flex-shrink-0 h-8 w-8 p-0"
+                  title="View on Solscan"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
           </div>
         )
       })}
-    </div>
+    </div >
   )
 }
 
@@ -718,7 +777,7 @@ function HistoryTab({
       {positions.map((position) => {
         const market = markets.get(position.marketPda.toString())
         const amountSol = Number(position.amount) / LAMPORTS_PER_SOL
-        
+
         if (!market) {
           return (
             <div
@@ -734,15 +793,15 @@ function HistoryTab({
         const isResolved = market.resolved
         const userWon = isResolved && market.outcome !== null ? market.outcome === position.outcome : null
         const outcome = market.outcome !== null ? (market.outcome ? "YES" : "NO") : null
-        
+
         // Check if position was sold out (zero amount)
         const isSoldOut = amountSol === 0
-        
+
         // Calculate realized P&L for history positions
         let pnl = 0
         let pnlPercent = 0
         let pnlLabel = ""
-        
+
         if (isResolved && outcome !== null) {
           if (userWon) {
             // Calculate payout: amount + (amount * losing_pool / winning_pool)
@@ -750,7 +809,7 @@ function HistoryTab({
             const noPoolSol = Number(market.noPool) / LAMPORTS_PER_SOL
             const winningPool = position.outcome ? yesPoolSol : noPoolSol
             const losingPool = position.outcome ? noPoolSol : yesPoolSol
-            
+
             if (winningPool > 0 && losingPool > 0) {
               const shareOfLosingPool = (amountSol * losingPool) / winningPool
               const payout = amountSol + shareOfLosingPool
@@ -770,16 +829,16 @@ function HistoryTab({
           pnlLabel = "Sold"
           // We can't calculate exact P&L without transaction data, so show as "Sold"
         }
-        
+
         // Format resolution date
-        const resolutionDate = market.endTimestamp 
+        const resolutionDate = market.endTimestamp
           ? new Date(Number(market.endTimestamp) * 1000)
           : null
         const formatDate = (date: Date) => {
-          return date.toLocaleDateString("en-US", { 
-            month: "short", 
-            day: "numeric", 
-            year: date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined 
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined
           })
         }
 
@@ -792,11 +851,10 @@ function HistoryTab({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span
-                    className={`text-xs font-medium px-2 py-0.5 sm:py-1 rounded flex-shrink-0 ${
-                      position.outcome
-                        ? "bg-green-500/20 text-green-500"
-                        : "bg-red-500/20 text-red-500"
-                    }`}
+                    className={`text-xs font-medium px-2 py-0.5 sm:py-1 rounded flex-shrink-0 ${position.outcome
+                      ? "bg-green-500/20 text-green-500"
+                      : "bg-red-500/20 text-red-500"
+                      }`}
                   >
                     {position.outcome ? "YES" : "NO"}
                   </span>
@@ -810,9 +868,8 @@ function HistoryTab({
                     <span className="text-xs text-muted-foreground">Sold Out</span>
                   )}
                   {pnl !== 0 && (
-                    <span className={`text-xs font-medium flex items-center gap-1 ${
-                      pnl > 0 ? "text-green-500" : "text-red-500"
-                    }`}>
+                    <span className={`text-xs font-medium flex items-center gap-1 ${pnl > 0 ? "text-green-500" : "text-red-500"
+                      }`}>
                       {pnl > 0 ? "+" : ""}{pnl.toFixed(4)} SOL ({pnlPercent > 0 ? "+" : ""}{pnlPercent.toFixed(1)}%)
                     </span>
                   )}
@@ -821,21 +878,24 @@ function HistoryTab({
                   )}
                 </div>
                 <div className="text-xs sm:text-sm text-foreground mb-1 truncate">
-                  Target: ${(Number(market.targetMarketCap) / 1e9).toFixed(1)}B
+                  {(() => {
+                    const ticker = (market as any)?.ticker
+                    const tokenMintStr = market?.tokenMint?.toString() || ""
+                    const tokenDisplay = ticker || (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
+                    return `Will ${tokenDisplay} hit $${(Number(market.targetMarketCap) / 1e9).toFixed(1)}B?`
+                  })()}
                 </div>
                 {isResolved && outcome !== null && (
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span
-                      className={`text-xs font-medium ${
-                        userWon ? "text-green-500" : "text-red-500"
-                      }`}
+                      className={`text-xs font-medium ${userWon ? "text-green-500" : "text-red-500"
+                        }`}
                     >
                       Outcome: {outcome} • {userWon ? "WON" : "LOST"}
                     </span>
                     {pnl !== 0 && (
-                      <span className={`text-xs font-medium ${
-                        pnl > 0 ? "text-green-500" : "text-red-500"
-                      }`}>
+                      <span className={`text-xs font-medium ${pnl > 0 ? "text-green-500" : "text-red-500"
+                        }`}>
                         • {pnlLabel}: {pnl > 0 ? "+" : ""}{pnl.toFixed(4)} SOL ({pnlPercent > 0 ? "+" : ""}{pnlPercent.toFixed(1)}%)
                       </span>
                     )}
@@ -967,9 +1027,8 @@ function TransactionsTab({
                     </span>
                   )}
                   {tx.outcome !== undefined && (
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                      tx.outcome ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
-                    }`}>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${tx.outcome ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
+                      }`}>
                       {tx.outcome ? "YES" : "NO"}
                     </span>
                   )}
@@ -985,7 +1044,7 @@ function TransactionsTab({
                   )}
                 </div>
                 {market && (
-                  <div 
+                  <div
                     className="text-xs sm:text-sm text-foreground mb-1 truncate cursor-pointer hover:underline"
                     onClick={() => {
                       onMarketClick(new PublicKey(tx.marketPda!))

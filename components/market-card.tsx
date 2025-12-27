@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { PublicKey, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js"
+import { PublicKey, Transaction, LAMPORTS_PER_SOL, SendTransactionError } from "@solana/web3.js"
 import * as anchor from "@coral-xyz/anchor"
 import { useWallet } from "./wallet-provider"
 import { getPositionPda } from "@/lib/anchor/program"
 import { buildPlaceBetInstruction } from "@/lib/solana/instructions"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { X } from "lucide-react"
+import { X, Copy, Check } from "lucide-react"
 import { SolanaLogo } from "./solana-logo"
 
 interface MarketCardProps {
@@ -20,6 +20,7 @@ interface MarketCardProps {
   yesPool: anchor.BN
   noPool: anchor.BN
   outcome?: boolean | null
+  ticker?: string
   onBetPlaced?: () => void
 }
 
@@ -32,6 +33,7 @@ export function MarketCard({
   yesPool,
   noPool,
   outcome,
+  ticker,
   onBetPlaced,
 }: MarketCardProps) {
   const { walletConnected, walletAddress, connection, wallet } = useWallet()
@@ -41,6 +43,7 @@ export function MarketCard({
   const [submitted, setSubmitted] = useState(false)
   const [txSignature, setTxSignature] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   // Auto-dismiss error after 5 seconds
   useEffect(() => {
@@ -62,8 +65,9 @@ export function MarketCard({
   const now = new Date()
   const isClosingSoon = !resolved && (resolveDate.getTime() - now.getTime()) < 24 * 60 * 60 * 1000
 
-  // Format question from token mint
-  const question = `Will ${tokenMint.slice(0, 4)}...${tokenMint.slice(-4)} hit $${(Number(targetMarketCap) / 1_000_000_000).toFixed(1)}B?`
+  // Format question from token mint or ticker
+  const tokenDisplay = ticker || `${tokenMint.slice(0, 4)}...${tokenMint.slice(-4)}`
+  const question = `Will ${tokenDisplay} hit $${(Number(targetMarketCap) / 1_000_000_000).toFixed(1)}B?`
 
   const handleSideSelect = (side: "YES" | "NO") => {
     if (resolved) return
@@ -89,6 +93,13 @@ export function MarketCard({
     setAmount((current + add).toFixed(2))
   }
 
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(tokenMint)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   const handleBet = async () => {
     if (!walletConnected || !walletAddress || !connection || !wallet) {
       setError("Connect your wallet first")
@@ -108,7 +119,7 @@ export function MarketCard({
     try {
       const userPubkey = new PublicKey(walletAddress)
       const marketPda = new PublicKey(pda)
-      
+
       // Determine outcome first
       const outcome = selectedSide === "YES"
       const [positionPda] = getPositionPda(marketPda, userPubkey, outcome)
@@ -167,12 +178,20 @@ export function MarketCard({
           maxRetries: 3,
         })
       } catch (error: any) {
-        const logs = error?.logs || []
+        let logs = error?.logs || []
+        if (error instanceof SendTransactionError) {
+          logs = error.logs || logs
+        }
         const logString = logs.join("\n")
 
         if (logString.includes("already in use") || logString.includes("Allocate: account")) {
           throw new Error("You have already placed a bet on this market.")
         }
+
+        if (error?.message?.includes("Blockhash not found")) {
+          throw new Error("Transaction timed out. Please try again.")
+        }
+
         if (error?.message?.includes("debit") || error?.message?.includes("credit")) {
           throw new Error("Transaction failed: Insufficient balance or account creation failed.")
         }
@@ -222,7 +241,7 @@ export function MarketCard({
   const potentialPayout = calculatePayout(selectedSide || "YES", betAmount)
 
   return (
-    <div className="relative border border-border/30 bg-[#0F0F11] rounded-lg overflow-hidden transition-all duration-200 hover:border-border/50 hover:bg-[#121214] hover:shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
+    <div className="relative glass-card overflow-hidden">
       {/* Status indicator */}
       {isClosingSoon && !resolved && (
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-amber-500/40 z-10" />
@@ -236,17 +255,36 @@ export function MarketCard({
       )}
 
       {/* Question - always visible at top, clickable */}
-      <div className="relative z-30 px-3 sm:px-4 pt-3 sm:pt-4 pb-2 bg-[#0F0F11]">
-        <h3 
-          className="text-xs sm:text-sm font-medium text-[#E5E5E5] leading-tight cursor-pointer hover:text-[#E5E5E5]/80 transition-colors"
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              window.location.href = `/market/${pda}`
-            }
-          }}
-        >
-          {question}
-        </h3>
+      <div className="relative z-30 px-3 sm:px-4 pt-3 sm:pt-4 pb-2 flex items-start gap-3">
+        {/* Token Icon */}
+        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#0B0B0D] border border-white/10 flex-shrink-0 mt-0.5">
+          {/* Using DiceBear as a placeholder generator for token icons based on mint address */}
+          <img
+            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${tokenMint}`}
+            alt="Token"
+            className="w-full h-full object-cover opacity-80"
+          />
+        </div>
+
+        <div className="flex-1">
+          <h3
+            className="text-xs sm:text-sm font-medium text-[#E5E5E5] leading-tight cursor-pointer hover:text-[#E5E5E5]/80 transition-colors pt-0.5 inline"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.location.href = `/market/${pda}`
+              }
+            }}
+          >
+            {question}
+          </h3>
+          <button
+            onClick={handleCopy}
+            className="inline-flex ml-2 p-0.5 text-[#8A8A8A] hover:text-[#E5E5E5] transition-colors align-middle"
+            title="Copy token address"
+          >
+            {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+          </button>
+        </div>
       </div>
 
       {/* Main content area - gets covered by betting sheet */}
@@ -311,107 +349,106 @@ export function MarketCard({
             </div>
           </div>
         )}
-                  </div>
+      </div>
 
       {/* Betting Sheet - slides up from bottom - only visible when side is selected */}
       {selectedSide && (
-                  <div
-          className="absolute left-0 right-0 z-20 bg-[#0F0F11] border-t border-border/30 transition-all duration-300 ease-out overflow-y-auto scrollbar-hide animate-in slide-in-from-bottom"
-                    style={{
+        <div
+          className="absolute left-0 right-0 z-20 glass-panel border-t border-white/10 transition-all duration-300 ease-out overflow-y-auto scrollbar-hide animate-in slide-in-from-bottom"
+          style={{
             top: "calc(1.5rem + 1.25rem + 0.5rem)", // Start below question
             bottom: "0",
             maxHeight: "calc(100% - 4.5rem)",
           }}
         >
-        <div className="px-4 py-3 space-y-2">
-          {/* Header with close button */}
-          <div className="flex items-center justify-between mb-0.5">
-            <div className="text-sm font-medium text-[#E5E5E5]">
-              Buy {selectedSide}
-            </div>
-            <button
-              onClick={handleCloseBet}
-              className="text-[#8A8A8A] hover:text-[#E5E5E5] transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Amount input */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => {
-                  setAmount(e.target.value)
-                  setError(null)
-                }}
-                className="flex-1 bg-[#0B0B0D] border-border/30 text-[#E5E5E5] font-mono h-9 text-sm"
-                disabled={loading || submitted}
-              />
-              <div className="flex gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleAmountQuickAdd(1)}
-                  className="text-xs h-9 px-2.5 bg-[#0B0B0D] border-border/30 text-[#8A8A8A] hover:text-[#E5E5E5]"
-                  disabled={loading || submitted}
-                >
-                  +1
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleAmountQuickAdd(10)}
-                  className="text-xs h-9 px-2.5 bg-[#0B0B0D] border-border/30 text-[#8A8A8A] hover:text-[#E5E5E5]"
-                  disabled={loading || submitted}
-                >
-                  +10
-                </Button>
+          <div className="px-4 py-3 space-y-2">
+            {/* Header with close button */}
+            <div className="flex items-center justify-between mb-0.5">
+              <div className="text-sm font-medium text-[#E5E5E5]">
+                Buy {selectedSide}
               </div>
+              <button
+                onClick={handleCloseBet}
+                className="text-[#8A8A8A] hover:text-[#E5E5E5] transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-
-            {/* Transaction status - floating (only for submitted with signature) */}
-            {submitted && !error && txSignature && (
-              <div className="absolute top-16 left-6 right-6 z-30 text-xs text-[#8A8A8A] leading-tight animate-in fade-in slide-in-from-top-2">
-                <div className="space-y-0.5 bg-[#0F0F11] border border-border/30 rounded px-2 py-1.5">
-                  <div className="text-[#E5E5E5]">Transaction submitted</div>
-                  <a
-                    href={`https://solscan.io/tx/${txSignature}?cluster=devnet`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#6B9E78] hover:underline block"
+            {/* Amount input */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => {
+                    setAmount(e.target.value)
+                    setError(null)
+                  }}
+                  className="flex-1 bg-[#0B0B0D] border-border/30 text-[#E5E5E5] font-mono h-9 text-sm"
+                  disabled={loading || submitted}
+                />
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleAmountQuickAdd(1)}
+                    className="text-xs h-9 px-2.5 bg-[#0B0B0D] border-border/30 text-[#8A8A8A] hover:text-[#E5E5E5]"
+                    disabled={loading || submitted}
                   >
-                    View on Solscan
-                  </a>
+                    +1
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleAmountQuickAdd(10)}
+                    className="text-xs h-9 px-2.5 bg-[#0B0B0D] border-border/30 text-[#8A8A8A] hover:text-[#E5E5E5]"
+                    disabled={loading || submitted}
+                  >
+                    +10
+                  </Button>
                 </div>
               </div>
-            )}
 
-            {/* Buy button - with payout info inside */}
-            <Button
-              onClick={handleBet}
-              disabled={loading || !amount || !walletConnected || submitted || resolved}
-              className={`w-[92%] mx-auto font-medium py-2.5 text-sm mt-3 flex flex-col items-center gap-0.5 ${
-                selectedSide === "YES"
+
+              {/* Transaction status - floating (only for submitted with signature) */}
+              {submitted && !error && txSignature && (
+                <div className="absolute top-16 left-6 right-6 z-30 text-xs text-[#8A8A8A] leading-tight animate-in fade-in slide-in-from-top-2">
+                  <div className="space-y-0.5 bg-[#0F0F11] border border-border/30 rounded px-2 py-1.5">
+                    <div className="text-[#E5E5E5]">Transaction submitted</div>
+                    <a
+                      href={`https://solscan.io/tx/${txSignature}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#6B9E78] hover:underline block"
+                    >
+                      View on Solscan
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Buy button - with payout info inside */}
+              <Button
+                onClick={handleBet}
+                disabled={loading || !amount || !walletConnected || submitted || resolved}
+                className={`w-full font-medium pt-1 pb-3 text-[10px] sm:text-xs mt-3 flex flex-col items-center justify-center gap-0.5 min-h-[44px] ${selectedSide === "YES"
                   ? "bg-[#6B9E78] hover:bg-[#6B9E78]/90 text-white"
                   : "bg-[#A67C7C] hover:bg-[#A67C7C]/90 text-white"
-              }`}
-            >
-              <span>{loading ? "Processing..." : submitted ? "Submitted..." : `Buy ${selectedSide}`}</span>
-              {betAmount > 0 && !loading && !submitted && (
-                <span className="text-xs opacity-80 font-normal">
-                  To win <span className="font-mono flex items-center gap-1 justify-center"><SolanaLogo size={12} />{potentialPayout.toFixed(2)}</span>
-            </span>
-              )}
-            </Button>
+                  }`}
+              >
+                <span className="whitespace-nowrap">{loading ? "Processing..." : submitted ? "Submitted..." : `Buy ${selectedSide}`}</span>
+                {betAmount > 0 && !loading && !submitted && (
+                  <span className="text-[9px] sm:text-[10px] opacity-80 font-normal whitespace-nowrap">
+                    To win <span className="font-mono inline-flex items-center gap-0.5"><SolanaLogo size={8} />{potentialPayout.toFixed(2)}</span>
+                  </span>
+                )}
+              </Button>
+            </div>
           </div>
-        </div>
         </div>
       )}
     </div>

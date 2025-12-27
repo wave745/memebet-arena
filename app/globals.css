@@ -176,3 +176,100 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
+
+/* Glassmorphism Effects - Premium 2025 Neo-Brutalist Glass */
+
+.glass {
+  background: rgba(15, 15, 17, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s ease;
+}
+
+.glass:hover {
+  background: rgba(20, 20, 22, 0.5);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+  transform: translateY(-2px);
+}
+
+.glass-card {
+  background: rgba(15, 15, 17, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(20, 20, 22, 0.5);
+  box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.5);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.glass-panel {
+  background: rgba(15, 15, 17, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-header {
+  background: rgba(18, 18, 18, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.02);
+}
+
+.glass-button:active {
+  transform: scale(0.98);
+}
+
+.glass-input {
+  background: rgba(11, 11, 13, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-input:focus {
+  background: rgba(11, 11, 13, 0.8);
+  border-color: rgba(107, 158, 120, 0.5);
+  box-shadow: 0 0 0 3px rgba(107, 158, 120, 0.1);
+}
+
+.opaque-panel {
+  background: #0B0B0D !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Typography improvements */
+h1, h2, h3 {
+  letter-spacing: 0.5px;
+}
+
+h1 {
+  letter-spacing: 0.75px;
+}

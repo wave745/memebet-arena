@@ -41,7 +41,7 @@ function HomeContent() {
         onCategoryChange={setCategoryFilter}
         onSearchModalOpen={() => setIsSearchModalOpen(true)}
       />
-      <main className="mx-auto max-w-7xl px-3 sm:px-4 py-4 sm:py-8">
+      <main className="mx-auto max-w-7xl px-3 sm:px-4 pt-[110px] sm:pt-[136px] pb-8">
         <MarketFeed searchQuery={searchQuery} categoryFilter={categoryFilter} />
       </main>
 

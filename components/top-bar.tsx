@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
+import Link from "next/link"
 import { SolanaLogo } from "./solana-logo"
 
 interface TopBarProps {
@@ -40,11 +41,13 @@ export function TopBar({
   }, [])
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
-      <div className="flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4">
+    <header className="fixed top-0 left-0 right-0 w-full z-50 glass-header">
+      <div className="mx-auto max-w-7xl flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4 py-2 sm:py-3">
         {/* Left: Logo */}
         <div className="flex items-baseline gap-2 flex-shrink-0">
-          <h1 className="text-lg sm:text-xl font-bold">Trenchmarket</h1>
+          <Link href="/">
+            <h1 className="text-lg sm:text-xl font-bold hover:opacity-80 transition-opacity">Trenchmarket</h1>
+          </Link>
         </div>
 
         <div className="flex-1 max-w-md hidden sm:block">
@@ -100,32 +103,34 @@ export function TopBar({
         )}
       </div>
 
-      <div className="border-t border-border px-3 sm:px-6 py-2 sm:py-3">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-          <Button
-            variant={categoryFilter === null ? "default" : "outline"}
-            size="sm"
-            onClick={() => onCategoryChange(null)}
-            className="h-8 text-xs flex-shrink-0"
-          >
-            All
-          </Button>
-          <Button
-            variant={categoryFilter === "hot" ? "default" : "outline"}
-            size="sm"
-            onClick={() => onCategoryChange("hot")}
-            className="h-8 text-xs flex-shrink-0"
-          >
-            Hot
-          </Button>
-          <Button
-            variant={categoryFilter === "new" ? "default" : "outline"}
-            size="sm"
-            onClick={() => onCategoryChange("new")}
-            className="h-8 text-xs flex-shrink-0"
-          >
-            New
-          </Button>
+      <div className="border-t border-border">
+        <div className="mx-auto max-w-7xl px-3 sm:px-4 py-1.5 sm:py-2">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <Button
+              variant={categoryFilter === null ? "default" : "outline"}
+              size="sm"
+              onClick={() => onCategoryChange(null)}
+              className="h-8 text-xs flex-shrink-0"
+            >
+              All
+            </Button>
+            <Button
+              variant={categoryFilter === "hot" ? "default" : "outline"}
+              size="sm"
+              onClick={() => onCategoryChange("hot")}
+              className="h-8 text-xs flex-shrink-0"
+            >
+              Hot
+            </Button>
+            <Button
+              variant={categoryFilter === "new" ? "default" : "outline"}
+              size="sm"
+              onClick={() => onCategoryChange("new")}
+              className="h-8 text-xs flex-shrink-0"
+            >
+              New
+            </Button>
+          </div>
         </div>
       </div>
     </header>

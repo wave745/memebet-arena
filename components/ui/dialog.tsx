@@ -42,7 +42,7 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
 export function DialogContent({ className = "", children }: DialogContentProps) {
   return (
     <div
-      className={`relative z-50 bg-background border border-border rounded-lg shadow-lg ${className}`}
+      className={`relative z-50 glass-panel ${className}`}
     >
       {children}
     </div>
