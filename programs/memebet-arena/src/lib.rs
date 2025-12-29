@@ -4,6 +4,8 @@ use anchor_lang::Discriminator;
 
 declare_id!("6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV");
 
+const ADMIN_PUBKEY: Pubkey = pubkey!("3zAjK7AzN7Wdor2i3kzcNrdRJc8PzysspjbgG8awp5NB");
+
 #[program]
 pub mod memebet_arena {
     use super::*;
@@ -16,6 +18,11 @@ pub mod memebet_arena {
         end_timestamp: i64,
         bump: u8,
     ) -> Result<()> {
+        // SECURITY: Only authorized admin can create markets
+        require!(
+            ctx.accounts.creator.key() == ADMIN_PUBKEY,
+            MemeBetError::Unauthorized
+        );
         // Validate end_timestamp is in the future
         let clock = Clock::get()?;
         require!(
@@ -182,6 +189,12 @@ pub mod memebet_arena {
     /// Anyone can call this. The logic is immutable.
     pub fn resolve_market(ctx: Context<ResolveMarket>, final_market_cap: u64) -> Result<()> {
         let market = &mut ctx.accounts.market;
+
+        // SECURITY: Only authorized admin can resolve markets
+        require!(
+            ctx.accounts.resolver.key() == ADMIN_PUBKEY,
+            MemeBetError::Unauthorized
+        );
 
         require!(!market.resolved, MemeBetError::AlreadyResolved);
 
@@ -480,4 +493,6 @@ pub enum MemeBetError {
     PositionAlreadyClaimed,
     #[msg("Cannot bet on different outcome. You already have a position on the opposite side.")]
     PositionOutcomeMismatch,
+    #[msg("Unauthorized: Only admin can perform this action")]
+    Unauthorized,
 }

@@ -47,7 +47,7 @@ export default function MarketPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState<"hot" | "new" | null>(null)
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
 
   // Trading state
@@ -80,7 +80,7 @@ export default function MarketPage() {
 
 
   // Fetch market from chain
-  const fetchMarket = async (isInitialLoad = false) => {
+  const fetchMarket = useCallback(async (isInitialLoad = false) => {
     if (!id || !connection) return
 
     try {
@@ -121,12 +121,12 @@ export default function MarketPage() {
         setLoading(false)
       }
     }
-  }
+  }, [id, connection, wallet])
 
   // Initial load
   useEffect(() => {
     fetchMarket(true)
-  }, [id, connection, wallet])
+  }, [fetchMarket])
 
   // Real-time polling every 5 seconds (optimized frequency)
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function MarketPage() {
     }, 5000) // Poll every 5 seconds (reduced from 3 to reduce load)
 
     return () => clearInterval(interval)
-  }, [connection, id])
+  }, [connection, id, fetchMarket])
 
   // Fetch user position (memoized to avoid unnecessary re-renders)
   const fetchUserPosition = useCallback(async () => {
@@ -202,7 +202,7 @@ export default function MarketPage() {
   // Fetch user position when market or wallet changes
   useEffect(() => {
     fetchUserPosition()
-  }, [market, walletAddress, connection])
+  }, [market, walletAddress, connection, fetchUserPosition])
 
   // Real-time polling for user position every 5 seconds (reduced frequency)
   useEffect(() => {
@@ -246,25 +246,28 @@ export default function MarketPage() {
 
   // Track percentage changes - update baseline when market data changes significantly
   useEffect(() => {
-    if (market) {
-      const currentYesPercent = totalPool > 0 ? (yesPoolSol / totalPool) * 100 : 50
-      const currentNoPercent = totalPool > 0 ? (noPoolSol / totalPool) * 100 : 50
+    if (!market) return
 
-      if (previousYesPercent === null) {
-        // Initialize on first load
+    const currentYesPercent = totalPool > 0 ? (yesPoolSol / totalPool) * 100 : 50
+    const currentNoPercent = totalPool > 0 ? (noPoolSol / totalPool) * 100 : 50
+
+    if (previousYesPercent === null) {
+      // Initialize on first load
+      setPreviousYesPercent(currentYesPercent)
+      setPreviousNoPercent(currentNoPercent)
+      return
+    }
+
+    // Update baseline when change is significant (market data updated)
+    // Use a small delay to allow the change indicator to be visible
+    if (Math.abs(currentYesPercent - previousYesPercent) > 0.1 || Math.abs(currentNoPercent - (previousNoPercent || 0)) > 0.1) {
+      const timer = setTimeout(() => {
         setPreviousYesPercent(currentYesPercent)
         setPreviousNoPercent(currentNoPercent)
-      } else {
-        // Update baseline when change is significant (market data updated)
-        // Use a small delay to allow the change indicator to be visible
-        if (Math.abs(currentYesPercent - previousYesPercent) > 0.1 || Math.abs(currentNoPercent - (previousNoPercent || 0)) > 0.1) {
-          const timer = setTimeout(() => {
-            setPreviousYesPercent(currentYesPercent)
-            setPreviousNoPercent(currentNoPercent)
-          }, 3000) // Show change for 3 seconds before updating baseline
-          return () => clearTimeout(timer)
-        }
-      }
+      }, 3000) // Show change for 3 seconds before updating baseline
+      
+      // Cleanup function must be returned unconditionally
+      return () => clearTimeout(timer)
     }
   }, [yesPoolSol, noPoolSol, totalPool, market, previousYesPercent, previousNoPercent]) // Track when pool values change
 
@@ -770,7 +773,7 @@ export default function MarketPage() {
     if (marketPdaStr) {
       loadCommentsForMarket()
     }
-  }, [marketPdaStr]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [marketPdaStr, loadCommentsForMarket])
 
   // Poll comments every 10 seconds (reduced frequency to avoid overwriting)
   useEffect(() => {
@@ -781,7 +784,7 @@ export default function MarketPage() {
     }, 10000) // Poll every 10 seconds (reduced from 5)
 
     return () => clearInterval(interval)
-  }, [marketPdaStr]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [marketPdaStr, loadCommentsForMarket])
 
   // Check if user is admin (for now, allow anyone - can be restricted later)
   const isAdmin = true // TODO: Add admin check via env variable or wallet whitelist
@@ -1543,7 +1546,7 @@ Resolution time is final — no appeals. The market will automatically resolve b
                         ? "bg-neon-green hover:bg-neon-green/90 text-black neon-glow-green"
                         : tradeSide === "NO"
                           ? "bg-neon-magenta hover:bg-neon-magenta/90 text-white neon-glow-magenta"
-                          : "bg-blue-600 hover:bg-blue-700 text-white"
+                          : "bg-neon-green hover:bg-neon-green/90 text-black neon-glow-green"
                       : "bg-neon-magenta hover:bg-neon-magenta/90 text-white neon-glow-magenta"
                       }`}
                     disabled={

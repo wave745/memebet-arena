@@ -241,7 +241,7 @@ export function MarketCard({
   const potentialPayout = calculatePayout(selectedSide || "YES", betAmount)
 
   return (
-    <div className="relative glass-card overflow-hidden neon-card-shine transform-gpu will-change-transform border border-white/5 hover:border-white/10 transition-all duration-300">
+    <div className="relative glass-card overflow-hidden neon-card-shine transform-gpu will-change-transform border border-white/5 hover:border-neon-green/20 hover:shadow-[0_10px_40px_-15px_rgba(105,255,148,0.2)] hover:z-[100] transition-all duration-300 ease-out">
       {/* Status indicator */}
       {isClosingSoon && !resolved && (
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-amber-500/40 z-10" />

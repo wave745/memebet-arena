@@ -3,23 +3,26 @@
 import { useEffect, useRef, useState, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, TrendingUp, Sparkles, ArrowRight } from "lucide-react"
+import { Search, TrendingUp, Sparkles, ArrowRight, Zap } from "lucide-react"
 import { useWallet } from "./wallet-provider"
 import { fetchMarketByPda } from "@/lib/anchor/markets"
 import { PublicKey } from "@solana/web3.js"
 import { useRouter } from "next/navigation"
+import { XLogo } from "./x-logo"
 
 interface SearchModalProps {
   isOpen: boolean
   onClose: () => void
   searchQuery: string
   onSearchChange: (query: string) => void
-  onCategorySelect: (category: "hot" | "new" | null) => void
+  onCategorySelect: (category: string | null) => void
 }
 
 const BROWSE_CATEGORIES = [
-  { label: "New", icon: Sparkles, value: "new" as const },
-  { label: "Hot", icon: TrendingUp, value: "hot" as const },
+  { label: "New", icon: Sparkles, value: "new" },
+  { label: "Hot", icon: TrendingUp, value: "hot" },
+  { label: "Trenches", icon: Zap, value: "trenches" },
+  { label: "KOLs", icon: XLogo, value: "kols", comingSoon: true },
 ]
 
 // Hardcoded seeded market PDAs (same as market-feed.tsx)
@@ -152,7 +155,7 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
 
   if (!isOpen) return null
 
-  const handleCategoryClick = (value: "hot" | "new" | null) => {
+  const handleCategoryClick = (value: string | null) => {
     onCategorySelect(value)
     onClose()
   }
@@ -207,13 +210,13 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm text-foreground">
+                        <div className="font-medium text-sm text-foreground">
                           {formatTokenDisplay(market.tokenMint)}
-                        </span>
+                        </div>
                         {market.resolved && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                          <div className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                             Resolved
-                          </span>
+                          </div>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -238,11 +241,14 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
                     key={category.label}
                     variant="outline"
                     size="sm"
-                    onClick={() => handleCategoryClick(category.value)}
-                    className="h-9 gap-2 bg-background/50 hover:bg-accent"
+                    onClick={() => !category.comingSoon && handleCategoryClick(category.value)}
+                    className={`h-9 gap-2 bg-background/50 hover:bg-accent ${category.comingSoon ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <category.icon className="h-4 w-4" />
                     {category.label}
+                    {category.comingSoon && (
+                      <span className="px-1 py-0.5 rounded-sm bg-neon-green/10 text-[8px] text-neon-green uppercase tracking-tighter border border-neon-green/20">Soon</span>
+                    )}
                   </Button>
                 ))}
               </div>

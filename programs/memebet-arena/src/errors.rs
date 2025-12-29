@@ -33,4 +33,6 @@ pub enum MemeBetError {
     PositionNotWinner,
     #[msg("Position already claimed")]
     PositionAlreadyClaimed,
+    #[msg("Unauthorized: Only admin can perform this action")]
+    Unauthorized,
 }

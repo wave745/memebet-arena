@@ -11,16 +11,16 @@ import * as anchor from "@coral-xyz/anchor"
 // Hardcoded seeded market PDAs (until indexer exists)
 // Hardcoded seeded market PDAs (until indexer exists)
 export const SEEDED_MARKETS = [
-  { pda: "7PtZBSzh8LN9oeQMi3uUhQRaQ7yBDs4skWcZMtGmVhcc", ticker: "BONK" },
-  { pda: "ERwWqoCH2NDuT25eeG8uGruVGH9qpFX6bU47SUBgJ11E", ticker: "WIF" },
-  { pda: "7SiMKeNgReui2NdMgodxGCogRumYf2Bob4NfuhVrC84h", ticker: "POPCAT" },
-  { pda: "2jvKsrAkRbTqXiffcerA7sWhau3SDYCnoec2BtNiQDRE", ticker: "BONK" },
-  { pda: "5mwSAmNfF6ddY4KHmVN9DwgxaFbPEUuxpBxJfu2hnH3a", ticker: "WIF" },
+  { pda: "7PtZBSzh8LN9oeQMi3uUhQRaQ7yBDs4skWcZMtGmVhcc", ticker: "BONK", category: "trenches" },
+  { pda: "ERwWqoCH2NDuT25eeG8uGruVGH9qpFX6bU47SUBgJ11E", ticker: "WIF", category: "trenches" },
+  { pda: "7SiMKeNgReui2NdMgodxGCogRumYf2Bob4NfuhVrC84h", ticker: "POPCAT", category: "kols" },
+  { pda: "2jvKsrAkRbTqXiffcerA7sWhau3SDYCnoec2BtNiQDRE", ticker: "BONK", category: "ai" },
+  { pda: "5mwSAmNfF6ddY4KHmVN9DwgxaFbPEUuxpBxJfu2hnH3a", ticker: "WIF", category: "cabals" },
 ]
 
 interface MarketFeedProps {
   searchQuery: string
-  categoryFilter: "hot" | "new" | null
+  categoryFilter: string | null
 }
 
 export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
@@ -52,6 +52,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
               noPool: market.noPool,
               outcome: market.outcome,
               ticker,
+              category: SEEDED_MARKETS.find(m => m.pda === marketPda.toString())?.category,
             }
           }
         } catch (error) {
@@ -117,18 +118,17 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
     // Category filter
     if (categoryFilter === "hot") {
-      // Hot: Markets with high total pool (high trading activity)
-      // Consider a market "hot" if total pool > 1 SOL
       const totalPool = Number(market.yesPool) + Number(market.noPool)
       const totalPoolSol = totalPool / LAMPORTS_PER_SOL
       return totalPoolSol > 1 && !market.resolved
     } else if (categoryFilter === "new") {
-      // New: Markets created recently (within last 7 days)
       const now = Date.now() / 1000
       const marketEndTime = Number(market.endTimestamp)
       const daysUntilEnd = (marketEndTime - now) / (24 * 60 * 60)
-      // Consider "new" if market ends in more than 7 days (recently created)
       return daysUntilEnd > 7 && !market.resolved
+    } else if (categoryFilter) {
+      // Custom categories: Trenches, KOLs, Cabals, Whales, AI
+      return market.category === categoryFilter
     }
 
     // "All" or null: show all markets

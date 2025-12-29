@@ -10,7 +10,7 @@ import { useState, useEffect } from "react"
 function HomeContent() {
   const { walletConnected, walletAddress, solBalance, connect, disconnect } = useWallet()
   const [searchQuery, setSearchQuery] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState<"hot" | "new" | null>(null)
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
 

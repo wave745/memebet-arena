@@ -1,10 +1,23 @@
 "use client"
 
-import type React from "react"
-
-import { createContext, useContext, useState, useEffect } from "react"
-import { Connection, PublicKey } from "@solana/web3.js"
+import React, { FC, useMemo, createContext, useContext, useState, useEffect, useCallback } from "react"
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
+import {
+  ConnectionProvider,
+  WalletProvider as SolanaWalletProvider,
+  useWallet as useSolanaWallet,
+} from "@solana/wallet-adapter-react"
+import { WalletAdapterNetwork, WalletError } from "@solana/wallet-adapter-base"
+import {
+  WalletModalProvider,
+} from "@solana/wallet-adapter-react-ui"
 import * as anchor from "@coral-xyz/anchor"
+
+// Polyfill Buffer for Solana libraries in browser
+if (typeof window !== "undefined") {
+  const { Buffer } = require("buffer")
+  window.Buffer = window.Buffer || Buffer
+}
 
 interface WalletContextType {
   walletConnected: boolean
@@ -13,119 +26,108 @@ interface WalletContextType {
   connection: Connection | null
   wallet: anchor.Wallet | null
   connect: () => Promise<void>
-  disconnect: () => void
+  disconnect: () => Promise<void>
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined)
 
-export function WalletProvider({ children }: { children: React.ReactNode }) {
-  const [walletConnected, setWalletConnected] = useState(false)
-  const [walletAddress, setWalletAddress] = useState<string | null>(null)
+export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const network = WalletAdapterNetwork.Devnet
+  const endpoint = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com"
+
+  // Explicitly include main wallets and allow Standard discovery
+  const wallets = useMemo(
+    () => [
+    ],
+    [network]
+  )
+
+  const onError = useCallback((error: WalletError) => {
+    // Suppress common non-fatal errors to prevent console noise
+    if (error.name === 'WalletDisconnectedError') {
+      console.warn("Wallet Context: Disconnected.", error.message)
+      return
+    }
+    console.error("Wallet Error:", error)
+  }, [])
+
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <SolanaWalletProvider wallets={wallets} autoConnect onError={onError}>
+        <WalletModalProvider>
+          <WalletStateWrapper>{children}</WalletStateWrapper>
+        </WalletModalProvider>
+      </SolanaWalletProvider>
+    </ConnectionProvider>
+  )
+}
+
+const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { publicKey, connected, disconnect: solanaDisconnect, wallet: solanaWallet } = useSolanaWallet()
   const [solBalance, setSolBalance] = useState(0)
   const [connection, setConnection] = useState<Connection | null>(null)
-  const [wallet, setWallet] = useState<anchor.Wallet | null>(null)
-  const [mounted, setMounted] = useState(false)
+  const [anchorWallet, setAnchorWallet] = useState<anchor.Wallet | null>(null)
 
   useEffect(() => {
-    setMounted(true)
-    // Initialize connection
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com"
     setConnection(new Connection(rpcUrl, "confirmed"))
-    checkWalletConnection()
   }, [])
 
   useEffect(() => {
-    if (walletAddress && connection) {
-      // Create wallet adapter
-      const walletAdapter = {
-        publicKey: new PublicKey(walletAddress),
+    let mounted = true
+
+    if (publicKey && connected && solanaWallet?.adapter && connection) {
+      const updateBalance = async () => {
+        try {
+          const balance = await connection.getBalance(publicKey)
+          if (mounted) setSolBalance(balance / LAMPORTS_PER_SOL)
+        } catch (err) {
+          console.error("Failed to fetch balance:", err)
+        }
+      }
+
+      updateBalance()
+
+      const adapter = solanaWallet.adapter
+      // Set up Anchor Wallet
+      const walletObj = {
+        publicKey: publicKey,
         signTransaction: async (tx: anchor.web3.Transaction) => {
-          if (typeof window !== "undefined" && (window as any).solana) {
-            const signed = await (window as any).solana.signTransaction(tx)
-            return signed
+          if (adapter && 'signTransaction' in adapter) {
+            return await (adapter as any).signTransaction(tx)
           }
-          throw new Error("Wallet not connected")
+          throw new Error("Wallet does not support transaction signing")
         },
         signAllTransactions: async (txs: anchor.web3.Transaction[]) => {
-          if (typeof window !== "undefined" && (window as any).solana) {
-            const signed = await (window as any).solana.signAllTransactions(txs)
-            return signed
+          if (adapter && 'signAllTransactions' in adapter) {
+            return await (adapter as any).signAllTransactions(txs)
           }
-          throw new Error("Wallet not connected")
+          throw new Error("Wallet does not support multiple transaction signing")
         },
       }
-      setWallet(walletAdapter as anchor.Wallet)
-      
-      // Update balance
-      updateBalance()
+      setAnchorWallet(walletObj as anchor.Wallet)
     } else {
-      setWallet(null)
+      setAnchorWallet(null)
+      setSolBalance(0)
     }
-  }, [walletAddress, connection])
 
-  const updateBalance = async () => {
-    if (walletAddress && connection) {
-      try {
-        const balance = await connection.getBalance(new PublicKey(walletAddress))
-        setSolBalance(balance / anchor.web3.LAMPORTS_PER_SOL)
-      } catch (err) {
-        console.error("Failed to fetch balance:", err)
-      }
-    }
-  }
+    return () => { mounted = false }
+  }, [publicKey, connected, connection, solanaWallet])
 
-  const checkWalletConnection = async () => {
-    if (typeof window !== "undefined" && (window as any).solana) {
-      try {
-        const response = await (window as any).solana.connect({ onlyIfTrusted: true })
-        setWalletAddress(response.publicKey.toString())
-        setWalletConnected(true)
-      } catch (err) {
-        // Wallet not connected
-      }
+  const contextValue: WalletContextType = {
+    walletConnected: connected,
+    walletAddress: publicKey?.toString() || null,
+    solBalance,
+    connection,
+    wallet: anchorWallet,
+    connect: async () => { }, // Handled by Modal
+    disconnect: async () => {
+      await solanaDisconnect()
     }
-  }
-
-  const connect = async () => {
-    if (typeof window !== "undefined" && (window as any).solana) {
-      try {
-        const response = await (window as any).solana.connect()
-        setWalletAddress(response.publicKey.toString())
-        setWalletConnected(true)
-      } catch (err) {
-        console.error("Wallet connection failed:", err)
-      }
-    } else {
-      alert("Please install a Solana wallet (e.g., Phantom)")
-    }
-  }
-
-  const disconnect = async () => {
-    if (typeof window !== "undefined" && (window as any).solana) {
-      try {
-        await (window as any).solana.disconnect()
-      } catch (err) {
-        console.error("Disconnect failed:", err)
-      }
-    }
-    setWalletAddress(null)
-    setWalletConnected(false)
-    setSolBalance(0)
-    setWallet(null)
   }
 
   return (
-    <WalletContext.Provider
-      value={{
-        walletConnected,
-        walletAddress,
-        solBalance,
-        connection,
-        wallet,
-        connect,
-        disconnect,
-      }}
-    >
+    <WalletContext.Provider value={contextValue}>
       {children}
     </WalletContext.Provider>
   )
