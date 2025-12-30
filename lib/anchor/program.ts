@@ -88,12 +88,12 @@ async function fetchIdl(): Promise<any> {
       }
       
       if (process.env.NODE_ENV === 'development') {
-        console.log("✅ Fetched IDL loaded:", {
-          name: idl.name,
-          version: idl.version,
-          instructions: idl.instructions?.length,
-          accounts: idl.accounts?.length,
-        })
+      console.log("✅ Fetched IDL loaded:", {
+        name: idl.name,
+        version: idl.version,
+        instructions: idl.instructions?.length,
+        accounts: idl.accounts?.length,
+      })
       }
       
       idlCache = idl
@@ -128,16 +128,16 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
   // Step 3: CRITICAL - Log RAW IDL immediately (before any processing)
   // Only log in development to avoid terminal spam
   if (process.env.NODE_ENV === 'development') {
-    console.log("RAW IDL CHECK:", {
-      isObject: typeof idl === 'object',
-      isEmpty: !idl || Object.keys(idl).length === 0,
-      version: idl?.version,
-      name: idl?.name,
-      hasInstructions: Array.isArray(idl?.instructions),
-      instructionCount: idl?.instructions?.length,
-      hasAccounts: Array.isArray(idl?.accounts),
-      accountCount: idl?.accounts?.length,
-    })
+  console.log("RAW IDL CHECK:", {
+    isObject: typeof idl === 'object',
+    isEmpty: !idl || Object.keys(idl).length === 0,
+    version: idl?.version,
+    name: idl?.name,
+    hasInstructions: Array.isArray(idl?.instructions),
+    instructionCount: idl?.instructions?.length,
+    hasAccounts: Array.isArray(idl?.accounts),
+    accountCount: idl?.accounts?.length,
+  })
   }
   
   // Step 4: Validate RAW IDL (fail fast if invalid)
@@ -255,13 +255,13 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
   
   // Step 10: Log final IDL before passing to Anchor (only in development)
   if (process.env.NODE_ENV === 'development') {
-    console.log("FINAL IDL CHECK (before Anchor):", {
-      version: idlCopy.version,
-      name: idlCopy.name,
-      hasAccounts: Array.isArray(idlCopy.accounts),
-      accountCount: idlCopy.accounts?.length,
+  console.log("FINAL IDL CHECK (before Anchor):", {
+    version: idlCopy.version,
+    name: idlCopy.name,
+    hasAccounts: Array.isArray(idlCopy.accounts),
+    accountCount: idlCopy.accounts?.length,
       hasInstructions: Array.isArray(idlCopy.instructions),
-      instructionCount: idlCopy.instructions?.length,
+    instructionCount: idlCopy.instructions?.length,
     })
   }
   

@@ -1,15 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
-import { useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useWallet } from "./wallet-provider"
 import { fetchMarketByPda } from "@/lib/anchor/markets"
 import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { MarketCard } from "@/components/market-card"
 import * as anchor from "@coral-xyz/anchor"
 
-// Hardcoded seeded market PDAs (until indexer exists)
-// Hardcoded seeded market PDAs (until indexer exists)
+// Hardcoded seeded market PDAs (base markets)
 export const SEEDED_MARKETS = [
   { pda: "7PtZBSzh8LN9oeQMi3uUhQRaQ7yBDs4skWcZMtGmVhcc", ticker: "BONK", category: "trenches" },
   { pda: "ERwWqoCH2NDuT25eeG8uGruVGH9qpFX6bU47SUBgJ11E", ticker: "WIF", category: "trenches" },
@@ -17,6 +15,31 @@ export const SEEDED_MARKETS = [
   { pda: "2jvKsrAkRbTqXiffcerA7sWhau3SDYCnoec2BtNiQDRE", ticker: "BONK", category: "ai" },
   { pda: "5mwSAmNfF6ddY4KHmVN9DwgxaFbPEUuxpBxJfu2hnH3a", ticker: "WIF", category: "cabals" },
 ]
+
+// Helper to get all markets including user-created ones from localStorage
+function getAllMarkets(): { pda: string; ticker: string; category: string }[] {
+  const allMarkets = [...SEEDED_MARKETS]
+  
+  // Load user-created markets from localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('created_markets')
+      if (stored) {
+        const createdMarkets = JSON.parse(stored)
+        // Add non-duplicate markets
+        for (const m of createdMarkets) {
+          if (!allMarkets.find(existing => existing.pda === m.pda)) {
+            allMarkets.push({ pda: m.pda, ticker: m.ticker, category: m.category || 'new' })
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load created markets:", e)
+    }
+  }
+  
+  return allMarkets
+}
 
 interface MarketFeedProps {
   searchQuery: string
@@ -35,9 +58,11 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
       return
     }
 
-    console.log("Fetching markets from chain...")
-    const marketData = await Promise.all(
-      SEEDED_MARKETS.map(async ({ pda, ticker }) => {
+    try {
+      const allMarketsList = getAllMarkets()
+      console.log(`Fetching ${allMarketsList.length} markets from chain...`)
+      const marketData = await Promise.all(
+        allMarketsList.map(async ({ pda, ticker }) => {
         try {
           const marketPda = new PublicKey(pda)
           const market = await fetchMarketByPda(connection, null, marketPda)
@@ -52,7 +77,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
               noPool: market.noPool,
               outcome: market.outcome,
               ticker,
-              category: SEEDED_MARKETS.find(m => m.pda === marketPda.toString())?.category,
+              category: getAllMarkets().find(m => m.pda === marketPda.toString())?.category || 'new',
             }
           }
         } catch (error) {
@@ -64,9 +89,9 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
     setMarkets(marketData.filter(m => m !== null))
     setLoading(false)
-  } catch (error) {
-    console.error("Failed to fetch markets:", error)
-    setLoading(false)
+    } catch (error) {
+      console.error("Failed to fetch markets:", error)
+      setLoading(false)
   }
   }, [connection])
 
@@ -122,14 +147,18 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
     // Category filter
     if (categoryFilter === "hot") {
+      // Hot = markets with significant pool activity (> 0.5 SOL total)
       const totalPool = Number(market.yesPool) + Number(market.noPool)
       const totalPoolSol = totalPool / LAMPORTS_PER_SOL
-      return totalPoolSol > 1 && !market.resolved
+      return totalPoolSol > 0.5 && !market.resolved
     } else if (categoryFilter === "new") {
-      const now = Date.now() / 1000
-      const marketEndTime = Number(market.endTimestamp)
-      const daysUntilEnd = (marketEndTime - now) / (24 * 60 * 60)
-      return daysUntilEnd > 7 && !market.resolved
+      // New = user-created markets OR markets with low activity (fresh markets)
+      const totalPool = Number(market.yesPool) + Number(market.noPool)
+      const totalPoolSol = totalPool / LAMPORTS_PER_SOL
+      // Consider "new" if: category is 'new', low pool activity, or not in base seeded markets
+      const isUserCreated = market.category === 'new' || !SEEDED_MARKETS.find(m => m.pda === market.pda)
+      const isLowActivity = totalPoolSol < 0.5
+      return (isUserCreated || isLowActivity) && !market.resolved
     } else if (categoryFilter) {
       // Custom categories: Trenches, KOLs, Cabals, Whales, AI
       return market.category === categoryFilter

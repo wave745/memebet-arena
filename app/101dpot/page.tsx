@@ -7,8 +7,6 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-    Flame,
-    Sparkles,
     Zap,
     Twitter as TwitterIcon,
     Users,
@@ -23,10 +21,22 @@ import {
     Eye
 } from "lucide-react"
 import { createMarket } from "@/lib/anchor/markets"
+import { getMarketPda } from "@/lib/anchor/program"
 import * as anchor from "@coral-xyz/anchor"
 import Link from "next/link"
 import { XLogo } from "@/components/x-logo"
 import { formatMarketCapShort } from "@/lib/utils/format-market-cap"
+
+// Helper to save created markets to localStorage
+function saveCreatedMarket(pda: string, ticker: string, category: string) {
+    const stored = localStorage.getItem('created_markets')
+    const markets = stored ? JSON.parse(stored) : []
+    // Avoid duplicates
+    if (!markets.find((m: any) => m.pda === pda)) {
+        markets.push({ pda, ticker, category, createdAt: Date.now() })
+        localStorage.setItem('created_markets', JSON.stringify(markets))
+    }
+}
 
 // We'll use a mocked preview version of MarketCard to avoid complexity in this file
 function MarketPreview({ data }: { data: any }) {
@@ -94,9 +104,8 @@ function MarketPreview({ data }: { data: any }) {
 
 const ADMIN_PUBKEY = "3zAjK7AzN7Wdor2i3kzcNrdRJc8PzysspjbgG8awp5NB"
 
+// Categories for curator to assign (hot/new are auto-computed, not manually assigned)
 const CATEGORIES = [
-    { id: "hot", label: "Hot", icon: Flame },
-    { id: "new", label: "New", icon: Sparkles },
     { id: "trenches", label: "Trenches", icon: Zap },
     { id: "kols", label: "KOLs", icon: XLogo },
     { id: "cabals", label: "Cabals", icon: Users },
@@ -209,20 +218,45 @@ export default function AdminPage() {
             const capBN = new anchor.BN(parseFloat(targetCap))
             const endBN = new anchor.BN(Math.floor(selectedDate.getTime() / 1000))
 
+            // Get the PDA before creating
+            const [marketPda] = getMarketPda(mintPubkey, capBN, endBN)
+
             const tx = await createMarket(connection, wallet, mintPubkey, capBN, endBN)
+
+            // Save to localStorage so it appears on the main page
+            saveCreatedMarket(marketPda.toString(), ticker || tokenMint.slice(0, 6), category)
 
             setStatus({
                 type: 'success',
-                msg: `MARKET_DEPLOYED_SUCCESSFULLY: ${tx.slice(0, 8)}...`
+                msg: `MARKET_DEPLOYED! PDA: ${marketPda.toString().slice(0, 12)}... TX: ${tx.slice(0, 8)}...`
             })
 
             setTokenMint("")
             setTicker("")
         } catch (err: any) {
             console.error("Deploy failed:", err)
+            // Extract meaningful error message
+            let errorMsg = "DEPLOYMENT_FAILURE"
+            const fullError = err?.message || err?.logs?.join(" ") || ""
+            
+            // Check for common errors
+            if (fullError.includes("already in use")) {
+                errorMsg = "MARKET_ALREADY_EXISTS: A market with these exact parameters already exists. Try different target cap or end date."
+            } else if (fullError.includes("Unauthorized")) {
+                errorMsg = "UNAUTHORIZED: Only admin wallet can create markets"
+            } else if (fullError.includes("insufficient") || fullError.includes("debit")) {
+                errorMsg = "INSUFFICIENT_BALANCE: Not enough SOL for transaction"
+            } else if (fullError.includes("InvalidEndTimestamp")) {
+                errorMsg = "INVALID_DATE: End timestamp must be in the future"
+            } else if (fullError.includes("Unexpected error") || fullError.includes("User rejected")) {
+                errorMsg = "WALLET_BLOCKED: Phantom blocked this request. Try on localhost or add site to trusted apps."
+            } else if (err?.message) {
+                errorMsg = err.message.slice(0, 200)
+            }
+            
             setStatus({
                 type: 'error',
-                msg: err.message || "DEPLOYMENT_FAILURE"
+                msg: errorMsg
             })
         } finally {
             setLoading(false)

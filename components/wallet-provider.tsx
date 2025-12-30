@@ -22,7 +22,7 @@ if (typeof window !== "undefined" && typeof window.Buffer === "undefined") {
     }).catch(() => {
       // Fallback: try require if import fails
       if (typeof require !== "undefined") {
-        const { Buffer } = require("buffer")
+  const { Buffer } = require("buffer")
         window.Buffer = Buffer
       }
     })
@@ -106,13 +106,30 @@ const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => 
         publicKey: publicKey,
         signTransaction: async (tx: anchor.web3.Transaction) => {
           if (adapter && 'signTransaction' in adapter) {
-            return await (adapter as any).signTransaction(tx)
+            try {
+              return await (adapter as any).signTransaction(tx)
+            } catch (err: any) {
+              console.error("Wallet signTransaction error:", err)
+              // Provide more helpful error message
+              if (err?.message === "Unexpected error" || !err?.message) {
+                throw new Error("Wallet blocked this request. Check: 1) Phantom is on Devnet 2) Disconnect and reconnect wallet 3) Try a different browser")
+              }
+              throw err
+            }
           }
           throw new Error("Wallet does not support transaction signing")
         },
         signAllTransactions: async (txs: anchor.web3.Transaction[]) => {
           if (adapter && 'signAllTransactions' in adapter) {
-            return await (adapter as any).signAllTransactions(txs)
+            try {
+              return await (adapter as any).signAllTransactions(txs)
+            } catch (err: any) {
+              console.error("Wallet signAllTransactions error:", err)
+              if (err?.message === "Unexpected error" || !err?.message) {
+                throw new Error("Wallet blocked this request. Check: 1) Phantom is on Devnet 2) Disconnect and reconnect wallet")
+              }
+              throw err
+            }
           }
           throw new Error("Wallet does not support multiple transaction signing")
         },

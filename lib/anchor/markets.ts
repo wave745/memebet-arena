@@ -137,18 +137,62 @@ export async function createMarket(
   targetMarketCap: anchor.BN,
   endTimestamp: anchor.BN
 ): Promise<string> {
-  const program = await getProgram(connection, wallet)
-  const [marketPda, bump] = getMarketPda(tokenMint, targetMarketCap, endTimestamp)
-
-  const tx = await (program.methods as any)
-    .createMarket(tokenMint, targetMarketCap, endTimestamp, bump)
-    .accounts({
-      market: marketPda,
-      creator: wallet.publicKey,
+  try {
+    console.log("Creating market with params:", {
+      tokenMint: tokenMint.toString(),
+      targetMarketCap: targetMarketCap.toString(),
+      endTimestamp: endTimestamp.toString(),
+      walletPubkey: wallet.publicKey.toString(),
     })
-    .rpc()
 
-  return tx
+    const program = await getProgram(connection, wallet)
+    console.log("Program loaded successfully")
+
+    const [marketPda, bump] = getMarketPda(tokenMint, targetMarketCap, endTimestamp)
+    console.log("Market PDA:", marketPda.toString(), "bump:", bump)
+
+    // Build transaction without sending (to handle signing manually)
+    const tx = await (program.methods as any)
+      .createMarket(tokenMint, targetMarketCap, endTimestamp, bump)
+      .accounts({
+        market: marketPda,
+        creator: wallet.publicKey,
+      })
+      .transaction()
+
+    // Get recent blockhash
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+    tx.recentBlockhash = blockhash
+    tx.feePayer = wallet.publicKey
+
+    console.log("Transaction built, requesting signature...")
+
+    // Sign transaction
+    const signedTx = await wallet.signTransaction(tx)
+    console.log("Transaction signed")
+
+    // Send raw transaction with skipPreflight to avoid simulation issues
+    const signature = await connection.sendRawTransaction(signedTx.serialize(), {
+      skipPreflight: false,
+      maxRetries: 3,
+    })
+    console.log("Transaction sent:", signature)
+
+    // Confirm transaction
+    await connection.confirmTransaction({
+      signature,
+      blockhash,
+      lastValidBlockHeight,
+    }, "confirmed")
+
+    console.log("Transaction confirmed:", signature)
+    return signature
+  } catch (error: any) {
+    console.error("createMarket error:", error)
+    console.error("Error message:", error?.message)
+    console.error("Error logs:", error?.logs)
+    throw error
+  }
 }
 
 
