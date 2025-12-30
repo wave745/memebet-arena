@@ -14,9 +14,21 @@ import {
 import * as anchor from "@coral-xyz/anchor"
 
 // Polyfill Buffer for Solana libraries in browser
-if (typeof window !== "undefined") {
-  const { Buffer } = require("buffer")
-  window.Buffer = window.Buffer || Buffer
+if (typeof window !== "undefined" && typeof window.Buffer === "undefined") {
+  try {
+    // Use dynamic import to avoid SSR issues
+    import("buffer").then(({ Buffer }) => {
+      window.Buffer = Buffer
+    }).catch(() => {
+      // Fallback: try require if import fails
+      if (typeof require !== "undefined") {
+        const { Buffer } = require("buffer")
+        window.Buffer = Buffer
+      }
+    })
+  } catch (e) {
+    // Silently fail - Buffer might already be polyfilled
+  }
 }
 
 interface WalletContextType {

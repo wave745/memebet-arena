@@ -28,7 +28,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
   const [loading, setLoading] = useState(true)
   const { connection } = useWallet()
 
-  const fetchMarkets = async () => {
+  const fetchMarkets = useCallback(async () => {
     if (!connection) {
       console.log("No connection available")
       setLoading(false)
@@ -64,7 +64,11 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
     setMarkets(marketData.filter(m => m !== null))
     setLoading(false)
+  } catch (error) {
+    console.error("Failed to fetch markets:", error)
+    setLoading(false)
   }
+  }, [connection])
 
   useEffect(() => {
     // Initial fetch
@@ -73,7 +77,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
     } else {
       setLoading(false)
     }
-  }, [connection])
+  }, [connection, fetchMarkets])
 
   // Real-time polling every 5 seconds
   useEffect(() => {
@@ -84,7 +88,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
     }, 5000) // Poll every 5 seconds
 
     return () => clearInterval(interval)
-  }, [connection])
+  }, [connection, fetchMarkets])
 
   if (loading) {
     return (

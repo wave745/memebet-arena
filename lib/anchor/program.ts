@@ -87,12 +87,14 @@ async function fetchIdl(): Promise<any> {
         throw new Error("Fetched IDL missing version or name")
       }
       
-      console.log("✅ Fetched IDL loaded:", {
-        name: idl.name,
-        version: idl.version,
-        instructions: idl.instructions?.length,
-        accounts: idl.accounts?.length,
-      })
+      if (process.env.NODE_ENV === 'development') {
+        console.log("✅ Fetched IDL loaded:", {
+          name: idl.name,
+          version: idl.version,
+          instructions: idl.instructions?.length,
+          accounts: idl.accounts?.length,
+        })
+      }
       
       idlCache = idl
       return idlCache
@@ -124,20 +126,19 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
   }
   
   // Step 3: CRITICAL - Log RAW IDL immediately (before any processing)
-  console.log("RAW IDL CHECK:", {
-    isObject: typeof idl === 'object',
-    isEmpty: !idl || Object.keys(idl).length === 0,
-    version: idl?.version,
-    name: idl?.name,
-    hasInstructions: Array.isArray(idl?.instructions),
-    instructionCount: idl?.instructions?.length,
-    hasAccounts: Array.isArray(idl?.accounts),
-    accountCount: idl?.accounts?.length,
-    accountNames: idl?.accounts?.map((a: any) => a?.name),
-    hasTypes: Array.isArray(idl?.types),
-    typeCount: idl?.types?.length,
-    allKeys: idl ? Object.keys(idl) : 'null',
-  })
+  // Only log in development to avoid terminal spam
+  if (process.env.NODE_ENV === 'development') {
+    console.log("RAW IDL CHECK:", {
+      isObject: typeof idl === 'object',
+      isEmpty: !idl || Object.keys(idl).length === 0,
+      version: idl?.version,
+      name: idl?.name,
+      hasInstructions: Array.isArray(idl?.instructions),
+      instructionCount: idl?.instructions?.length,
+      hasAccounts: Array.isArray(idl?.accounts),
+      accountCount: idl?.accounts?.length,
+    })
+  }
   
   // Step 4: Validate RAW IDL (fail fast if invalid)
   if (!idl || typeof idl !== 'object' || Object.keys(idl).length === 0) {
@@ -252,24 +253,17 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
     idlCopy.metadata.address = PROGRAM_ID.toString()
   }
   
-  // Step 10: Log final IDL before passing to Anchor
-  console.log("FINAL IDL CHECK (before Anchor):", {
-    version: idlCopy.version,
-    name: idlCopy.name,
-    hasAccounts: Array.isArray(idlCopy.accounts),
-    accountCount: idlCopy.accounts?.length,
-    accountDetails: idlCopy.accounts?.map((a: any) => ({
-      name: a?.name,
-      size: a?.size,
-      type: a?.type,
-      hasDiscriminator: Array.isArray(a?.discriminator),
-    })),
+  // Step 10: Log final IDL before passing to Anchor (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log("FINAL IDL CHECK (before Anchor):", {
+      version: idlCopy.version,
+      name: idlCopy.name,
+      hasAccounts: Array.isArray(idlCopy.accounts),
+      accountCount: idlCopy.accounts?.length,
       hasInstructions: Array.isArray(idlCopy.instructions),
-    instructionCount: idlCopy.instructions?.length,
-    hasTypes: Array.isArray(idlCopy.types),
-    typeCount: idlCopy.types?.length,
-    allKeys: Object.keys(idlCopy),
+      instructionCount: idlCopy.instructions?.length,
     })
+  }
   
   // Step 11: Create Program (Anchor 0.32.1: idl, provider - programId from IDL metadata)
   try {
