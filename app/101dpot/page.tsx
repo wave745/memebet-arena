@@ -115,6 +115,7 @@ export default function AdminPage() {
     const [ticker, setTicker] = useState("")
     const [targetCap, setTargetCap] = useState("1000")
     const [endDate, setEndDate] = useState("")
+    const [dateError, setDateError] = useState<string | null>(null)
     const [category, setCategory] = useState("trenches")
     const [rules, setRules] = useState("Market resolves YES if token reaches target market cap before the end date. Resolves NO otherwise.")
     const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null)
@@ -172,13 +173,41 @@ export default function AdminPage() {
         e.preventDefault()
         if (!connection || !wallet || !walletAddress) return
 
+        // Validate date
+        if (!endDate) {
+            setStatus({
+                type: 'error',
+                msg: 'Please enter a valid expiry date and time'
+            })
+            return
+        }
+
+        const selectedDate = new Date(endDate)
+        if (isNaN(selectedDate.getTime())) {
+            setStatus({
+                type: 'error',
+                msg: 'Invalid date format. Please use the date picker.'
+            })
+            return
+        }
+
+        // Check if date is in the future
+        const now = new Date()
+        if (selectedDate <= now) {
+            setStatus({
+                type: 'error',
+                msg: 'Expiry date must be in the future'
+            })
+            return
+        }
+
         setLoading(true)
         setStatus(null)
 
         try {
             const mintPubkey = new PublicKey(tokenMint)
             const capBN = new anchor.BN(parseFloat(targetCap))
-            const endBN = new anchor.BN(Math.floor(new Date(endDate).getTime() / 1000))
+            const endBN = new anchor.BN(Math.floor(selectedDate.getTime() / 1000))
 
             const tx = await createMarket(connection, wallet, mintPubkey, capBN, endBN)
 
@@ -363,10 +392,39 @@ export default function AdminPage() {
                                         <Input
                                             type="datetime-local"
                                             value={endDate}
-                                            onChange={(e) => setEndDate(e.target.value)}
-                                            className="bg-white/5 border-white/10 h-14 focus:border-neon-green/50 transition-all font-bold text-sm"
+                                            onChange={(e) => {
+                                                const value = e.target.value
+                                                setEndDate(value)
+                                                // Clear error when user starts typing
+                                                if (dateError) setDateError(null)
+                                                // Validate format
+                                                if (value && !value.includes('T')) {
+                                                    setDateError('Please select both date and time')
+                                                } else if (value) {
+                                                    const date = new Date(value)
+                                                    if (isNaN(date.getTime())) {
+                                                        setDateError('Invalid date format')
+                                                    } else if (date <= new Date()) {
+                                                        setDateError('Date must be in the future')
+                                                    } else {
+                                                        setDateError(null)
+                                                    }
+                                                }
+                                            }}
+                                            onBlur={(e) => {
+                                                const value = e.target.value
+                                                if (value && !value.includes('T')) {
+                                                    setDateError('Please select both date and time')
+                                                }
+                                            }}
+                                            className={`bg-white/5 border-white/10 h-14 focus:border-neon-green/50 transition-all font-bold text-sm ${dateError ? 'border-red-500/50' : ''}`}
                                             required
+                                            min={new Date().toISOString().slice(0, 16)}
+                                            step="60"
                                         />
+                                        {dateError && (
+                                            <p className="text-xs text-red-400 mt-1">{dateError}</p>
+                                        )}
                                     </div>
                                 </div>
 
