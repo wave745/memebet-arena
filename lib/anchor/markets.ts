@@ -137,7 +137,7 @@ export async function createMarket(
   targetMarketCap: anchor.BN,
   endTimestamp: anchor.BN
 ): Promise<string> {
-  const program = await getProgram(connection, wallet)
+  const program: anchor.Program<MemebetArena> = await getProgram(connection, wallet) as anchor.Program<MemebetArena>
   const [marketPda, bump] = getMarketPda(tokenMint, targetMarketCap, endTimestamp)
 
   const tx = await program.methods
