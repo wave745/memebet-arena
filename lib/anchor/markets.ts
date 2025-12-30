@@ -137,15 +137,14 @@ export async function createMarket(
   targetMarketCap: anchor.BN,
   endTimestamp: anchor.BN
 ): Promise<string> {
-  const program: anchor.Program<MemebetArena> = await getProgram(connection, wallet) as anchor.Program<MemebetArena>
+  const program = await getProgram(connection, wallet)
   const [marketPda, bump] = getMarketPda(tokenMint, targetMarketCap, endTimestamp)
 
-  const tx = await program.methods
+  const tx = await (program.methods as any)
     .createMarket(tokenMint, targetMarketCap, endTimestamp, bump)
     .accounts({
       market: marketPda,
       creator: wallet.publicKey,
-      systemProgram: anchor.web3.SystemProgram.programId,
     })
     .rpc()
 
