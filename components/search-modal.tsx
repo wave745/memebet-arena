@@ -9,6 +9,7 @@ import { fetchMarketByPda } from "@/lib/anchor/markets"
 import { PublicKey } from "@solana/web3.js"
 import { useRouter } from "next/navigation"
 import { XLogo } from "./x-logo"
+import { formatMarketCapShort } from "@/lib/utils/format-market-cap"
 
 interface SearchModalProps {
   isOpen: boolean
@@ -98,7 +99,7 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
     return markets.filter((market) => {
       const tokenMintStr = market.tokenMint.toLowerCase()
       const tokenDisplay = `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}`
-      const targetCap = Number(market.targetMarketCap) / 1_000_000_000
+      const targetCap = formatMarketCapShort(Number(market.targetMarketCap))
       const targetCapStr = targetCap.toString()
 
       return (
@@ -165,8 +166,7 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
   }
 
   const formatMarketCap = (targetMarketCap: bigint) => {
-    const cap = Number(targetMarketCap) / 1_000_000_000
-    return `$${cap.toFixed(1)}B`
+    return formatMarketCapShort(Number(targetMarketCap))
   }
 
   return (

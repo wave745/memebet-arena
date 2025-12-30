@@ -26,6 +26,7 @@ import { createMarket } from "@/lib/anchor/markets"
 import * as anchor from "@coral-xyz/anchor"
 import Link from "next/link"
 import { XLogo } from "@/components/x-logo"
+import { formatMarketCapShort } from "@/lib/utils/format-market-cap"
 
 // We'll use a mocked preview version of MarketCard to avoid complexity in this file
 function MarketPreview({ data }: { data: any }) {
@@ -43,7 +44,7 @@ function MarketPreview({ data }: { data: any }) {
                     </div>
                     <div className="flex-1">
                         <h3 className="text-sm font-bold text-white leading-tight">
-                            Will {data.ticker || "TOKEN"} hit ${data.targetCap || "1.0"}B?
+                            Will {data.ticker || "TOKEN"} hit ${formatMarketCapShort(data.targetCap || "1000")}?
                         </h3>
                         <div className="text-[10px] text-white/40 font-mono mt-1">
                             Resolves {resolveDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
@@ -112,7 +113,7 @@ export default function AdminPage() {
     // Form State
     const [tokenMint, setTokenMint] = useState("")
     const [ticker, setTicker] = useState("")
-    const [targetCap, setTargetCap] = useState("1.0")
+    const [targetCap, setTargetCap] = useState("1000")
     const [endDate, setEndDate] = useState("")
     const [category, setCategory] = useState("trenches")
     const [rules, setRules] = useState("Market resolves YES if token reaches target market cap before the end date. Resolves NO otherwise.")
@@ -176,7 +177,7 @@ export default function AdminPage() {
 
         try {
             const mintPubkey = new PublicKey(tokenMint)
-            const capBN = new anchor.BN(parseFloat(targetCap) * 1_000_000_000)
+            const capBN = new anchor.BN(parseFloat(targetCap))
             const endBN = new anchor.BN(Math.floor(new Date(endDate).getTime() / 1000))
 
             const tx = await createMarket(connection, wallet, mintPubkey, capBN, endBN)
@@ -344,11 +345,11 @@ export default function AdminPage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Target Cap (Billions USD)</label>
+                                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Target Market Cap (USD)</label>
                                         <div className="relative">
                                             <Input
                                                 type="number"
-                                                step="0.01"
+                                                step="1"
                                                 value={targetCap}
                                                 onChange={(e) => setTargetCap(e.target.value)}
                                                 className="bg-white/5 border-white/10 h-14 focus:border-neon-green/50 transition-all font-black text-xl pl-10"

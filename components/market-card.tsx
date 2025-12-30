@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { X, Copy, Check } from "lucide-react"
 import { SolanaLogo } from "./solana-logo"
+import { formatMarketCapShort } from "@/lib/utils/format-market-cap"
 
 interface MarketCardProps {
   pda: string
@@ -67,7 +68,7 @@ export function MarketCard({
 
   // Format question from token mint or ticker
   const tokenDisplay = ticker || `${tokenMint.slice(0, 4)}...${tokenMint.slice(-4)}`
-  const question = `Will ${tokenDisplay} hit $${(Number(targetMarketCap) / 1_000_000_000).toFixed(1)}B?`
+  const question = `Will ${tokenDisplay} hit $${formatMarketCapShort(Number(targetMarketCap))}?`
 
   const handleSideSelect = (side: "YES" | "NO") => {
     if (resolved) return

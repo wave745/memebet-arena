@@ -17,6 +17,7 @@ import { Transaction } from "@solana/web3.js"
 import { buildRedeemInstruction } from "@/lib/solana/instructions"
 import { useRouter } from "next/navigation"
 import { SEEDED_MARKETS } from "@/components/market-feed"
+import { formatMarketCapShort } from "@/lib/utils/format-market-cap"
 
 interface WalletModalProps {
   isOpen: boolean
@@ -675,7 +676,7 @@ function ActiveBetsTab({
                       const ticker = (market as any)?.ticker
                       const tokenMintStr = market?.tokenMint?.toString() || ""
                       const tokenDisplay = ticker || (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
-                      return `Will ${tokenDisplay} hit $${(Number(market.targetMarketCap) / 1e9).toFixed(1)}B?`
+                      return `Will ${tokenDisplay} hit $${formatMarketCapShort(Number(market.targetMarketCap))}?`
                     })()}
                   </div>
                 )}
@@ -709,7 +710,7 @@ function ActiveBetsTab({
                     const ticker = (market as any)?.ticker
                     const tokenMintStr = market?.tokenMint?.toString() || ""
                     const tokenDisplay = ticker || (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
-                    const question = `Will ${tokenDisplay} hit $${(Number(market?.targetMarketCap || 0) / 1e9).toFixed(1)}B?`
+                    const question = `Will ${tokenDisplay} hit $${formatMarketCapShort(Number(market?.targetMarketCap || 0))}?`
 
                     onShare({
                       marketQuestion: question,
@@ -883,7 +884,7 @@ function HistoryTab({
                     const ticker = (market as any)?.ticker
                     const tokenMintStr = market?.tokenMint?.toString() || ""
                     const tokenDisplay = ticker || (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
-                    return `Will ${tokenDisplay} hit $${(Number(market.targetMarketCap) / 1e9).toFixed(1)}B?`
+                    return `Will ${tokenDisplay} hit $${formatMarketCapShort(Number(market.targetMarketCap))}?`
                   })()}
                 </div>
                 {isResolved && outcome !== null && (

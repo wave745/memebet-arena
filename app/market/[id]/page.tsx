@@ -25,6 +25,7 @@ import {
   type Comment
 } from "@/lib/comments"
 import { SEEDED_MARKETS } from "@/components/market-feed"
+import { formatMarketCapShort, formatMarketCap } from "@/lib/utils/format-market-cap"
 
 interface ChainMarketData {
   marketPda: PublicKey
@@ -284,7 +285,7 @@ export default function MarketPage() {
   const tokenDisplay = ticker || (market ? `${market.tokenMint.toString().slice(0, 4)}...${market.tokenMint.toString().slice(-4)}` : "Loading...")
 
   const question = market
-    ? `Will ${tokenDisplay} hit $${(Number(market.targetMarketCap) / 1_000_000_000).toFixed(1)}B?`
+    ? `Will ${tokenDisplay} hit $${formatMarketCapShort(Number(market.targetMarketCap))}?`
     : "Loading..."
 
   const handleCopy = () => {
@@ -625,9 +626,8 @@ export default function MarketPage() {
       const userPubkey = new PublicKey(walletAddress)
       const marketPda = market.marketPda
 
-      // Convert market cap to lamports (assuming it's in billions, convert to base units)
-      // If input is in billions (e.g., 5.0 for $5B), multiply by 1e9
-      const finalMarketCapLamports = BigInt(Math.floor(marketCapValue * 1_000_000_000))
+      // Convert market cap to base units (raw dollar value)
+      const finalMarketCapLamports = BigInt(Math.floor(marketCapValue))
 
       const instruction = buildResolveMarketInstruction(
         marketPda,
@@ -923,18 +923,18 @@ export default function MarketPage() {
                       <h3 className="text-sm font-semibold text-amber-500 mb-3">Resolve Market</h3>
                       <div className="space-y-3">
                         <div>
-                          <label className="text-xs text-[#8A8A8A] mb-1 block">Final Market Cap (Billions)</label>
+                          <label className="text-xs text-[#8A8A8A] mb-1 block">Final Market Cap (USD)</label>
                           <input
                             type="number"
-                            step="0.1"
+                            step="1"
                             value={finalMarketCap}
                             onChange={(e) => setFinalMarketCap(e.target.value)}
-                            placeholder="e.g., 5.2"
+                            placeholder="e.g., 1000000"
                             className="w-full glass-input rounded px-3 py-2 text-sm text-[#E5E5E5] placeholder:text-[#8A8A8A]"
                             disabled={resolving}
                           />
                           <p className="text-xs text-[#8A8A8A] mt-1">
-                            Target: ${(Number(market.targetMarketCap) / 1_000_000_000).toFixed(1)}B
+                            Target: {formatMarketCap(Number(market.targetMarketCap))}
                           </p>
                         </div>
                         {resolveError && (
@@ -983,7 +983,7 @@ export default function MarketPage() {
                       {/* Generate default rules based on market data */}
                       {(() => {
                         const tokenAddress = market.tokenMint.toString()
-                        const targetCap = (Number(market.targetMarketCap) / 1_000_000_000).toFixed(1)
+                        const targetCap = formatMarketCapShort(Number(market.targetMarketCap))
                         const resolveTime = new Date(Number(market.endTimestamp) * 1000).toLocaleString("en-US", {
                           month: "long",
                           day: "numeric",
@@ -993,7 +993,7 @@ export default function MarketPage() {
                           timeZoneName: "short"
                         })
 
-                        const defaultRules = `This market will resolve to "Yes" if the token at address ${tokenAddress.slice(0, 8)}...${tokenAddress.slice(-8)} reaches or exceeds $${targetCap}B market cap at any point before ${resolveTime}.
+                        const defaultRules = `This market will resolve to "Yes" if the token at address ${tokenAddress.slice(0, 8)}...${tokenAddress.slice(-8)} reaches or exceeds $${targetCap} market cap at any point before ${resolveTime}.
 
 Market cap will be determined by the highest reliable source available (CoinGecko, CoinMarketCap, Birdeye, DexScreener) at the exact resolution time.
 
