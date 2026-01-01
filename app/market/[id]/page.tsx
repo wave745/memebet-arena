@@ -867,7 +867,7 @@ export default function MarketPage() {
           <p className="text-muted-foreground">Market not found</p>
         </main>
       ) : (
-        <main className="relative sm:fixed sm:inset-0 sm:top-[138px] min-h-screen sm:overflow-hidden">
+        <main className="relative sm:fixed sm:inset-0 pt-[110px] sm:pt-0 sm:top-[138px] min-h-screen sm:overflow-hidden">
           <div className="mx-auto max-w-7xl px-3 sm:px-4 sm:h-full py-4 sm:py-0">
             <div className="grid gap-4 sm:gap-6 lg:grid-cols-3 sm:h-full">
               {/* Left: Chart and Details */}
