@@ -77,9 +77,10 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
 
 const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
   const { connection } = useSolanaWalletConnection()
-  const { publicKey, connected, disconnect: solanaDisconnect, wallet: solanaWallet } = useSolanaWallet()
+  const { publicKey, connected, disconnect: solanaDisconnect, wallet: solanaWallet, connect: solanaConnect } = useSolanaWallet()
   const [solBalance, setSolBalance] = useState(0)
   const [anchorWallet, setAnchorWallet] = useState<anchor.Wallet | null>(null)
+  const [isInitializing, setIsInitializing] = useState(true)
 
   // Fetch balance with debounce/interval
   useEffect(() => {
@@ -110,6 +111,33 @@ const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => 
       if (intervalId) clearInterval(intervalId)
     }
   }, [publicKey, connected, connection])
+
+  // Auto-connect wallet on page load/navigation
+  useEffect(() => {
+    // Only run this once per page load
+    if (isInitializing) {
+      const autoConnectWallet = async () => {
+        try {
+          // Check if we have a previously connected wallet
+          const hasConnectedWallet = localStorage.getItem('walletName')
+
+          if (hasConnectedWallet && !connected) {
+            console.log('Attempting to auto-connect wallet...')
+            await solanaConnect()
+          }
+        } catch (error) {
+          console.warn('Auto-connect failed:', error)
+        } finally {
+          setIsInitializing(false)
+        }
+      }
+
+      // Small delay to ensure wallet adapter is ready
+      const timer = setTimeout(autoConnectWallet, 100)
+
+      return () => clearTimeout(timer)
+    }
+  }, [connected, solanaConnect, isInitializing])
 
   // Setup Anchor Wallet - Memoize to prevent frequent re-creation
   useEffect(() => {
