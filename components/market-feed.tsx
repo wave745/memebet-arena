@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { useWallet } from "./wallet-provider"
 import { fetchMarketByPda } from "@/lib/anchor/markets"
 import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
@@ -19,7 +19,7 @@ export const SEEDED_MARKETS = [
 // Helper to get all markets including user-created ones from localStorage
 function getAllMarkets(): { pda: string; ticker: string; category: string }[] {
   const allMarkets = [...SEEDED_MARKETS]
-  
+
   // Load user-created markets from localStorage
   if (typeof window !== 'undefined') {
     try {
@@ -37,7 +37,7 @@ function getAllMarkets(): { pda: string; ticker: string; category: string }[] {
       console.error("Failed to load created markets:", e)
     }
   }
-  
+
   return allMarkets
 }
 
@@ -53,67 +53,110 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
   const fetchMarkets = useCallback(async () => {
     if (!connection) {
-      console.log("No connection available")
       setLoading(false)
       return
     }
 
+    // Prevent overlapping fetches could be handled with a ref, but for now just rely on the interval
     try {
       const allMarketsList = getAllMarkets()
-      console.log(`Fetching ${allMarketsList.length} markets from chain...`)
+      // Create a map for faster lookups
+      const marketMap = new Map(allMarketsList.map(m => [m.pda, m]))
+
       const marketData = await Promise.all(
         allMarketsList.map(async ({ pda, ticker }) => {
-        try {
-          const marketPda = new PublicKey(pda)
-          const market = await fetchMarketByPda(connection, null, marketPda)
-          if (market) {
-            return {
-              pda: marketPda.toString(),
-              tokenMint: market.tokenMint.toString(),
-              targetMarketCap: market.targetMarketCap,
-              endTimestamp: market.endTimestamp,
-              resolved: market.resolved,
-              yesPool: market.yesPool,
-              noPool: market.noPool,
-              outcome: market.outcome,
-              ticker,
-              category: getAllMarkets().find(m => m.pda === marketPda.toString())?.category || 'new',
+          try {
+            const marketPda = new PublicKey(pda)
+            const market = await fetchMarketByPda(connection, null, marketPda)
+            if (market) {
+              return {
+                pda: marketPda.toString(),
+                tokenMint: market.tokenMint.toString(),
+                targetMarketCap: market.targetMarketCap,
+                endTimestamp: market.endTimestamp,
+                resolved: market.resolved,
+                yesPool: market.yesPool,
+                noPool: market.noPool,
+                outcome: market.outcome,
+                ticker,
+                category: marketMap.get(marketPda.toString())?.category || 'new',
+              }
             }
+          } catch (error) {
+            console.error(`Failed to fetch market ${pda}:`, error)
           }
-        } catch (error) {
-          console.error(`Failed to fetch market ${pda}:`, error)
-        }
-        return null
-      })
-    )
+          return null
+        })
+      )
 
-    setMarkets(marketData.filter(m => m !== null))
-    setLoading(false)
+      setMarkets(marketData.filter(m => m !== null))
+      setLoading(false)
     } catch (error) {
       console.error("Failed to fetch markets:", error)
       setLoading(false)
-  }
+    }
   }, [connection])
 
   useEffect(() => {
-    // Initial fetch
-    if (connection) {
-      fetchMarkets()
-    } else {
+    if (!connection) {
       setLoading(false)
+      return
     }
-  }, [connection, fetchMarkets])
 
-  // Real-time polling every 5 seconds
-  useEffect(() => {
-    if (!connection) return
+    // Initial fetch
+    fetchMarkets()
 
-    const interval = setInterval(() => {
-      fetchMarkets()
-    }, 5000) // Poll every 5 seconds
+    // Poll every 10 seconds to reduce load
+    const interval = setInterval(fetchMarkets, 10000)
 
     return () => clearInterval(interval)
   }, [connection, fetchMarkets])
+
+  // Filter markets based on category and search query
+  const filteredMarkets = useMemo(() => {
+    return markets.filter((market) => {
+      // Search filter: check if search query matches token mint (first 4 and last 4 chars)
+      if (searchQuery.trim()) {
+        const tokenMintStr = market.tokenMint.toString()
+        const searchLower = searchQuery.toLowerCase().trim()
+        const tokenDisplay = `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}`
+
+        if (!tokenDisplay.toLowerCase().includes(searchLower) &&
+          !tokenMintStr.toLowerCase().includes(searchLower)) {
+          return false
+        }
+      }
+
+      // Category filter
+      if (categoryFilter === "hot") {
+        // Hot = markets with significant pool activity (> 0.5 SOL total)
+        const totalPool = Number(market.yesPool) + Number(market.noPool)
+        const totalPoolSol = totalPool / LAMPORTS_PER_SOL
+        return totalPoolSol > 0.5 && !market.resolved
+      } else if (categoryFilter === "new") {
+        // New = user-created markets OR markets with low activity (fresh markets)
+        const totalPool = Number(market.yesPool) + Number(market.noPool)
+        const totalPoolSol = totalPool / LAMPORTS_PER_SOL
+        // Consider "new" if: category is 'new', low pool activity, or not in base seeded markets
+        const isUserCreated = market.category === 'new' || !SEEDED_MARKETS.find(m => m.pda === market.pda)
+        const isLowActivity = totalPoolSol < 0.5
+        return (isUserCreated || isLowActivity) && !market.resolved
+      } else if (categoryFilter) {
+        // Custom categories: Trenches, KOLs, Cabals, Whales, AI
+        return market.category === categoryFilter
+      }
+
+      // "All" or null: show all markets
+      return true
+    })
+  }, [markets, searchQuery, categoryFilter])
+
+  const handleBetPlaced = async () => {
+    // Immediate refresh after bet is placed (polling will continue)
+    if (connection) {
+      await fetchMarkets()
+    }
+  }
 
   if (loading) {
     return (
@@ -123,50 +166,6 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
       </div>
     )
   }
-
-  const handleBetPlaced = async () => {
-    // Immediate refresh after bet is placed (polling will continue)
-    if (connection) {
-      await fetchMarkets()
-    }
-  }
-
-  // Filter markets based on category and search query
-  const filteredMarkets = markets.filter((market) => {
-    // Search filter: check if search query matches token mint (first 4 and last 4 chars)
-    if (searchQuery.trim()) {
-      const tokenMintStr = market.tokenMint.toString()
-      const searchLower = searchQuery.toLowerCase().trim()
-      const tokenDisplay = `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}`
-
-      if (!tokenDisplay.toLowerCase().includes(searchLower) &&
-        !tokenMintStr.toLowerCase().includes(searchLower)) {
-        return false
-      }
-    }
-
-    // Category filter
-    if (categoryFilter === "hot") {
-      // Hot = markets with significant pool activity (> 0.5 SOL total)
-      const totalPool = Number(market.yesPool) + Number(market.noPool)
-      const totalPoolSol = totalPool / LAMPORTS_PER_SOL
-      return totalPoolSol > 0.5 && !market.resolved
-    } else if (categoryFilter === "new") {
-      // New = user-created markets OR markets with low activity (fresh markets)
-      const totalPool = Number(market.yesPool) + Number(market.noPool)
-      const totalPoolSol = totalPool / LAMPORTS_PER_SOL
-      // Consider "new" if: category is 'new', low pool activity, or not in base seeded markets
-      const isUserCreated = market.category === 'new' || !SEEDED_MARKETS.find(m => m.pda === market.pda)
-      const isLowActivity = totalPoolSol < 0.5
-      return (isUserCreated || isLowActivity) && !market.resolved
-    } else if (categoryFilter) {
-      // Custom categories: Trenches, KOLs, Cabals, Whales, AI
-      return market.category === categoryFilter
-    }
-
-    // "All" or null: show all markets
-    return true
-  })
 
   if (filteredMarkets.length === 0) {
     return (
@@ -194,6 +193,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
             noPool={market.noPool}
             outcome={market.outcome}
             ticker={market.ticker}
+            category={market.category}
             onBetPlaced={handleBetPlaced}
           />
         </div>

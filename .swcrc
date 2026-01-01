@@ -1,0 +1,30 @@
+{
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "tsx": true,
+      "decorators": true
+    },
+    "transform": {
+      "react": {
+        "runtime": "automatic"
+      }
+    },
+    "target": "es2020",
+    "loose": false,
+    "externalHelpers": true,
+    "keepClassNames": true
+  },
+  "module": {
+    "type": "es6"
+  },
+  "minify": false,
+  "sourceMaps": true,
+  "env": {
+    "test": {
+      "module": {
+        "type": "commonjs"
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Market {
+  pda           String   @id
+  tokenMint     String
+  ticker        String?
+  category      String   @default("new")
+  targetCap     String
+  endTimestamp  Int      // Unix timestamp in seconds
+  createdAt     DateTime @default(now())
+  resolved      Boolean  @default(false)
+  outcome       Boolean? // true = YES, false = NO, null = Unresolved
+
+  activities    Activity[]
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  txHash    String   @unique
+  slot      Int
+  timestamp Int      // Block time
+  type      String   // CREATE, BET_YES, BET_NO, RESOLVE, REDEEM, SELL
+  marketPda String
+  user      String
+  amount    String
+  
+  market    Market   @relation(fields: [marketPda], references: [pda])
+
+  @@index([timestamp(sort: Desc)])
+}

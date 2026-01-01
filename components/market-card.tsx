@@ -22,6 +22,7 @@ interface MarketCardProps {
   noPool: anchor.BN
   outcome?: boolean | null
   ticker?: string
+  category?: string
   onBetPlaced?: () => void
 }
 
@@ -35,6 +36,7 @@ export function MarketCard({
   noPool,
   outcome,
   ticker,
+  category,
   onBetPlaced,
 }: MarketCardProps) {
   const { walletConnected, walletAddress, connection, wallet } = useWallet()
@@ -201,6 +203,28 @@ export function MarketCard({
 
       setTxSignature(signature)
       await connection.confirmTransaction(signature, "confirmed")
+
+      // Notify Activity Backend
+      fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          txHash: signature,
+          type: selectedSide === 'YES' ? 'BET_YES' : 'BET_NO',
+          marketPda: pda,
+          user: walletAddress,
+          amount: amountLamports.toString(),
+          outcome: selectedSide === 'YES', // for this specific bet
+          marketInfo: {
+            tokenMint,
+            ticker,
+            targetCap: targetMarketCap.toString(),
+            endTimestamp: endTimestamp.toNumber(),
+            resolved,
+            category: category || "new"
+          }
+        })
+      }).catch(console.error)
 
       // Success - reset and refresh
       onBetPlaced?.()

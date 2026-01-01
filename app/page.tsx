@@ -2,6 +2,8 @@
 
 import { TopBar } from "@/components/top-bar"
 import { MarketFeed } from "@/components/market-feed"
+import { ActivityFeed } from "@/components/activity-feed"
+import { LeaderboardFeed } from "@/components/leaderboard-feed"
 import { SearchModal } from "@/components/search-modal"
 import { WalletModal } from "@/components/wallet-modal"
 import { WalletProvider, useWallet } from "@/components/wallet-provider"
@@ -15,6 +17,15 @@ function HomeContent() {
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
 
   useEffect(() => {
+    // Check URL params for category on mount
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const category = params.get('category')
+      if (category) {
+        setCategoryFilter(category)
+      }
+    }
+
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === "/" && !isSearchModalOpen) {
         e.preventDefault()
@@ -42,7 +53,13 @@ function HomeContent() {
         onSearchModalOpen={() => setIsSearchModalOpen(true)}
       />
       <main className="mx-auto max-w-7xl px-3 sm:px-4 pt-[110px] sm:pt-[136px] pb-8">
-        <MarketFeed searchQuery={searchQuery} categoryFilter={categoryFilter} />
+        {categoryFilter === 'live' ? (
+          <ActivityFeed />
+        ) : categoryFilter === 'leaderboard' ? (
+          <LeaderboardFeed />
+        ) : (
+          <MarketFeed searchQuery={searchQuery} categoryFilter={categoryFilter} />
+        )}
       </main>
 
       <SearchModal

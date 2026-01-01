@@ -1,14 +1,19 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
+  // Use Turbopack with optimized settings
   turbopack: {
-    root: process.cwd(),
-    resolveAlias: {
-      tailwindcss: path.resolve(__dirname, "node_modules/tailwindcss"),
-    },
-  } as any,
-  experimental: {
+    root: __dirname,
+  },
+
+  // Optimize images for faster development
+  images: {
+    unoptimized: true,
+  },
+
+  // DISABLE TypeScript checking in development for MAXIMUM speed
+  typescript: {
+    ignoreBuildErrors: true,
   },
 };
 

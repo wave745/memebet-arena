@@ -6,6 +6,7 @@ import {
   ConnectionProvider,
   WalletProvider as SolanaWalletProvider,
   useWallet as useSolanaWallet,
+  useConnection as useSolanaWalletConnection,
 } from "@solana/wallet-adapter-react"
 import { WalletAdapterNetwork, WalletError } from "@solana/wallet-adapter-base"
 import {
@@ -22,7 +23,7 @@ if (typeof window !== "undefined" && typeof window.Buffer === "undefined") {
     }).catch(() => {
       // Fallback: try require if import fails
       if (typeof require !== "undefined") {
-  const { Buffer } = require("buffer")
+        const { Buffer } = require("buffer")
         window.Buffer = Buffer
       }
     })
@@ -75,61 +76,57 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
 }
 
 const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { connection } = useSolanaWalletConnection()
   const { publicKey, connected, disconnect: solanaDisconnect, wallet: solanaWallet } = useSolanaWallet()
   const [solBalance, setSolBalance] = useState(0)
-  const [connection, setConnection] = useState<Connection | null>(null)
   const [anchorWallet, setAnchorWallet] = useState<anchor.Wallet | null>(null)
 
-  useEffect(() => {
-    const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com"
-    setConnection(new Connection(rpcUrl, "confirmed"))
-  }, [])
-
+  // Fetch balance with debounce/interval
   useEffect(() => {
     let mounted = true
+    let intervalId: NodeJS.Timeout
 
-    if (publicKey && connected && solanaWallet?.adapter && connection) {
-      const updateBalance = async () => {
+    const fetchBalance = async () => {
+      if (publicKey && connection) {
         try {
           const balance = await connection.getBalance(publicKey)
           if (mounted) setSolBalance(balance / LAMPORTS_PER_SOL)
         } catch (err) {
           console.error("Failed to fetch balance:", err)
         }
+      } else {
+        if (mounted) setSolBalance(0)
       }
+    }
 
-      updateBalance()
+    if (connected && publicKey) {
+      fetchBalance()
+      // Poll balance less frequently (10s) to save resources
+      intervalId = setInterval(fetchBalance, 10000)
+    }
 
+    return () => {
+      mounted = false
+      if (intervalId) clearInterval(intervalId)
+    }
+  }, [publicKey, connected, connection])
+
+  // Setup Anchor Wallet - Memoize to prevent frequent re-creation
+  useEffect(() => {
+    if (publicKey && connected && solanaWallet?.adapter) {
       const adapter = solanaWallet.adapter
-      // Set up Anchor Wallet
+
       const walletObj = {
         publicKey: publicKey,
         signTransaction: async (tx: anchor.web3.Transaction) => {
           if (adapter && 'signTransaction' in adapter) {
-            try {
-              return await (adapter as any).signTransaction(tx)
-            } catch (err: any) {
-              console.error("Wallet signTransaction error:", err)
-              // Provide more helpful error message
-              if (err?.message === "Unexpected error" || !err?.message) {
-                throw new Error("Wallet blocked this request. Check: 1) Phantom is on Devnet 2) Disconnect and reconnect wallet 3) Try a different browser")
-              }
-              throw err
-            }
+            return await (adapter as any).signTransaction(tx)
           }
           throw new Error("Wallet does not support transaction signing")
         },
         signAllTransactions: async (txs: anchor.web3.Transaction[]) => {
           if (adapter && 'signAllTransactions' in adapter) {
-            try {
-              return await (adapter as any).signAllTransactions(txs)
-            } catch (err: any) {
-              console.error("Wallet signAllTransactions error:", err)
-              if (err?.message === "Unexpected error" || !err?.message) {
-                throw new Error("Wallet blocked this request. Check: 1) Phantom is on Devnet 2) Disconnect and reconnect wallet")
-              }
-              throw err
-            }
+            return await (adapter as any).signAllTransactions(txs)
           }
           throw new Error("Wallet does not support multiple transaction signing")
         },
@@ -137,13 +134,10 @@ const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => 
       setAnchorWallet(walletObj as anchor.Wallet)
     } else {
       setAnchorWallet(null)
-      setSolBalance(0)
     }
+  }, [publicKey, connected, solanaWallet])
 
-    return () => { mounted = false }
-  }, [publicKey, connected, connection, solanaWallet])
-
-  const contextValue: WalletContextType = {
+  const contextValue: WalletContextType = useMemo(() => ({
     walletConnected: connected,
     walletAddress: publicKey?.toString() || null,
     solBalance,
@@ -153,7 +147,7 @@ const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => 
     disconnect: async () => {
       await solanaDisconnect()
     }
-  }
+  }), [connected, publicKey, solBalance, connection, anchorWallet, solanaDisconnect])
 
   return (
     <WalletContext.Provider value={contextValue}>

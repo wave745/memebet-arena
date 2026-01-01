@@ -10,7 +10,7 @@ import { PublicKey } from "@solana/web3.js"
 import { fetchMarketByPda } from "@/lib/anchor/markets"
 import * as anchor from "@coral-xyz/anchor"
 import { LAMPORTS_PER_SOL } from "@solana/web3.js"
-import { TrendingUp, TrendingDown, MessageSquare, Link, Reply, Copy, Check } from "lucide-react"
+import { TrendingUp, TrendingDown, MessageSquare, Link, Reply, Copy, Check, BarChart3 } from "lucide-react"
 import { Transaction } from "@solana/web3.js"
 import { getPositionPda } from "@/lib/anchor/program"
 import { buildPlaceBetInstruction, buildSellSharesInstruction, buildResolveMarketInstruction } from "@/lib/solana/instructions"
@@ -26,6 +26,7 @@ import {
 } from "@/lib/comments"
 import { SEEDED_MARKETS } from "@/components/market-feed"
 import { formatMarketCapShort, formatMarketCap } from "@/lib/utils/format-market-cap"
+import { MarketChart, generateChartData } from "@/components/market-chart"
 
 interface ChainMarketData {
   marketPda: PublicKey
@@ -78,6 +79,7 @@ export default function MarketPage() {
   const [previousYesPercent, setPreviousYesPercent] = useState<number | null>(null) // Track previous percentage for change indicator
   const [previousNoPercent, setPreviousNoPercent] = useState<number | null>(null) // Track previous NO percentage for change indicator
   const [copied, setCopied] = useState(false)
+  const [chartType, setChartType] = useState<"dexscreener" | "market">("dexscreener") // Chart toggle state
 
 
   // Fetch market from chain
@@ -129,13 +131,16 @@ export default function MarketPage() {
     fetchMarket(true)
   }, [fetchMarket])
 
-  // Real-time polling every 5 seconds (optimized frequency)
+  // Real-time polling every 10 seconds (reduced from 5 to reduce load)
   useEffect(() => {
     if (!connection || !id) return
 
     const interval = setInterval(() => {
-      fetchMarket(false) // Don't show loading on polling updates
-    }, 5000) // Poll every 5 seconds (reduced from 3 to reduce load)
+      // Only fetch if tab is visible to save resources
+      if (!document.hidden) {
+        fetchMarket(false)
+      }
+    }, 10000)
 
     return () => clearInterval(interval)
   }, [connection, id, fetchMarket])
@@ -266,7 +271,7 @@ export default function MarketPage() {
         setPreviousYesPercent(currentYesPercent)
         setPreviousNoPercent(currentNoPercent)
       }, 3000) // Show change for 3 seconds before updating baseline
-      
+
       // Cleanup function must be returned unconditionally
       return () => clearTimeout(timer)
     }
@@ -562,6 +567,26 @@ export default function MarketPage() {
           fetchUserPosition()
         ])
 
+        // Notify Activity Backend
+        fetch('/api/activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            txHash: signature,
+            type: 'SELL',
+            marketPda: market.marketPda.toString(),
+            user: walletAddress,
+            amount: sellAmountLamports.toString(),
+            marketInfo: {
+              tokenMint: market.tokenMint.toString(),
+              ticker: ticker || market.tokenMint.toString().slice(0, 6),
+              targetCap: market.targetMarketCap.toString(),
+              endTimestamp: Number(market.endTimestamp),
+              resolved: market.resolved
+            }
+          })
+        }).catch(console.error)
+
         // Reset form
         setTradeAmount("")
         setTradeSubmitted(false)
@@ -659,6 +684,27 @@ export default function MarketPage() {
         fetchMarket(false),
         fetchUserPosition()
       ])
+
+      // Notify Activity Backend
+      fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          txHash: signature,
+          type: 'RESOLVE',
+          marketPda: market.marketPda.toString(),
+          user: walletAddress,
+          amount: "0",
+          marketInfo: {
+            tokenMint: market.tokenMint.toString(),
+            ticker: ticker || market.tokenMint.toString().slice(0, 6),
+            targetCap: market.targetMarketCap.toString(),
+            endTimestamp: Number(market.endTimestamp),
+            resolved: true,
+            outcome: marketCapValue >= Number(market.targetMarketCap)
+          }
+        })
+      }).catch(console.error)
 
       // Reset form
       setFinalMarketCap("")
@@ -905,6 +951,16 @@ export default function MarketPage() {
                     </div>
                     <div className="flex items-center gap-2 ml-3 flex-shrink-0">
                       <button
+                        onClick={() => setChartType(chartType === "dexscreener" ? "market" : "dexscreener")}
+                        className={`transition-colors p-1.5 ${chartType === "dexscreener"
+                            ? "text-[#69ff94] hover:text-[#69ff94]/80"
+                            : "text-[#8A8A8A] hover:text-[#E5E5E5]"
+                          }`}
+                        title={`Switch to ${chartType === "dexscreener" ? "Market" : "DexScreener"} chart`}
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                      </button>
+                      <button
                         onClick={copyMarketLink}
                         className="text-[#8A8A8A] hover:text-[#E5E5E5] transition-colors p-1.5"
                         title="Copy market link"
@@ -953,17 +1009,40 @@ export default function MarketPage() {
                     </div>
                   )}
 
-                  {/* Chart Section - DexScreener Only */}
+                  {/* Chart Section */}
                   <div className="glass p-2 sm:p-4">
                     {market ? (
                       <div className="rounded-xl overflow-hidden border border-white/10">
-                        <iframe
-                          src={`https://dexscreener.com/solana/${market.tokenMint.toString()}?embed=1&theme=dark&trades=0&info=0`}
-                          className="w-full h-[240px] sm:h-[320px] border-0 transform-gpu"
-                          title="DexScreener Chart"
-                          allowFullScreen
-                          loading="lazy"
-                        />
+                        {chartType === "dexscreener" ? (
+                          <iframe
+                            src={`https://dexscreener.com/solana/${market.tokenMint.toString()}?embed=1&theme=dark&trades=0&info=0`}
+                            className="w-full h-[240px] sm:h-[320px] border-0 transform-gpu"
+                            title="DexScreener Chart"
+                            allowFullScreen
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-[240px] sm:h-[320px] bg-[#0B0B0D] p-4">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-sm font-semibold text-[#E5E5E5]">Market Probability</h3>
+                              <div className="flex items-center gap-4 text-xs">
+                                <div className="flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-[#69ff94]"></div>
+                                  <span className="text-[#E5E5E5]">YES {yesPercent.toFixed(1)}%</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-[#ff00ff]"></div>
+                                  <span className="text-[#E5E5E5]">NO {noPercent.toFixed(1)}%</span>
+                                </div>
+                              </div>
+                            </div>
+                            <MarketChart
+                              data={generateChartData("1D", yesPercent)}
+                              currentValue={yesPercent}
+                              color="#69ff94"
+                            />
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="h-[240px] sm:h-[320px] flex items-center justify-center bg-[#0B0B0D] rounded border border-border/20">

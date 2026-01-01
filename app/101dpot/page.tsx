@@ -226,6 +226,27 @@ export default function AdminPage() {
             // Save to localStorage so it appears on the main page
             saveCreatedMarket(marketPda.toString(), ticker || tokenMint.slice(0, 6), category)
 
+            // Notify Activity Backend
+            fetch('/api/activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    txHash: tx,
+                    type: 'CREATE',
+                    marketPda: marketPda.toString(),
+                    user: walletAddress,
+                    amount: "0",
+                    marketInfo: {
+                        tokenMint: tokenMint,
+                        ticker: ticker || tokenMint.slice(0, 6),
+                        targetCap: parseFloat(targetCap), // just for metadata
+                        endTimestamp: Math.floor(selectedDate.getTime() / 1000),
+                        resolved: false,
+                        category: category
+                    }
+                })
+            }).catch(console.error)
+
             setStatus({
                 type: 'success',
                 msg: `MARKET_DEPLOYED! PDA: ${marketPda.toString().slice(0, 12)}... TX: ${tx.slice(0, 8)}...`
@@ -238,7 +259,7 @@ export default function AdminPage() {
             // Extract meaningful error message
             let errorMsg = "DEPLOYMENT_FAILURE"
             const fullError = err?.message || err?.logs?.join(" ") || ""
-            
+
             // Check for common errors
             if (fullError.includes("already in use")) {
                 errorMsg = "MARKET_ALREADY_EXISTS: A market with these exact parameters already exists. Try different target cap or end date."
@@ -253,7 +274,7 @@ export default function AdminPage() {
             } else if (err?.message) {
                 errorMsg = err.message.slice(0, 200)
             }
-            
+
             setStatus({
                 type: 'error',
                 msg: errorMsg

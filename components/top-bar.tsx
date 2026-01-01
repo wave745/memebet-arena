@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, LayoutGrid, Flame, Sparkles, Zap, Users, TrendingUp, Bot } from "lucide-react"
+import { Search, LayoutGrid, Flame, Sparkles, Zap, Users, TrendingUp, Bot, Activity, Trophy } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { SolanaLogo } from "./solana-logo"
 import { XLogo } from "./x-logo"
 
@@ -36,6 +37,7 @@ export function TopBar({
     onCategoryChange,
     onSearchModalOpen,
 }: TopBarProps) {
+    const router = useRouter()
     const [mounted, setMounted] = useState(false)
     const { setVisible } = useWalletModal()
     const [balancePulse, setBalancePulse] = useState(false)
@@ -122,17 +124,31 @@ export function TopBar({
                 <div className="mx-auto max-w-7xl px-3 sm:px-4">
                     <div className="category-bar flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 relative">
                         {[
-                            { id: null, label: "All", icon: LayoutGrid, desc: "Slay the full arena" },
-                            { id: "hot", label: "Hot", icon: Flame, desc: "High-volume trending bets" },
-                            { id: "new", label: "New", icon: Sparkles, desc: "Freshly launched alpha" },
-                            { id: "trenches", label: "Trenches", icon: Zap, desc: "Pure memecoin madness" },
+                            { id: null, label: "All", icon: LayoutGrid, desc: "Slay the full arena", comingSoon: false },
+                            { id: "hot", label: "Hot", icon: Flame, desc: "High-volume trending bets", comingSoon: false },
+                            { id: "new", label: "New", icon: Sparkles, desc: "Freshly launched alpha", comingSoon: false },
+                            { id: "trenches", label: "Trenches", icon: Zap, desc: "Pure memecoin madness", comingSoon: false },
                             { id: "kols", label: "KOLs", icon: XLogo, desc: "Bet on influencer signals", comingSoon: true },
                             { id: "cabals", label: "Cabals", icon: Users, desc: "Insider & hidden activities", comingSoon: true },
                             { id: "ai", label: "AI", icon: Bot, desc: "Future-forward agentic markets", comingSoon: true },
+                            { id: "leaderboard", label: "Leaderboard", icon: Trophy, desc: "Arena Champions", comingSoon: false },
+                            { id: "live", label: "Live", icon: Activity, desc: "Real-time arena feed", comingSoon: false },
                         ].map((cat) => (
                             <div key={cat.label} className="relative group/tab">
                                 <button
-                                    onClick={() => !cat.comingSoon && onCategoryChange(cat.id as any)}
+                                    onClick={() => {
+                                        if (cat.comingSoon) return
+
+                                        // If we are not on the home page, navigate to home with the category param
+                                        if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+                                            // For default "All" category (id is null), don't add param or add empty
+                                            const param = cat.id ? `?category=${cat.id}` : ''
+                                            router.push(`/${param}`)
+                                        } else {
+                                            // If on home page, just update the filter
+                                            onCategoryChange(cat.id as any)
+                                        }
+                                    }}
                                     className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all flex-shrink-0 relative ${categoryFilter === cat.id
                                         ? "neon-tab-active"
                                         : "neon-tab-inactive"
