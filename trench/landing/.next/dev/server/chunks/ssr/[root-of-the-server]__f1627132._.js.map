@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///home/caesa/memebet-arena/trench/landing/app/page.tsx"],"sourcesContent":["export default function Home() {\n  return (\n    <div className=\"min-h-screen flex flex-col items-center justify-center px-4 text-center bg-black text-white\">\n      <div className=\"max-w-4xl mx-auto\">\n        <h1 className=\"text-6xl font-bold mb-6 text-green-400\">\n          TRENCHMARKET\n        </h1>\n        <p className=\"text-xl mb-8\">\n          Belief markets on Solana memecoins. Fast, degenerate, based.\n        </p>\n        <button\n          onClick={() => window.location.href = 'http://localhost:3001'}\n          className=\"bg-green-500 hover:bg-green-600 text-black font-bold py-3 px-6 rounded-lg\"\n        >\n          ENTER THE TRENCH\n        </button>\n      </div>\n    </div>\n  )\n}\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACtB,qBACE,8OAAC;QAAI,WAAU;kBACb,cAAA,8OAAC;YAAI,WAAU;;8BACb,8OAAC;oBAAG,WAAU;8BAAyC;;;;;;8BAGvD,8OAAC;oBAAE,WAAU;8BAAe;;;;;;8BAG5B,8OAAC;oBACC,SAAS,IAAM,OAAO,QAAQ,CAAC,IAAI,GAAG;oBACtC,WAAU;8BACX;;;;;;;;;;;;;;;;;AAMT"}}]
+}

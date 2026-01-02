@@ -212,6 +212,8 @@ pub mod memebet_arena {
         Ok(())
     }
 
+
+
     /// Redeem winning position
     pub fn redeem(ctx: Context<Redeem>, _outcome: bool) -> Result<()> {
         let market = &ctx.accounts.market;
@@ -416,6 +418,7 @@ pub struct ResolveMarket<'info> {
     pub market: Account<'info, Market>,
     pub resolver: Signer<'info>,
 }
+
 
 #[derive(Accounts)]
 #[instruction(outcome: bool)]

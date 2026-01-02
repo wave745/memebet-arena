@@ -61,7 +61,7 @@ export function TopBar({
             <div className="mx-auto max-w-7xl flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4 py-2 sm:py-3">
                 {/* Left: Logo */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    <Link href="/" className="glass-text-wrapper hover:scale-105 transition-transform">
+                    <Link href="/app" className="glass-text-wrapper hover:scale-105 transition-transform">
                         <h1 className="text-lg sm:text-xl font-black shining-text tracking-tighter">Trenchmarket</h1>
                     </Link>
                 </div>
@@ -139,14 +139,18 @@ export function TopBar({
                                     onClick={() => {
                                         if (cat.comingSoon) return
 
-                                        // If we are not on the home page, navigate to home with the category param
-                                        if (typeof window !== 'undefined' && window.location.pathname !== '/') {
-                                            // For default "All" category (id is null), don't add param or add empty
-                                            const param = cat.id ? `?category=${cat.id}` : ''
-                                            router.push(`/${param}`)
-                                        } else {
-                                            // If on home page, just update the filter
-                                            onCategoryChange(cat.id as any)
+                                        // Always update the filter state
+                                        onCategoryChange(cat.id as any)
+
+                                        // Update URL params for the current page
+                                        if (typeof window !== 'undefined') {
+                                            const url = new URL(window.location.href)
+                                            if (cat.id) {
+                                                url.searchParams.set('category', cat.id)
+                                            } else {
+                                                url.searchParams.delete('category')
+                                            }
+                                            router.push(url.pathname + url.search)
                                         }
                                     }}
                                     className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all flex-shrink-0 relative ${categoryFilter === cat.id

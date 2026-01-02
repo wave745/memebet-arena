@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trenchmarket - Solana Prediction Markets</title>
+    <meta name="description" content="Belief markets on Solana memecoins. Fast, degenerate, based.">
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-cyan: #00ffff;
+            --neon-magenta: #ff0080;
+            --background: #0a0a0a;
+            --foreground: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Background Effects */
+        .bg-effects {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -2;
+        }
+
+        .glass-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.2;
+        }
+
+        .bg-orbs {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 40%;
+            height: 40%;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 50%;
+            filter: blur(120px);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        .bg-orbs:nth-child(2) {
+            top: auto;
+            bottom: -10%;
+            left: auto;
+            right: -10%;
+            background: rgba(255, 0, 128, 0.1);
+            animation-delay: 1s;
+        }
+
+        .bg-orbs:nth-child(3) {
+            top: 40%;
+            left: 60%;
+            width: 30%;
+            height: 30%;
+            background: rgba(0, 255, 255, 0.05);
+            filter: blur(100px);
+            animation-delay: 2s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+        }
+
+        /* Logo */
+        .logo {
+            width: 128px;
+            height: 128px;
+            margin: 0 auto 2rem;
+            background: url('/trench-market-logo1.png') center/contain no-repeat;
+        }
+
+        /* Title */
+        .title-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .title-glow {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, rgba(0, 255, 136, 0.3), rgba(0, 255, 255, 0.3), rgba(255, 0, 128, 0.3));
+            filter: blur(20px);
+            opacity: 0.5;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .title {
+            position: relative;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-green), var(--neon-cyan), var(--neon-magenta));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            letter-spacing: 0.1em;
+            filter: drop-shadow(0 0 30px rgba(0, 255, 136, 0.5));
+            z-index: 1;
+        }
+
+        .title-underline {
+            position: relative;
+            width: clamp(8rem, 12vw, 12rem);
+            height: 4px;
+            margin: 0 auto;
+            background: linear-gradient(45deg, var(--neon-green), var(--neon-cyan), var(--neon-magenta));
+            border-radius: 2px;
+            opacity: 0.8;
+            overflow: hidden;
+        }
+
+        .title-underline::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+            animation: shimmer 2s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Tagline */
+        .tagline {
+            font-size: clamp(1.25rem, 2vw, 1.5rem);
+            color: #888;
+            text-align: center;
+            margin-bottom: 3rem;
+            max-width: 32rem;
+            line-height: 1.6;
+        }
+
+        .tagline .highlight {
+            color: var(--neon-green);
+            font-weight: 600;
+        }
+
+        /* CTA Button */
+        .cta-container {
+            position: relative;
+            margin-bottom: 4rem;
+        }
+
+        .cta-glow {
+            position: absolute;
+            inset: -20px;
+            background: linear-gradient(45deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 255, 0.2), rgba(255, 0, 128, 0.2));
+            filter: blur(30px);
+            opacity: 0.3;
+            animation: pulse 3s ease-in-out infinite;
+            border-radius: 2rem;
+        }
+
+        .cta-button {
+            position: relative;
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 900;
+            color: transparent;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05), transparent);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 255, 136, 0.3);
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent, rgba(0, 255, 136, 0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 1s ease;
+        }
+
+        .cta-button:hover::before {
+            transform: translateX(100%);
+        }
+
+        .cta-button:hover {
+            transform: scale(1.1) translateY(-4px);
+            border-color: rgba(0, 255, 136, 0.6);
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .cta-button .text {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(45deg, white, var(--neon-green), var(--neon-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.05em;
+        }
+
+        /* Particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .cta-button:hover .particles {
+            opacity: 1;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: ping 2s ease-in-out infinite;
+        }
+
+        .particle:nth-child(1) {
+            top: 25%;
+            left: 25%;
+            width: 4px;
+            height: 4px;
+            background: var(--neon-green);
+        }
+
+        .particle:nth-child(2) {
+            top: 75%;
+            right: 25%;
+            width: 4px;
+            height: 4px;
+            background: var(--neon-cyan);
+            animation-delay: 0.5s;
+        }
+
+        .particle:nth-child(3) {
+            top: 50%;
+            left: 50%;
+            width: 3px;
+            height: 3px;
+            background: var(--neon-magenta);
+            animation-delay: 1s;
+        }
+
+        @keyframes ping {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        /* Social Links */
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            color: white;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(0, 255, 136, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .social-link.x:hover {
+            border-color: rgba(0, 255, 136, 0.5);
+        }
+
+        .social-link.discord:hover {
+            border-color: rgba(255, 0, 128, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .logo {
+                width: 96px;
+                height: 96px;
+            }
+
+            .title {
+                font-size: clamp(2.5rem, 12vw, 4rem);
+            }
+
+            .social-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="bg-effects">
+        <div class="glass-grid"></div>
+        <div class="bg-orbs"></div>
+        <div class="bg-orbs"></div>
+        <div class="bg-orbs"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="max-width: 64rem; width: 100%; text-align: center;">
+        <!-- Logo -->
+        <div class="logo"></div>
+
+        <!-- Title -->
+        <div class="title-container">
+            <div class="title-glow"></div>
+            <h1 class="title">TRENCHMARKET</h1>
+            <div class="title-underline"></div>
+        </div>
+
+        <!-- Tagline -->
+        <p class="tagline">
+            Belief markets on Solana memecoins.<br />
+            <span class="highlight">Fast, degenerate, based.</span>
+        </p>
+
+        <!-- CTA Button -->
+        <div class="cta-container">
+            <div class="cta-glow"></div>
+            <button class="cta-button" onclick="window.location.href='https://arena.trench-market.fun'">
+                <div class="particles">
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                    <div class="particle"></div>
+                </div>
+                <span class="text">ENTER THE TRENCH</span>
+            </button>
+        </div>
+
+        <!-- Social Links -->
+        <div class="social-links">
+            <a href="https://x.com/Trenchmarket_" class="social-link x" target="_blank" rel="noopener noreferrer">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                Follow on X
+            </a>
+
+            <a href="https://discord.gg/FnQ7y4pj" class="social-link discord" target="_blank" rel="noopener noreferrer">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.019 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z"/>
+                </svg>
+                Join Discord
+            </a>
+        </div>
+    </div>
+</body>
+</html>

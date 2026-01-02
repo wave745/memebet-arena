@@ -1,11 +1,11 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js"
 import * as anchor from "@coral-xyz/anchor"
+import { getTokenData } from "../lib/dexscreener"
 
 // ---- Configuration ----
 
-const RPC_URL = process.env.RPC_URL || "https://api.devnet.solana.com"
+const RPC_URL = process.env.RPC_URL || "https://api.mainnet-beta.solana.com"
 const INDEXER_URL = process.env.INDEXER_URL || "http://localhost:3001"
-const DEXSCREENER_BASE = "https://api.dexscreener.com/latest/dex/tokens"
 const PROGRAM_ID = process.env.PROGRAM_ID || "YourProgramIdHere"
 
 // ---- Types ----
@@ -16,17 +16,6 @@ interface UnresolvedMarket {
   tokenMint: string
   targetMarketCap: number
   endTimestamp: number
-}
-
-interface DexScreenerTrade {
-  priceUsd: number
-  volumeUsd: number
-  timestamp: number
-}
-
-interface DexScreenerResponse {
-  trades: DexScreenerTrade[]
-  circulatingSupply: number
 }
 
 // ---- Connection Setup ----
@@ -41,51 +30,17 @@ function loadResolverKeypair(): Keypair {
   return Keypair.fromSecretKey(Uint8Array.from(JSON.parse(key)))
 }
 
-// ---- VWAP Computation ----
-
-function computeVWAP(trades: DexScreenerTrade[], endTs: number): number {
-  const windowStart = endTs - 600 // 10 minutes before end
-
-  let volumeSum = 0
-  let priceVolumeSum = 0
-
-  for (const trade of trades) {
-    if (trade.timestamp >= windowStart && trade.timestamp <= endTs) {
-      priceVolumeSum += trade.priceUsd * trade.volumeUsd
-      volumeSum += trade.volumeUsd
-    }
-  }
-
-  if (volumeSum === 0) {
-    throw new Error("VWAP_ZERO_VOLUME: No trades in 10-minute window")
-  }
-
-  return priceVolumeSum / volumeSum
-}
-
 // ---- DexScreener Fetch ----
 
-async function fetchDexScreenerData(tokenMint: string): Promise<DexScreenerResponse> {
-  const response = await fetch(`${DEXSCREENER_BASE}/${tokenMint}`)
+async function fetchTokenData(tokenMint: string) {
+  console.log(`Fetching data for token: ${tokenMint}`)
+  const tokenData = await getTokenData(tokenMint)
 
-  if (!response.ok) {
-    throw new Error(`DexScreener fetch failed: ${response.status}`)
+  if (!tokenData) {
+    throw new Error(`No data available for token ${tokenMint}`)
   }
 
-  const data = await response.json()
-
-  // DexScreener returns pairs, we need to extract trades and supply
-  // This is simplified - actual DexScreener API structure may differ
-  const pair = data.pairs?.[0]
-
-  if (!pair) {
-    throw new Error(`No pair found for token ${tokenMint}`)
-  }
-
-  return {
-    trades: pair.trades || [],
-    circulatingSupply: pair.fdv / pair.priceUsd || 0,
-  }
+  return tokenData
 }
 
 // ---- Indexer Fetch ----
@@ -120,16 +75,13 @@ async function resolveMarket(
   console.log(`Target Market Cap: $${market.targetMarketCap.toLocaleString()}`)
   console.log(`End Timestamp: ${new Date(market.endTimestamp * 1000).toISOString()}`)
 
-  // Fetch DexScreener data
-  const dexData = await fetchDexScreenerData(market.tokenMint)
+  // Fetch token data from DexScreener
+  const tokenData = await fetchTokenData(market.tokenMint)
 
-  // Compute VWAP over last 10 minutes before end_timestamp
-  const vwap = computeVWAP(dexData.trades, market.endTimestamp)
-  console.log(`VWAP (10min): $${vwap.toFixed(8)}`)
+  console.log(`Current Market Cap: $${tokenData.marketCap.toLocaleString()}`)
 
-  // Compute market cap
-  const marketCap = vwap * dexData.circulatingSupply
-  console.log(`Computed Market Cap: $${marketCap.toLocaleString()}`)
+  // Use market cap directly from DexScreener
+  const marketCap = tokenData.marketCap
 
   // Determine outcome
   const outcome = determineOutcome(marketCap, market.targetMarketCap)

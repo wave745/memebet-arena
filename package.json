@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS='--max-old-space-size=16384 --no-deprecation --expose-gc --no-warnings' next dev --turbo",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096 --no-deprecation --expose-gc --no-warnings' next dev --webpack",
     "dev:fast": "NODE_OPTIONS='--max-old-space-size=20480 --no-deprecation --expose-gc --no-warnings --disable-warning=ExperimentalWarning' next dev --turbo",
     "dev:webpack": "NODE_OPTIONS='--max-old-space-size=12288 --no-deprecation --expose-gc' next dev --webpack",
     "build": "next build",

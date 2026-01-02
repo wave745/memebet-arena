@@ -11,7 +11,7 @@ memebet_arena = "6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV"
 [programs.devnet]
 memebet_arena = "6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV"
 
-[programs.mainnet-beta]
+[programs.mainnet]
 memebet_arena = "6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV"
 
 [registry]
