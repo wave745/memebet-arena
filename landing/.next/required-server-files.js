@@ -141,7 +141,7 @@ self.__SERVER_FILES_MANIFEST={
     }
   },
   "appDir": "/home/caesa/memebet-arena/landing",
-  "relativeAppDir": "",
+  "relativeAppDir": "memebet-arena/landing",
   "files": [
     ".next/routes-manifest.json",
     ".next/server/pages-manifest.json",
