@@ -9,12 +9,12 @@ echo "This will deploy both apps as separate Vercel projects:"
 echo "- Landing Page → trench-market.fun"
 echo "- Main App → arena.trench-market.fun"
 echo ""
-echo "Make sure you have Vercel CLI installed: npm i -g vercel"
+echo "This script uses npx to run Vercel CLI (no global install needed)"
 echo ""
 
-# Check if vercel CLI is installed
-if ! command -v vercel &> /dev/null; then
-    echo "❌ Vercel CLI not found. Install with: npm i -g vercel"
+# Check if npx is available
+if ! command -v npx &> /dev/null; then
+    echo "❌ npx not found. Please install Node.js/npm first."
     exit 1
 fi
 
@@ -35,7 +35,7 @@ case $choice in
 
         if [ $? -eq 0 ]; then
             echo "☁️  Deploying to Vercel..."
-            vercel --prod
+            npx vercel --prod
             echo "✅ Landing page deployed!"
         else
             echo "❌ Build failed"
@@ -49,7 +49,7 @@ case $choice in
 
         if [ $? -eq 0 ]; then
             echo "☁️  Deploying to Vercel..."
-            vercel --prod
+            npx vercel --prod
             echo "✅ Main app deployed!"
         else
             echo "❌ Build failed"
@@ -61,20 +61,20 @@ case $choice in
         echo ""
         echo "🏠 Deploying Landing Page..."
         cd landing
-        npm run build && vercel --prod
+        npm run build && npx vercel --prod
         echo "✅ Landing page deployed!"
         echo ""
 
         echo "🎯 Deploying Main App..."
         cd ..
-        npm run build && vercel --prod
+        npm run build && npx vercel --prod
         echo "✅ Main app deployed!"
         echo ""
         echo "🎉 Both apps deployed successfully!"
         ;;
     4)
         echo "📋 Vercel Projects:"
-        vercel ls
+        npx vercel ls
         ;;
     *)
         echo "❌ Invalid option"

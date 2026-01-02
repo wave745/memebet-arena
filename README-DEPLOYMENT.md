@@ -21,10 +21,8 @@ Deploy Trenchmarket with separate landing page and main application to different
 ## 🚀 Quick Deploy
 
 ```bash
-# Make sure Vercel CLI is installed
-npm i -g vercel
-
-# Run deployment script
+# No global installation needed - uses npx
+# Just run the deployment script
 ./deploy.sh
 ```
 
@@ -37,7 +35,7 @@ Choose option 3 to deploy both apps automatically.
 ```bash
 cd landing
 npm run build
-vercel --prod
+npx vercel --prod
 # Follow prompts to create new project
 # Name: trenchmarket-landing
 ```
@@ -47,7 +45,7 @@ vercel --prod
 ```bash
 cd ..  # Back to root
 npm run build
-vercel --prod
+npx vercel --prod
 # Follow prompts to create new project
 # Name: trenchmarket-app
 ```
