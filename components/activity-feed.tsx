@@ -25,7 +25,7 @@ export function ActivityFeed() {
     const [isLive, setIsLive] = useState(true)
     const [lastUpdate, setLastUpdate] = useState<number>(Date.now())
 
-    const fetchActivities = async () => {
+    const fetchActivities = async (retryCount = 0) => {
         try {
             const res = await fetch("/api/activity?limit=50")
             if (!res.ok) throw new Error(`API error: ${res.status}`)
@@ -36,8 +36,20 @@ export function ActivityFeed() {
             }
         } catch (e) {
             console.error("Failed to load activity", e)
+
+            // Retry up to 3 times with exponential backoff for network/API errors
+            if (retryCount < 3) {
+                const delay = Math.pow(2, retryCount) * 1000 // 1s, 2s, 4s
+                console.log(`Retrying activity fetch in ${delay}ms (attempt ${retryCount + 1}/3)`)
+                setTimeout(() => fetchActivities(retryCount + 1), delay)
+            } else {
+                console.warn("Activity fetch failed after 3 retries")
+                setIsLive(false) // Show as not live if we can't fetch
+            }
         } finally {
-            setLoading(false)
+            if (retryCount === 0) { // Only set loading false on first attempt
+                setLoading(false)
+            }
         }
     }
 

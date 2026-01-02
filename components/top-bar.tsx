@@ -9,6 +9,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { SolanaLogo } from "./solana-logo"
 import { XLogo } from "./x-logo"
+import { ConnectionStatus } from "./connection-status"
 
 interface TopBarProps {
     walletConnected: boolean
@@ -88,6 +89,9 @@ export function TopBar({
                 >
                     <Search className="h-5 w-5 text-muted-foreground" />
                 </button>
+
+                {/* Connection Status */}
+                <ConnectionStatus />
 
                 {/* Right: Wallet */}
                 {mounted && (

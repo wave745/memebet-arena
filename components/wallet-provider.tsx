@@ -121,13 +121,24 @@ const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => 
     let mounted = true
     let intervalId: NodeJS.Timeout
 
-    const fetchBalance = async () => {
+    const fetchBalance = async (retryCount = 0) => {
       if (publicKey && connection) {
         try {
           const balance = await connection.getBalance(publicKey)
           if (mounted) setSolBalance(balance / LAMPORTS_PER_SOL)
         } catch (err) {
           console.error("Failed to fetch balance:", err)
+
+          // Retry up to 3 times with exponential backoff
+          if (retryCount < 3 && mounted) {
+            const delay = Math.pow(2, retryCount) * 1000 // 1s, 2s, 4s
+            console.log(`Retrying balance fetch in ${delay}ms (attempt ${retryCount + 1}/3)`)
+            setTimeout(() => fetchBalance(retryCount + 1), delay)
+          } else if (mounted) {
+            // If all retries failed, set balance to 0 and log warning
+            console.warn("Balance fetch failed after 3 retries, setting to 0")
+            setSolBalance(0)
+          }
         }
       } else {
         if (mounted) setSolBalance(0)

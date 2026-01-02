@@ -16,6 +16,7 @@ const LeaderboardFeed = dynamic(() => import("@/components/leaderboard-feed").th
 const SearchModal = dynamic(() => import("@/components/search-modal").then(mod => ({ default: mod.SearchModal })))
 const WalletModal = dynamic(() => import("@/components/wallet-modal").then(mod => ({ default: mod.WalletModal })))
 import { WalletProvider, useWallet } from "@/components/wallet-provider"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { useState, useEffect } from "react"
 
 function HomeContent() {
@@ -89,8 +90,10 @@ function HomeContent() {
 
 export default function App() {
   return (
-    <WalletProvider>
-      <HomeContent />
-    </WalletProvider>
+    <ErrorBoundary>
+      <WalletProvider>
+        <HomeContent />
+      </WalletProvider>
+    </ErrorBoundary>
   )
 }
