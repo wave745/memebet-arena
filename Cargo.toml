@@ -3,12 +3,9 @@ members = ["programs/*"]
 resolver = "2"
 
 [profile.release]
-opt-level = "z"     # Optimize for size (aggressive)
-lto = true          # Link-time optimization
-codegen-units = 1   # Better optimization
-panic = "abort"     # Smaller binary
-strip = true        # Strip debug symbols
 overflow-checks = true
+lto = "fat"
+codegen-units = 1
 
 [patch.crates-io]
 anchor-syn = { path = "patches/anchor-syn/anchor-syn-0.32.1" }
