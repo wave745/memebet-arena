@@ -15,9 +15,12 @@ async function getAllMarkets(): Promise<{ pda: string; ticker: string; category:
 
   try {
     // First, fetch markets from the database API
-    const response = await fetch('/api/markets/sync')
+    console.log("Fetching markets from API...")
+    const response = await fetch(window.location.origin + '/api/markets/sync')
+    console.log("API response status:", response.status)
     if (response.ok) {
       const dbMarkets = await response.json()
+      console.log("Markets from API:", dbMarkets.length, dbMarkets)
       for (const market of dbMarkets) {
         allMarkets.push({
           pda: market.pda,
@@ -25,6 +28,8 @@ async function getAllMarkets(): Promise<{ pda: string; ticker: string; category:
           category: market.category || 'new'
         })
       }
+    } else {
+      console.error("API response not ok:", response.status)
     }
   } catch (e) {
     console.error("Failed to fetch markets from API:", e)
@@ -67,9 +72,12 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
       return
     }
 
+    console.log("Starting fetchMarkets...")
+
     // Prevent overlapping fetches could be handled with a ref, but for now just rely on the interval
     try {
       const allMarketsList = await getAllMarkets()
+      console.log("All markets list:", allMarketsList.length, allMarketsList)
       // Create a map for faster lookups
       const marketMap = new Map(allMarketsList.map(m => [m.pda, m]))
 
@@ -99,7 +107,9 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
         })
       )
 
-      setMarkets(marketData.filter(m => m !== null))
+      const filteredMarkets = marketData.filter(m => m !== null)
+      console.log("Final markets to display:", filteredMarkets.length, filteredMarkets)
+      setMarkets(filteredMarkets)
       setLoading(false)
     } catch (error) {
       console.error("Failed to fetch markets:", error)

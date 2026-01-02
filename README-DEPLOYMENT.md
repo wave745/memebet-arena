@@ -70,18 +70,71 @@ vercel --prod
 
 Copy these environment variables to **both** Vercel projects:
 
+### **Main App Project:**
 ```bash
-# Database
-DATABASE_URL=your_database_url
+# Solana RPC (Production - automatically detected)
+NEXT_PUBLIC_RPC_URL=https://api.mainnet-beta.solana.com
 
-# Solana
-SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+# Database (optional - for development only)
+# DATABASE_URL=your_database_url
 
-# Wallet Connect
+# Wallet Connect (optional)
 NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id
 
-# Other API keys...
+# Other API keys as needed
 ```
+
+## 🗄️ **Database Configuration**
+
+**Current Setup:** In-memory storage (resets on deployments)
+
+For production persistence, add one of these:
+
+### **Option 1: Vercel Postgres**
+```bash
+# Add to environment variables
+POSTGRES_URL=your_vercel_postgres_url
+
+# Vercel will provide this automatically when you add Postgres
+```
+
+### **Option 2: PlanetScale**
+```bash
+DATABASE_URL=mysql://user:pass@host/db
+```
+
+### **Option 3: Supabase**
+```bash
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
+```
+
+**Note:** Current implementation uses global in-memory storage for Vercel compatibility. Markets persist during the deployment but reset on redeploys. Add a database for full persistence.
+
+### **Landing Page Project:**
+```bash
+# Minimal env vars needed
+NEXT_PUBLIC_RPC_URL=https://api.mainnet-beta.solana.com
+```
+
+## ⚠️ **Critical: Wallet Configuration**
+
+The wallet provider automatically detects production vs development:
+
+- **Production** (`NODE_ENV=production`): Uses Mainnet + Mainnet RPC
+- **Development** (`NODE_ENV=development`): Uses Devnet + Devnet RPC
+
+**Included Wallets:**
+- ✅ Phantom
+- ✅ Solflare
+- ✅ Backpack
+- ✅ Coinbase Wallet
+- ✅ Trust Wallet
+
+**Environment Variables in Vercel:**
+1. Go to Project Settings → Environment Variables
+2. Add `NEXT_PUBLIC_RPC_URL=https://api.mainnet-beta.solana.com`
+3. Vercel automatically sets `NODE_ENV=production`
 
 ## 🧪 Testing
 

@@ -261,7 +261,8 @@ export default function AdminPage() {
             saveCreatedMarket(marketPda.toString(), ticker || tokenMint.slice(0, 6), category)
 
             // Sync to database so all users can see the market
-            await fetch('/api/markets/sync', {
+            console.log("Syncing market to database:", marketPda.toString())
+            const syncResponse = await fetch(window.location.origin + '/api/markets/sync', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -274,6 +275,7 @@ export default function AdminPage() {
                     resolved: false
                 })
             })
+            console.log("Sync response:", syncResponse.status, await syncResponse.text())
 
             // Notify Activity Backend
             fetch('/api/activity', {

@@ -12,6 +12,13 @@ import { WalletAdapterNetwork, WalletError } from "@solana/wallet-adapter-base"
 import {
   WalletModalProvider,
 } from "@solana/wallet-adapter-react-ui"
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+  BackpackWalletAdapter,
+  CoinbaseWalletAdapter,
+  TrustWalletAdapter,
+} from "@solana/wallet-adapter-wallets"
 import * as anchor from "@coral-xyz/anchor"
 
 // Polyfill Buffer for Solana libraries in browser
@@ -45,12 +52,25 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined)
 
 export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
-  const network = WalletAdapterNetwork.Devnet
-  const endpoint = process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com"
+  // Use Mainnet for production, Devnet for development
+  const network = process.env.NODE_ENV === 'production'
+    ? WalletAdapterNetwork.Mainnet
+    : WalletAdapterNetwork.Devnet
+
+  const endpoint = process.env.NEXT_PUBLIC_RPC_URL ||
+    (network === WalletAdapterNetwork.Mainnet
+      ? "https://api.mainnet-beta.solana.com"
+      : "https://api.devnet.solana.com")
 
   // Explicitly include main wallets and allow Standard discovery
   const wallets = useMemo(
     () => [
+      // Add popular wallets
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new BackpackWalletAdapter(),
+      new CoinbaseWalletAdapter(),
+      new TrustWalletAdapter(),
     ],
     [network]
   )
