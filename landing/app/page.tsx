@@ -18,47 +18,49 @@ function DiscordIcon({ className }: { className?: string }) {
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-3 sm:px-4 py-4 sm:py-6 md:py-8 text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center px-3 sm:px-4 py-2 sm:py-4 md:py-6 text-center">
       {/* Hero Section */}
       <div className="max-w-4xl mx-auto w-full px-2 sm:px-0">
         {/* Logo */}
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-2 sm:mb-4">
           <img
             src="/trench-market-logo1.png"
             alt="Trenchmarket Logo"
-            className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 mx-auto mb-3 sm:mb-4"
+            className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 lg:w-32 lg:h-32 mx-auto"
           />
         </div>
 
         {/* Title */}
-        <div className="relative mb-4 sm:mb-6">
+        <div className="relative mb-3 sm:mb-4 md:mb-6">
           {/* Background glow effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-neon-green/20 sm:from-neon-green/30 via-neon-cyan/20 sm:via-neon-cyan/30 to-neon-magenta/20 sm:to-neon-magenta/30 blur-xl sm:blur-2xl opacity-40 sm:opacity-50 animate-pulse"></div>
 
-          <h1 className="relative text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black mb-2 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta bg-clip-text text-transparent tracking-wider drop-shadow-2xl leading-tight">
+          <h1 className="relative text-xl xs:text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-1 sm:mb-2 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta bg-clip-text text-transparent tracking-wider drop-shadow-2xl leading-tight">
             TRENCHMARKET
           </h1>
 
           {/* Animated underline */}
-          <div className="relative mx-auto w-20 sm:w-28 md:w-32 lg:w-40 xl:w-48 h-0.5 sm:h-1 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta rounded-full opacity-80">
+          <div className="relative mx-auto w-16 sm:w-24 md:w-28 lg:w-36 xl:w-44 h-0.5 sm:h-1 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta rounded-full opacity-80">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-pulse rounded-full"></div>
           </div>
         </div>
 
         {/* Tagline */}
-        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 sm:mb-8 md:mb-10 lg:mb-12 max-w-2xl mx-auto leading-relaxed px-2">
-          Belief markets on Solana memecoins.<br className="hidden sm:block" />
-          <span className="text-neon-green font-semibold">Fast, degenerate, based.</span>
-        </p>
+        <div className="mb-4 sm:mb-6 md:mb-8 lg:mb-10">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed px-1 sm:px-2">
+            Belief markets on Solana memecoins.<br />
+            <span className="text-neon-green font-semibold block sm:inline">Fast, degenerate, based.</span>
+          </p>
+        </div>
 
         {/* CTA Button */}
-        <div className="mb-8 sm:mb-10 md:mb-12 lg:mb-16 relative">
+        <div className="mb-4 sm:mb-6 md:mb-8 relative">
           {/* Background glow effect - reduced for mobile */}
           <div className="absolute inset-0 bg-gradient-to-r from-neon-green/15 sm:from-neon-green/20 via-neon-cyan/15 sm:via-neon-cyan/20 to-neon-magenta/15 sm:to-neon-magenta/20 blur-2xl sm:blur-3xl opacity-25 sm:opacity-30 animate-pulse"></div>
 
           <Button
             size="lg"
-            className="group relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 hover:border-neon-green/60 text-transparent bg-clip-text font-black text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 h-auto rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl shadow-black/50 hover:shadow-neon-green/30 transition-all duration-500 sm:duration-700 hover:scale-105 sm:hover:scale-110 hover:-translate-y-0.5 sm:hover:-translate-y-1 sm:hover:-translate-y-2 overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-neon-green/20 before:to-transparent before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-1000 after:absolute after:inset-0 after:bg-gradient-to-br after:from-neon-green/10 after:via-transparent after:to-neon-cyan/10 after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-500"
+            className="group relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 hover:border-neon-green/60 text-transparent bg-clip-text font-black text-sm sm:text-base px-5 sm:px-6 py-2.5 sm:py-3 h-auto rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl shadow-black/50 hover:shadow-neon-green/30 transition-all duration-500 sm:duration-700 hover:scale-105 sm:hover:scale-110 hover:-translate-y-0.5 sm:hover:-translate-y-1 overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-neon-green/20 before:to-transparent before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-1000 after:absolute after:inset-0 after:bg-gradient-to-br after:from-neon-green/10 after:via-transparent after:to-neon-cyan/10 after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-500"
             onClick={() => window.location.href = 'https://arena.trench-market.fun'}
           >
             {/* Animated background particles - simplified for mobile */}
@@ -79,8 +81,8 @@ export default function Home() {
           </Button>
         </div>
 
-        {/* Social Links - Touch-friendly mobile design */}
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 md:gap-6 w-full max-w-sm sm:max-w-none mx-auto">
+        {/* Social Links - Better vertical spacing */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-xs sm:max-w-none mx-auto">
           <a
             href="https://x.com/Trenchmarket_"
             className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-neon-green/50 transition-all duration-300 group w-full sm:w-auto active:scale-95 touch-manipulation"
