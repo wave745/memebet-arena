@@ -106,7 +106,7 @@ export function ActivityFeed() {
 
                         <div className="text-right hidden sm:block">
                             <a
-                                href={`https://explorer.solana.com/tx/${item.txHash}?cluster=devnet`}
+                                href={`https://explorer.solana.com/tx/${item.txHash}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-white transition-colors"

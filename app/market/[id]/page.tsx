@@ -1625,7 +1625,7 @@ Resolution time is final — no appeals. The market will automatically resolve b
                     <div className="mb-3 text-xs text-[#8A8A8A] bg-[#0B0B0D] border border-border/30 rounded px-2 py-1.5">
                       <div className="text-[#E5E5E5] mb-1">Transaction submitted</div>
                       <a
-                        href={`https://solscan.io/tx/${txSignature}?cluster=devnet`}
+                        href={`https://solscan.io/tx/${txSignature}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[#6B9E78] hover:underline"

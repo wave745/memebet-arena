@@ -489,7 +489,7 @@ export function MarketCard({
                   <div className="space-y-0.5 bg-[#0F0F11] border border-border/30 rounded px-2 py-1.5">
                     <div className="text-[#E5E5E5]">Transaction submitted</div>
                     <a
-                      href={`https://solscan.io/tx/${txSignature}?cluster=devnet`}
+                      href={`https://solscan.io/tx/${txSignature}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#6B9E78] hover:underline block"

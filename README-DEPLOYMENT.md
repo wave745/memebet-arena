@@ -121,6 +121,7 @@ The wallet provider automatically detects production vs development:
 
 - **Production** (`NODE_ENV=production`): Uses Mainnet + Mainnet RPC
 - **Development** (`NODE_ENV=development`): Uses Devnet + Devnet RPC
+- **Production** (`NODE_ENV=production`): Uses Mainnet + Mainnet RPC + Mainnet explorer links
 
 **Included Wallets:**
 - ✅ Phantom
