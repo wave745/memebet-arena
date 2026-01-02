@@ -22,6 +22,8 @@ interface Activity {
 export function ActivityFeed() {
     const [activities, setActivities] = useState<Activity[]>([])
     const [loading, setLoading] = useState(true)
+    const [isLive, setIsLive] = useState(true)
+    const [lastUpdate, setLastUpdate] = useState<number>(Date.now())
 
     const fetchActivities = async () => {
         try {
@@ -30,6 +32,7 @@ export function ActivityFeed() {
             const data = await res.json()
             if (Array.isArray(data)) {
                 setActivities(data)
+                setLastUpdate(Date.now())
             }
         } catch (e) {
             console.error("Failed to load activity", e)
@@ -40,7 +43,8 @@ export function ActivityFeed() {
 
     useEffect(() => {
         fetchActivities()
-        const interval = setInterval(fetchActivities, 30000)
+        // Poll every 5 seconds for live updates
+        const interval = setInterval(fetchActivities, 5000)
         return () => clearInterval(interval)
     }, [])
 
@@ -64,8 +68,11 @@ export function ActivityFeed() {
     return (
         <div className="max-w-3xl mx-auto">
             <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-6 pl-4 flex items-center gap-3">
-                <div className="h-1.5 w-1.5 bg-red-500 rounded-full animate-pulse" />
-                Live Arena Feed
+                <div className={`h-1.5 w-1.5 rounded-full animate-pulse ${isLive ? 'bg-red-500' : 'bg-green-500'}`} />
+                Live Global Feed
+                <span className="text-[8px] text-white/20 font-normal tracking-normal">
+                    ({activities.length} activities)
+                </span>
             </h2>
             <div className="space-y-3">
                 {activities.map((item) => (
