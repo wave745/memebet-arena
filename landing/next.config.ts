@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    turbopack: {
+      root: process.cwd(),
+    },
+  },
+
   // Optimize images for faster development
   images: {
     unoptimized: true,

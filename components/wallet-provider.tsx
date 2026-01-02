@@ -15,7 +15,7 @@ import {
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
-  BackpackWalletAdapter,
+  BitgetWalletAdapter,
   CoinbaseWalletAdapter,
   TrustWalletAdapter,
 } from "@solana/wallet-adapter-wallets"
@@ -68,7 +68,7 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
       // Add popular wallets
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
-      new BackpackWalletAdapter(),
+      new BitgetWalletAdapter(),
       new CoinbaseWalletAdapter(),
       new TrustWalletAdapter(),
     ],
