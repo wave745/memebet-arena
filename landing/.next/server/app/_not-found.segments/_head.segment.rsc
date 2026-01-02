@@ -1,0 +1,6 @@
+1:"$Sreact.fragment"
+2:I[69131,["/_next/static/chunks/bf3fcd0caacc7df8.js"],"ViewportBoundary"]
+3:I[69131,["/_next/static/chunks/bf3fcd0caacc7df8.js"],"MetadataBoundary"]
+4:"$Sreact.suspense"
+5:I[16490,["/_next/static/chunks/bf3fcd0caacc7df8.js"],"IconMark"]
+0:{"buildId":"afBL5ibmSBoc0oi1vUII7","rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Trenchmarket - Solana Prediction Markets"}],["$","meta","1",{"name":"description","content":"Belief markets on Solana memecoins. Fast, degenerate, based."}],["$","link","2",{"rel":"icon","href":"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>"}],["$","link","3",{"rel":"apple-touch-icon","href":"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>"}],["$","$L5","4",{}]]}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"loading":null,"isPartial":false}
