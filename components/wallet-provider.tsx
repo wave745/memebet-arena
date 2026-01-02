@@ -57,10 +57,24 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
     ? WalletAdapterNetwork.Mainnet
     : WalletAdapterNetwork.Devnet
 
-  const endpoint = process.env.NEXT_PUBLIC_RPC_URL ||
-    (network === WalletAdapterNetwork.Mainnet
-      ? "https://api.mainnet-beta.solana.com"
-      : "https://api.devnet.solana.com")
+  // RPC endpoint with fallback options for reliability
+  const getEndpoint = () => {
+    // Use environment variable if set
+    if (process.env.NEXT_PUBLIC_RPC_URL) {
+      return process.env.NEXT_PUBLIC_RPC_URL
+    }
+
+    // Production mainnet - require paid RPC provider
+    if (network === WalletAdapterNetwork.Mainnet) {
+      console.warn("⚠️ Using default mainnet RPC. For production, set NEXT_PUBLIC_RPC_URL to a paid provider like Helius!")
+      return "https://api.mainnet-beta.solana.com"
+    }
+
+    // Development - use devnet
+    return "https://api.devnet.solana.com"
+  }
+
+  const endpoint = getEndpoint()
 
   // Explicitly include main wallets and allow Standard discovery
   const wallets = useMemo(

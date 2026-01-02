@@ -70,8 +70,12 @@ Copy these environment variables to **both** Vercel projects:
 
 ### **Main App Project:**
 ```bash
-# Solana RPC (Production - automatically detected)
-NEXT_PUBLIC_RPC_URL=https://api.mainnet-beta.solana.com
+# Solana RPC (PRODUCTION - Use paid provider for mainnet!)
+NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
+
+# Alternative RPC providers (choose one):
+# NEXT_PUBLIC_RPC_URL=https://mainnet.rpcpool.com/YOUR_QUICKNODE_API_KEY
+# NEXT_PUBLIC_RPC_URL=https://ssc-dao.genesysgo.net
 
 # Database (optional - for development only)
 # DATABASE_URL=your_database_url
@@ -81,6 +85,32 @@ NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id
 
 # Other API keys as needed
 ```
+
+## ⚠️ **CRITICAL: RPC Provider Setup**
+
+**The default Solana mainnet RPC (`https://api.mainnet-beta.solana.com`) will NOT work for production!**
+
+It has extremely strict rate limits and returns `403 Forbidden` errors, especially when:
+- Creating markets (multiple transactions)
+- Fetching account balances
+- Real-time activity polling
+
+### **Required: Use a Paid RPC Provider**
+
+1. **Helius** (Recommended):
+   - Sign up: https://helius.xyz
+   - Get API key from dashboard
+   - Use: `https://mainnet.helius-rpc.com/?api-key=YOUR_API_KEY`
+
+2. **QuickNode**:
+   - Sign up: https://quicknode.com
+   - Create Solana mainnet endpoint
+   - Use: `https://mainnet.rpcpool.com/YOUR_API_KEY`
+
+3. **GenesysGo** (Free tier available):
+   - Use: `https://ssc-dao.genesysgo.net`
+
+**Without a proper RPC provider, your app will fail on mainnet!** 🚨
 
 ## 🗄️ **Database Configuration**
 
