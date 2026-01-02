@@ -48,7 +48,7 @@ export function ActivityFeed() {
             }
         } finally {
             if (retryCount === 0) { // Only set loading false on first attempt
-                setLoading(false)
+            setLoading(false)
             }
         }
     }

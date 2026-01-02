@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import "@solana/wallet-adapter-react-ui/styles.css"
 import { WalletProvider } from "@/components/wallet-provider"
+import { Analytics } from "@vercel/analytics/next"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -45,6 +46,7 @@ export default function RootLayout({
           <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] bg-neon-cyan/5 rounded-full blur-[100px] animate-pulse [animation-delay:2s]" />
         </div>
         <WalletProvider>{children}</WalletProvider>
+        <Analytics />
       </body>
     </html>
   )
