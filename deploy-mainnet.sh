@@ -7,11 +7,18 @@ echo "🚀 Deploying Trenchmarket Program to Solana Mainnet"
 echo "=================================================="
 echo ""
 
+# Add Solana CLI to PATH
+export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
 # Check if solana CLI is installed
 if ! command -v solana &> /dev/null; then
     echo "❌ Solana CLI not found!"
-    echo "Install it with: sh -c \"\$(curl -sSfL https://release.solana.com/v1.18.4/install)\""
-    exit 1
+    echo "Installing Solana CLI..."
+    sh -c "$(curl -sSfL https://release.solana.com/v1.18.4/install)" || {
+        echo "❌ Failed to install Solana CLI"
+        exit 1
+    }
+    export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 fi
 
 # Check if anchor CLI is installed
@@ -43,15 +50,38 @@ echo "🔄 Switching to mainnet..."
 solana config set --url https://api.mainnet-beta.solana.com
 
 echo ""
-echo "💰 Checking wallet balance..."
-solana balance
+echo "💰 Checking mainnet wallet balance..."
+MAINNET_BALANCE=$(solana balance 2>/dev/null | awk '{print $1}')
 
-echo ""
-read -p "Balance looks good? Continue with deployment? (y/N): " -n 1 -r
-echo ""
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "❌ Deployment cancelled"
-    exit 1
+if [ -z "$MAINNET_BALANCE" ] || [ "$MAINNET_BALANCE" = "0" ]; then
+    echo "❌ No SOL found on mainnet wallet!"
+    echo ""
+    echo "You need ~0.5-1 SOL on mainnet for deployment."
+    echo ""
+    echo "Options to get mainnet SOL:"
+    echo "1. Transfer from devnet: Use a bridge or exchange"
+    echo "2. Buy SOL on an exchange (Binance, Coinbase, etc.)"
+    echo "3. Use mainnet faucet if available"
+    echo ""
+    echo "Current devnet balance: $(solana config set --url https://api.devnet.solana.com && solana balance && solana config set --url https://api.mainnet-beta.solana.com)"
+    echo ""
+    read -p "Do you want to continue anyway? (y/N): " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Deployment cancelled - get mainnet SOL first"
+        exit 1
+    fi
+else
+    echo "✅ Mainnet balance: $MAINNET_BALANCE SOL"
+    if (( $(echo "$MAINNET_BALANCE < 0.5" | bc -l) )); then
+        echo "⚠️  Warning: Balance is low. Deployment costs ~0.1-0.5 SOL"
+        read -p "Continue anyway? (y/N): " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "❌ Deployment cancelled - insufficient funds"
+            exit 1
+        fi
+    fi
 fi
 
 echo ""
