@@ -18,87 +18,87 @@ function DiscordIcon({ className }: { className?: string }) {
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center px-3 sm:px-4 py-4 sm:py-6 md:py-8 text-center">
       {/* Hero Section */}
-      <div className="max-w-4xl mx-auto w-full">
+      <div className="max-w-4xl mx-auto w-full px-2 sm:px-0">
         {/* Logo */}
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-4 sm:mb-6">
           <img
             src="/trench-market-logo1.png"
             alt="Trenchmarket Logo"
-            className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4"
+            className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 mx-auto mb-3 sm:mb-4"
           />
         </div>
 
         {/* Title */}
-        <div className="relative mb-6">
+        <div className="relative mb-4 sm:mb-6">
           {/* Background glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-neon-green/30 via-neon-cyan/30 to-neon-magenta/30 blur-2xl opacity-50 animate-pulse"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-neon-green/20 sm:from-neon-green/30 via-neon-cyan/20 sm:via-neon-cyan/30 to-neon-magenta/20 sm:to-neon-magenta/30 blur-xl sm:blur-2xl opacity-40 sm:opacity-50 animate-pulse"></div>
 
-          <h1 className="relative text-4xl sm:text-6xl lg:text-8xl font-black mb-2 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta bg-clip-text text-transparent tracking-wider drop-shadow-2xl leading-tight">
+          <h1 className="relative text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black mb-2 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta bg-clip-text text-transparent tracking-wider drop-shadow-2xl leading-tight">
             TRENCHMARKET
           </h1>
 
           {/* Animated underline */}
-          <div className="relative mx-auto w-24 sm:w-32 lg:w-48 h-1 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta rounded-full opacity-80">
+          <div className="relative mx-auto w-20 sm:w-28 md:w-32 lg:w-40 xl:w-48 h-0.5 sm:h-1 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta rounded-full opacity-80">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-pulse rounded-full"></div>
           </div>
         </div>
 
         {/* Tagline */}
-        <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed px-2">
+        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 sm:mb-8 md:mb-10 lg:mb-12 max-w-2xl mx-auto leading-relaxed px-2">
           Belief markets on Solana memecoins.<br className="hidden sm:block" />
           <span className="text-neon-green font-semibold">Fast, degenerate, based.</span>
         </p>
 
         {/* CTA Button */}
-        <div className="mb-10 sm:mb-16 relative">
-          {/* Background glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-neon-green/20 via-neon-cyan/20 to-neon-magenta/20 blur-3xl opacity-30 animate-pulse"></div>
+        <div className="mb-8 sm:mb-10 md:mb-12 lg:mb-16 relative">
+          {/* Background glow effect - reduced for mobile */}
+          <div className="absolute inset-0 bg-gradient-to-r from-neon-green/15 sm:from-neon-green/20 via-neon-cyan/15 sm:via-neon-cyan/20 to-neon-magenta/15 sm:to-neon-magenta/20 blur-2xl sm:blur-3xl opacity-25 sm:opacity-30 animate-pulse"></div>
 
           <Button
             size="lg"
-            className="group relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 hover:border-neon-green/60 text-transparent bg-clip-text font-black text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-3 h-auto rounded-xl sm:rounded-2xl shadow-2xl shadow-black/50 hover:shadow-neon-green/30 transition-all duration-700 hover:scale-105 sm:hover:scale-110 hover:-translate-y-1 sm:hover:-translate-y-2 overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-neon-green/20 before:to-transparent before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-1000 after:absolute after:inset-0 after:bg-gradient-to-br after:from-neon-green/10 after:via-transparent after:to-neon-cyan/10 after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-500"
+            className="group relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 hover:border-neon-green/60 text-transparent bg-clip-text font-black text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 h-auto rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl shadow-black/50 hover:shadow-neon-green/30 transition-all duration-500 sm:duration-700 hover:scale-105 sm:hover:scale-110 hover:-translate-y-0.5 sm:hover:-translate-y-1 sm:hover:-translate-y-2 overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-neon-green/20 before:to-transparent before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-1000 after:absolute after:inset-0 after:bg-gradient-to-br after:from-neon-green/10 after:via-transparent after:to-neon-cyan/10 after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-500"
             onClick={() => window.location.href = 'https://arena.trench-market.fun'}
           >
-            {/* Animated background particles */}
+            {/* Animated background particles - simplified for mobile */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
               <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-neon-green rounded-full animate-ping"></div>
               <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-neon-cyan rounded-full animate-ping [animation-delay:0.5s]"></div>
               <div className="absolute top-1/2 left-1/2 w-0.5 h-0.5 bg-neon-magenta rounded-full animate-ping [animation-delay:1s]"></div>
             </div>
 
-            <span className="relative z-10 bg-gradient-to-r from-white via-neon-green to-neon-cyan bg-clip-text text-transparent font-black text-xs sm:text-sm tracking-wider">
+            <span className="relative z-10 bg-gradient-to-r from-white via-neon-green to-neon-cyan bg-clip-text text-transparent font-black text-sm sm:text-base tracking-wider">
               ENTER THE TRENCH
             </span>
 
-            {/* Border glow animation */}
-            <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta animate-spin opacity-20" style={{animationDuration: '3s'}}></div>
+            {/* Border glow animation - only on larger screens */}
+            <div className="hidden sm:block absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta animate-spin opacity-20" style={{animationDuration: '3s'}}></div>
             </div>
           </Button>
         </div>
 
-        {/* Social Links */}
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6">
+        {/* Social Links - Touch-friendly mobile design */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 md:gap-6 w-full max-w-sm sm:max-w-none mx-auto">
           <a
             href="https://x.com/Trenchmarket_"
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-neon-green/50 transition-all duration-300 group min-w-0"
+            className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-neon-green/50 transition-all duration-300 group w-full sm:w-auto active:scale-95 touch-manipulation"
             target="_blank"
             rel="noopener noreferrer"
           >
-            <XLogo className="w-5 h-5 text-neon-cyan group-hover:text-neon-green transition-colors flex-shrink-0" />
-            <span className="text-sm font-medium whitespace-nowrap">Follow on X</span>
+            <XLogo className="w-4 h-4 sm:w-5 sm:h-5 text-neon-cyan group-hover:text-neon-green transition-colors flex-shrink-0" />
+            <span className="text-sm sm:text-sm font-medium whitespace-nowrap">Follow on X</span>
           </a>
 
           <a
             href="https://discord.gg/FnQ7y4pj"
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-neon-magenta/50 transition-all duration-300 group min-w-0"
+            className="flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-neon-magenta/50 transition-all duration-300 group w-full sm:w-auto active:scale-95 touch-manipulation"
             target="_blank"
             rel="noopener noreferrer"
           >
-            <DiscordIcon className="w-5 h-5 text-neon-magenta group-hover:text-neon-magenta/80 transition-colors flex-shrink-0" />
-            <span className="text-sm font-medium whitespace-nowrap">Join Discord</span>
+            <DiscordIcon className="w-4 h-4 sm:w-5 sm:h-5 text-neon-magenta group-hover:text-neon-magenta/80 transition-colors flex-shrink-0" />
+            <span className="text-sm sm:text-sm font-medium whitespace-nowrap">Join Discord</span>
           </a>
         </div>
       </div>
