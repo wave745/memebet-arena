@@ -2,6 +2,38 @@ import { NextResponse } from "next/server"
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
 
+export async function GET() {
+    try {
+        const db = await open({
+            filename: './dev.db',
+            driver: sqlite3.Database
+        })
+
+        const markets = await db.all(`
+            SELECT pda, tokenMint, ticker, category, targetCap, endTimestamp, resolved, outcome, createdAt
+            FROM Market
+            ORDER BY createdAt DESC
+        `)
+
+        await db.close()
+
+        return NextResponse.json(markets.map(market => ({
+            pda: market.pda,
+            tokenMint: market.tokenMint,
+            ticker: market.ticker,
+            category: market.category || 'new',
+            targetCap: market.targetCap,
+            endTimestamp: Number(market.endTimestamp),
+            resolved: !!market.resolved,
+            outcome: market.outcome !== null ? !!market.outcome : null,
+            createdAt: market.createdAt
+        })))
+    } catch (e) {
+        console.error("Failed to fetch markets:", e)
+        return NextResponse.json({ error: "Failed to fetch markets" }, { status: 500 })
+    }
+}
+
 export async function POST(request: Request) {
     try {
         const body = await request.json()

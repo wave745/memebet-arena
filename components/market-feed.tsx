@@ -9,19 +9,38 @@ import * as anchor from "@coral-xyz/anchor"
 
 // No hardcoded seeded markets - all markets come from user creation or API
 
-// Helper to get all markets from user-created ones in localStorage
-function getAllMarkets(): { pda: string; ticker: string; category: string }[] {
+// Helper to get all markets from API and localStorage
+async function getAllMarkets(): Promise<{ pda: string; ticker: string; category: string }[]> {
   const allMarkets: { pda: string; ticker: string; category: string }[] = []
 
-  // Load user-created markets from localStorage
+  try {
+    // First, fetch markets from the database API
+    const response = await fetch('/api/markets/sync')
+    if (response.ok) {
+      const dbMarkets = await response.json()
+      for (const market of dbMarkets) {
+        allMarkets.push({
+          pda: market.pda,
+          ticker: market.ticker,
+          category: market.category || 'new'
+        })
+      }
+    }
+  } catch (e) {
+    console.error("Failed to fetch markets from API:", e)
+  }
+
+  // Also include any user-created markets from localStorage (for fallback/new markets)
   if (typeof window !== 'undefined') {
     try {
       const stored = localStorage.getItem('created_markets')
       if (stored) {
         const createdMarkets = JSON.parse(stored)
-        // Add all user-created markets
+        // Add local markets that aren't already in the API results
         for (const m of createdMarkets) {
+          if (!allMarkets.find(existing => existing.pda === m.pda)) {
             allMarkets.push({ pda: m.pda, ticker: m.ticker, category: m.category || 'new' })
+          }
         }
       }
     } catch (e) {
@@ -50,7 +69,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
     // Prevent overlapping fetches could be handled with a ref, but for now just rely on the interval
     try {
-      const allMarketsList = getAllMarkets()
+      const allMarketsList = await getAllMarkets()
       // Create a map for faster lookups
       const marketMap = new Map(allMarketsList.map(m => [m.pda, m]))
 

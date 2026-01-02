@@ -260,6 +260,21 @@ export default function AdminPage() {
             // Save to localStorage so it appears on the main page
             saveCreatedMarket(marketPda.toString(), ticker || tokenMint.slice(0, 6), category)
 
+            // Sync to database so all users can see the market
+            await fetch('/api/markets/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pda: marketPda.toString(),
+                    tokenMint: tokenMint,
+                    ticker: ticker || tokenMint.slice(0, 6),
+                    category: category,
+                    targetCap: capBN,
+                    endTimestamp: endBN,
+                    resolved: false
+                })
+            })
+
             // Notify Activity Backend
             fetch('/api/activity', {
                 method: 'POST',

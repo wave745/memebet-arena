@@ -57,12 +57,39 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
 
     setLoading(true)
     try {
-      // No hardcoded markets - markets will be loaded dynamically
-      // This could be extended to fetch from an API or user-created markets
-      const marketData: MarketResult[] = []
-      setMarkets(marketData)
+      // Fetch markets from the database API
+      const response = await fetch('/api/markets/sync')
+      if (response.ok) {
+        const dbMarkets = await response.json()
+        const marketData: MarketResult[] = []
+
+        // Fetch blockchain data for each market
+        for (const market of dbMarkets.slice(0, 20)) { // Limit to 20 for search performance
+          try {
+            const marketPda = new PublicKey(market.pda)
+            const blockchainData = await fetchMarketByPda(connection, null, marketPda)
+            if (blockchainData) {
+              marketData.push({
+                pda: market.pda,
+                tokenMint: market.tokenMint,
+                targetMarketCap: BigInt(market.targetCap || '0'),
+                resolved: market.resolved,
+                yesPool: blockchainData.yesPool,
+                noPool: blockchainData.noPool,
+              })
+            }
+          } catch (error) {
+            console.error(`Failed to fetch market ${market.pda}:`, error)
+          }
+        }
+
+        setMarkets(marketData)
+      } else {
+        setMarkets([])
+      }
     } catch (error) {
       console.error("Failed to fetch markets:", error)
+      setMarkets([])
     } finally {
       setLoading(false)
     }
