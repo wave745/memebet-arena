@@ -16,7 +16,6 @@ import { generatePnLImage, type PnLData } from "@/lib/pnl-generator"
 import { Transaction } from "@solana/web3.js"
 import { buildRedeemInstruction } from "@/lib/solana/instructions"
 import { useRouter } from "next/navigation"
-import { SEEDED_MARKETS } from "@/components/market-feed"
 import { formatMarketCapShort } from "@/lib/utils/format-market-cap"
 
 interface WalletModalProps {
@@ -133,10 +132,8 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
       marketResults.forEach((result) => {
         if (result) {
           const [pdaStr, marketData] = result
-          // Find ticker from SEEDED_MARKETS
-          const ticker = SEEDED_MARKETS.find(m => m.pda === pdaStr)?.ticker
-          // Enrich market data with ticker
-          marketMap.set(pdaStr, { ...marketData, ticker })
+          // TODO: Get ticker from API or user input - no hardcoded data
+          marketMap.set(pdaStr, { ...marketData, ticker: 'UNKNOWN' })
         }
       })
 

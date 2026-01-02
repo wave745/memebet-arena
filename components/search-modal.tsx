@@ -26,14 +26,7 @@ const BROWSE_CATEGORIES = [
   { label: "KOLs", icon: XLogo, value: "kols", comingSoon: true },
 ]
 
-// Hardcoded seeded market PDAs (same as market-feed.tsx)
-const SEEDED_MARKET_PDAS = [
-  "7PtZBSzh8LN9oeQMi3uUhQRaQ7yBDs4skWcZMtGmVhcc", // BONK $5B
-  "ERwWqoCH2NDuT25eeG8uGruVGH9qpFX6bU47SUBgJ11E", // WIF $10B
-  "7SiMKeNgReui2NdMgodxGCogRumYf2Bob4NfuhVrC84h", // POPCAT $2B
-  "2jvKsrAkRbTqXiffcerA7sWhau3SDYCnoec2BtNiQDRE", // BONK $3B
-  "5mwSAmNfF6ddY4KHmVN9DwgxaFbPEUuxpBxJfu2hnH3a", // WIF $8B
-]
+// No hardcoded seeded market PDAs - all markets come from user creation or API
 
 interface MarketResult {
   pda: string
@@ -64,25 +57,9 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
 
     setLoading(true)
     try {
+      // No hardcoded markets - markets will be loaded dynamically
+      // This could be extended to fetch from an API or user-created markets
       const marketData: MarketResult[] = []
-      for (const pdaStr of SEEDED_MARKET_PDAS) {
-        try {
-          const marketPda = new PublicKey(pdaStr)
-          const market = await fetchMarketByPda(connection, null, marketPda)
-          if (market) {
-            marketData.push({
-              pda: marketPda.toString(),
-              tokenMint: market.tokenMint.toString(),
-              targetMarketCap: market.targetMarketCap,
-              resolved: market.resolved,
-              yesPool: market.yesPool,
-              noPool: market.noPool,
-            })
-          }
-        } catch (error) {
-          console.error(`Failed to fetch market ${pdaStr}:`, error)
-        }
-      }
       setMarkets(marketData)
     } catch (error) {
       console.error("Failed to fetch markets:", error)

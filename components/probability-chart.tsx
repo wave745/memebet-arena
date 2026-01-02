@@ -30,53 +30,24 @@ function calculateProbability(yesPool: anchor.BN, noPool: anchor.BN): number {
   return Number((yesPoolBigInt * 10000n) / total) / 100
 }
 
-// Mock data generator - in production, this would come from an indexer
-// Snapshot probability on each bet, or sample every X seconds
-function generateMockHistory(market: ChainMarketData, side: "YES" | "NO") {
-  const now = Date.now()
-  const endTime = Number(market.endTimestamp) * 1000
-  const daysBeforeEnd = 10
-  const created = endTime - (daysBeforeEnd * 24 * 60 * 60 * 1000)
-  const duration = now - created
-  const points = 40 // Controlled movement - not too many, not too few
-  
-  const history = []
+// Historical data will come from indexer API in production
+// For now, return empty array - no mock data
+function generateHistory(market: ChainMarketData, side: "YES" | "NO") {
+  // TODO: Integrate with indexer API for real historical probability data
+  // For now, return only current data point
   const currentYesProb = calculateProbability(market.yesPool, market.noPool)
   const currentNoProb = 100 - currentYesProb
   
-  // Generate historical data points with realistic progression
-  for (let i = 0; i < points; i++) {
-    const timestamp = created + (duration * i / points)
-    const progress = i / points
-    
-    // Simulate realistic probability evolution
-    // Start near 50%, evolve toward current state with controlled volatility
-    const baseProb = 50 + (currentYesProb - 50) * progress
-    const volatility = 4 * Math.sin(progress * Math.PI * 3) + (Math.random() - 0.5) * 2
-    const yesProb = Math.max(5, Math.min(95, baseProb + volatility))
-    const noProb = 100 - yesProb
-    
-    history.push({
-      time: new Date(timestamp),
-      timestamp,
-      yesProb,
-      noProb,
-    })
-  }
-  
-  // Add current point (actual current probability)
-  history.push({
-    time: new Date(now),
-    timestamp: now,
+  return [{
+    time: new Date(),
+    timestamp: Date.now(),
     yesProb: currentYesProb,
     noProb: currentNoProb,
-  })
-  
-  return history
+  }]
 }
 
 export function ProbabilityChart({ market, side }: ProbabilityChartProps) {
-  const history = useMemo(() => generateMockHistory(market, side), [market, side])
+  const history = useMemo(() => generateHistory(market, side), [market, side])
   
   // Calculate current probability from actual pool data
   const currentYesProb = calculateProbability(market.yesPool, market.noPool)

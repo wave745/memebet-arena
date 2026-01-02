@@ -24,7 +24,6 @@ import {
   organizeComments,
   type Comment
 } from "@/lib/comments"
-import { SEEDED_MARKETS } from "@/components/market-feed"
 import { formatMarketCapShort, formatMarketCap } from "@/lib/utils/format-market-cap"
 import { getTokenData, type TokenData } from "@/lib/dexscreener"
 
@@ -306,7 +305,8 @@ export default function MarketPage() {
 
 
 
-  const ticker = market ? SEEDED_MARKETS.find(m => m.pda === market.marketPda.toString())?.ticker : null
+  // TODO: Get ticker from API or market data - no hardcoded data
+  const ticker = null
   const tokenDisplay = ticker || (market ? `${market.tokenMint.toString().slice(0, 4)}...${market.tokenMint.toString().slice(-4)}` : "Loading...")
 
   const question = market

@@ -7,18 +7,11 @@ import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { MarketCard } from "@/components/market-card"
 import * as anchor from "@coral-xyz/anchor"
 
-// Hardcoded seeded market PDAs (base markets)
-export const SEEDED_MARKETS = [
-  { pda: "7PtZBSzh8LN9oeQMi3uUhQRaQ7yBDs4skWcZMtGmVhcc", ticker: "BONK", category: "trenches" },
-  { pda: "ERwWqoCH2NDuT25eeG8uGruVGH9qpFX6bU47SUBgJ11E", ticker: "WIF", category: "trenches" },
-  { pda: "7SiMKeNgReui2NdMgodxGCogRumYf2Bob4NfuhVrC84h", ticker: "POPCAT", category: "kols" },
-  { pda: "2jvKsrAkRbTqXiffcerA7sWhau3SDYCnoec2BtNiQDRE", ticker: "BONK", category: "ai" },
-  { pda: "5mwSAmNfF6ddY4KHmVN9DwgxaFbPEUuxpBxJfu2hnH3a", ticker: "WIF", category: "cabals" },
-]
+// No hardcoded seeded markets - all markets come from user creation or API
 
-// Helper to get all markets including user-created ones from localStorage
+// Helper to get all markets from user-created ones in localStorage
 function getAllMarkets(): { pda: string; ticker: string; category: string }[] {
-  const allMarkets = [...SEEDED_MARKETS]
+  const allMarkets: { pda: string; ticker: string; category: string }[] = []
 
   // Load user-created markets from localStorage
   if (typeof window !== 'undefined') {
@@ -26,11 +19,9 @@ function getAllMarkets(): { pda: string; ticker: string; category: string }[] {
       const stored = localStorage.getItem('created_markets')
       if (stored) {
         const createdMarkets = JSON.parse(stored)
-        // Add non-duplicate markets
+        // Add all user-created markets
         for (const m of createdMarkets) {
-          if (!allMarkets.find(existing => existing.pda === m.pda)) {
             allMarkets.push({ pda: m.pda, ticker: m.ticker, category: m.category || 'new' })
-          }
         }
       }
     } catch (e) {
