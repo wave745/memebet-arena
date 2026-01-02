@@ -18,7 +18,7 @@ memebet_arena = "6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "mainnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
