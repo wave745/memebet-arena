@@ -41,7 +41,7 @@ if (typeof window === 'undefined' && typeof require !== 'undefined') {
   }
 }
 
-export const PROGRAM_ID = new PublicKey("Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb")
+export const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
 
 // Cache for runtime-fetched IDL
 let idlCache: any = null

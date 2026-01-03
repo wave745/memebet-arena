@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const require = createRequire(import.meta.url)
 
-const PROGRAM_ID = new PublicKey("Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb")
+const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
 const RPC_URL = process.env.RPC_URL || "https://api.devnet.solana.com"
 const WALLET_PATH = process.env.WALLET_PATH || "~/.config/solana/id.json"
 

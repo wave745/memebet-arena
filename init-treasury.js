@@ -21,7 +21,7 @@ async function main() {
   anchor.setProvider(provider);
 
   // Program ID
-  const programId = new PublicKey('Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb');
+  const programId = new PublicKey('ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL');
 
   console.log('Testing basic program interaction...');
 
@@ -111,26 +111,38 @@ async function main() {
   console.log('Treasury PDA:', treasuryPDA.toString());
 
   try {
-    // Initialize treasury
-    const tx = await program.methods
-      .initializeTreasury()
-      .accounts({
-        treasury: treasuryPDA,
-        admin: wallet.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .rpc();
+    // Manually create the initialize_treasury instruction since we don't have IDL deployed yet
+    const instructionData = Buffer.from([124, 186, 211, 195, 85, 165, 129, 166]); // initialize_treasury discriminator from IDL
 
-    console.log('Initialize treasury tx:', tx);
+    const initTreasuryIx = {
+      keys: [
+        { pubkey: treasuryPDA, isSigner: false, isWritable: true },
+        { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
+        { pubkey: anchor.web3.SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      programId: programId,
+      data: instructionData,
+    };
 
-    // Verify treasury was created
-    const treasuryAccount = await program.account.treasury.fetch(treasuryPDA);
-    console.log('Treasury initialized successfully!');
-    console.log('Treasury admin:', treasuryAccount.admin.toString());
-    console.log('Total fees collected:', treasuryAccount.totalFeesCollected.toString());
+    // Create and send transaction
+    const transaction = new anchor.web3.Transaction().add(initTreasuryIx);
+    const txSignature = await provider.sendAndConfirm(transaction);
+
+    console.log('✅ Treasury initialized successfully!');
+    console.log('Transaction signature:', txSignature);
+
+    // Verify treasury account exists
+    const treasuryInfo = await connection.getAccountInfo(treasuryPDA);
+    if (treasuryInfo) {
+      console.log('✅ Treasury account created successfully!');
+      console.log('Treasury balance:', treasuryInfo.lamports / anchor.web3.LAMPORTS_PER_SOL, 'SOL');
+    } else {
+      console.log('❌ Treasury account not found after initialization');
+    }
 
   } catch (error) {
-    console.error('Error initializing treasury:', error);
+    console.error('❌ Treasury initialization failed:', error.message);
+    console.log('Treasury PDA:', treasuryPDA.toString());
   }
 }
 

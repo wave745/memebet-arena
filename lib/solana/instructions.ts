@@ -1,6 +1,6 @@
 import { PublicKey, TransactionInstruction, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
 
-export const PROGRAM_ID = new PublicKey("Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb")
+export const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
 
 // Instruction discriminators (first 8 bytes of sha256("global:instruction_name"))
 // Computed: sha256("global:place_bet")[0..8]

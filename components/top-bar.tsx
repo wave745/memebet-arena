@@ -148,7 +148,7 @@ export function TopBar({
                                             const url = new URL(window.location.href)
                                             if (cat.id) {
                                                 url.searchParams.set('category', cat.id)
-                                            } else {
+                                        } else {
                                                 url.searchParams.delete('category')
                                             }
                                             router.push(url.pathname + url.search)

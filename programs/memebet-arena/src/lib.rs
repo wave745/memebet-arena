@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 
-declare_id!("Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb");
+declare_id!("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL");
 
 const ADMIN_PUBKEY: Pubkey = pubkey!("3zAjK7AzN7Wdor2i3kzcNrdRJc8PzysspjbgG8awp5NB");
 

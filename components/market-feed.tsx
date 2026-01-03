@@ -65,7 +65,7 @@ async function getAllMarkets(): Promise<{ pda: string; ticker: string; category:
           if (!allMarkets.find(existing => existing.pda === m.pda)) {
             // Validate PDA before adding
             if (m.pda && isValidSolanaAddress(m.pda)) {
-              allMarkets.push({ pda: m.pda, ticker: m.ticker, category: m.category || 'new' })
+            allMarkets.push({ pda: m.pda, ticker: m.ticker, category: m.category || 'new' })
             } else {
               console.warn("Skipping invalid PDA from localStorage:", m.pda)
             }
