@@ -168,11 +168,6 @@ export function TopBar({
                                     )}
                                 </button>
 
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 border border-white/10 rounded text-[10px] text-white/70 whitespace-nowrap opacity-0 group-hover/tab:opacity-100 pointer-events-none transition-all duration-200 transform translate-y-2 group-hover/tab:translate-y-0 z-[60] backdrop-blur-md">
-                                    {cat.desc}
-                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/90" />
-                                </div>
                             </div>
                         ))}
                     </div>
