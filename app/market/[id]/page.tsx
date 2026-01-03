@@ -436,7 +436,10 @@ export default function MarketPage() {
           positionPda,
           userPubkey,
           outcome,
-          amountLamports
+          amountLamports,
+          market.tokenMint,
+          market.targetMarketCap,
+          market.endTimestamp
         )
 
         const transaction = new Transaction().add(instruction)

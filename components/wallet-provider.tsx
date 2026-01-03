@@ -82,10 +82,19 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
   const onError = useCallback((error: WalletError) => {
     // Suppress common non-fatal errors to prevent console noise
     if (error.name === 'WalletDisconnectedError') {
-      console.warn("Wallet Context: Disconnected.", error.message)
+      console.warn("🔌 Wallet disconnected:", error.message)
       return
     }
-    console.error("Wallet Error:", error)
+    if (error.name === 'WalletNotFoundError') {
+      console.warn("👛 Wallet not found:", error.message)
+      return
+    }
+    if (error.name === 'WalletConnectionError' && error.message?.includes('User rejected')) {
+      console.log("❌ User rejected wallet connection")
+      return
+    }
+
+    console.error("🚨 Wallet Error:", error.name, error.message)
   }, [])
 
   return (
@@ -106,39 +115,68 @@ const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => 
   const [anchorWallet, setAnchorWallet] = useState<anchor.Wallet | null>(null)
   const [isInitializing, setIsInitializing] = useState(true)
 
-  // Fetch balance with debounce/interval
+  // Fetch balance with improved error handling and connection recovery
   useEffect(() => {
     let mounted = true
     let intervalId: NodeJS.Timeout
+    let consecutiveFailures = 0
 
     const fetchBalance = async (retryCount = 0) => {
-      if (publicKey && connection) {
-        try {
-          const balance = await connection.getBalance(publicKey)
-          if (mounted) setSolBalance(balance / LAMPORTS_PER_SOL)
-        } catch (err) {
-          console.error("Failed to fetch balance:", err)
+      if (!publicKey || !connection || !mounted) {
+        if (mounted) setSolBalance(0)
+        return
+      }
 
-          // Retry up to 3 times with exponential backoff
-          if (retryCount < 3 && mounted) {
-            const delay = Math.pow(2, retryCount) * 1000 // 1s, 2s, 4s
-            console.log(`Retrying balance fetch in ${delay}ms (attempt ${retryCount + 1}/3)`)
+      try {
+        const balance = await connection.getBalance(publicKey, {
+          commitment: 'confirmed',
+        })
+        if (mounted) {
+          setSolBalance(balance / LAMPORTS_PER_SOL)
+          consecutiveFailures = 0 // Reset failure count on success
+        }
+      } catch (err: any) {
+        console.warn("Balance fetch failed:", err?.message || err)
+
+        // Check if it's a connection issue
+        if (err?.message?.includes('Failed to fetch') || err?.message?.includes('ERR_CONNECTION')) {
+          console.log("🔄 Connection issue detected, will retry...")
+
+          if (retryCount < 5 && mounted) {
+            const delay = Math.min(Math.pow(2, retryCount) * 1000, 10000) // Cap at 10s
+            console.log(`⏳ Retrying balance fetch in ${delay}ms (attempt ${retryCount + 1}/5)`)
             setTimeout(() => fetchBalance(retryCount + 1), delay)
           } else if (mounted) {
-            // If all retries failed, set balance to 0 and log warning
-            console.warn("Balance fetch failed after 3 retries, setting to 0")
-            setSolBalance(0)
+            consecutiveFailures++
+            if (consecutiveFailures >= 3) {
+              console.warn("⚠️ Multiple balance fetch failures, keeping last known balance")
+              // Don't set to 0, keep last known balance
+            } else {
+              setSolBalance(0)
+            }
+          }
+        } else {
+          // Other types of errors (like account not found)
+          if (mounted) {
+            consecutiveFailures++
+            if (consecutiveFailures >= 3) {
+              console.warn("⚠️ Account balance unavailable")
+            } else {
+              setSolBalance(0)
+            }
           }
         }
-      } else {
-        if (mounted) setSolBalance(0)
       }
     }
 
     if (connected && publicKey) {
+      // Initial fetch
       fetchBalance()
-      // Poll balance less frequently (30s) to save resources
-      intervalId = setInterval(fetchBalance, 30000)
+
+      // Poll balance every 60 seconds (reduced frequency to avoid rate limits)
+      intervalId = setInterval(fetchBalance, 60000)
+    } else {
+      setSolBalance(0)
     }
 
     return () => {
@@ -147,32 +185,57 @@ const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => 
     }
   }, [publicKey, connected, connection])
 
-  // Auto-connect wallet on page load/navigation
+  // Auto-connect wallet on page load/navigation with improved error handling
   useEffect(() => {
     // Only run this once per page load
     if (isInitializing) {
       const autoConnectWallet = async () => {
         try {
-          // Check if we have a previously connected wallet
-          const hasConnectedWallet = localStorage.getItem('walletName')
+          // Check for previously connected wallet using correct localStorage key
+          const walletState = localStorage.getItem('trench-market-wallet')
 
-          if (hasConnectedWallet && !connected) {
-            console.log('Attempting to auto-connect wallet...')
-            await solanaConnect()
+          if (walletState && !connected) {
+            console.log('🔄 Attempting to auto-connect wallet...')
+
+            // Parse wallet state to get wallet name
+            const parsedState = JSON.parse(walletState)
+            if (parsedState?.walletName) {
+              console.log(`🔌 Auto-connecting to ${parsedState.walletName}...`)
+
+              // Wait for wallet adapter to be ready
+              let attempts = 0
+              const maxAttempts = 10
+
+              while (attempts < maxAttempts && !solanaWallet?.adapter) {
+                await new Promise(resolve => setTimeout(resolve, 200))
+                attempts++
+              }
+
+              if (solanaWallet?.adapter) {
+                await solanaConnect()
+                console.log('✅ Wallet auto-connected successfully')
+              } else {
+                console.warn('⚠️ Wallet adapter not ready for auto-connect')
+              }
+            }
+          } else if (!walletState) {
+            console.log('ℹ️ No previously connected wallet found')
           }
         } catch (error) {
-          console.warn('Auto-connect failed:', error)
+          console.warn('❌ Auto-connect failed:', error)
+          // Clear potentially corrupted wallet state
+          localStorage.removeItem('trench-market-wallet')
         } finally {
           setIsInitializing(false)
         }
       }
 
-      // Small delay to ensure wallet adapter is ready
-      const timer = setTimeout(autoConnectWallet, 100)
+      // Delay to ensure all adapters are initialized
+      const timer = setTimeout(autoConnectWallet, 500)
 
       return () => clearTimeout(timer)
     }
-  }, [connected, solanaConnect, isInitializing])
+  }, [connected, solanaConnect, solanaWallet?.adapter, isInitializing])
 
   // Setup Anchor Wallet - Memoize to prevent frequent re-creation
   useEffect(() => {
@@ -200,17 +263,37 @@ const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => 
     }
   }, [publicKey, connected, solanaWallet])
 
+  // Manual reconnect function for troubleshooting
+  const manualReconnect = useCallback(async () => {
+    try {
+      console.log('🔄 Manual wallet reconnect attempt...')
+      if (!connected) {
+        await solanaConnect()
+        console.log('✅ Manual reconnect successful')
+      } else {
+        console.log('ℹ️ Wallet already connected')
+      }
+    } catch (error) {
+      console.error('❌ Manual reconnect failed:', error)
+      throw error
+    }
+  }, [connected, solanaConnect])
+
   const contextValue: WalletContextType = useMemo(() => ({
     walletConnected: connected,
     walletAddress: publicKey?.toString() || null,
     solBalance,
     connection,
     wallet: anchorWallet,
-    connect: async () => { }, // Handled by Modal
+    connect: manualReconnect,
     disconnect: async () => {
+      console.log('🔌 Disconnecting wallet...')
       await solanaDisconnect()
+      // Clear wallet state
+      localStorage.removeItem('trench-market-wallet')
+      console.log('✅ Wallet disconnected and state cleared')
     }
-  }), [connected, publicKey, solBalance, connection, anchorWallet, solanaDisconnect])
+  }), [connected, publicKey, solBalance, connection, anchorWallet, solanaDisconnect, manualReconnect])
 
   return (
     <WalletContext.Provider value={contextValue}>

@@ -172,12 +172,16 @@ export function MarketCard({
       }
 
       // Multiple buys on the same market are supported - the program handles it
+      const tokenMintPubkey = new PublicKey(tokenMint)
       const instruction = buildPlaceBetInstruction(
         marketPda,
         positionPda,
         userPubkey,
         outcome,
-        amountLamports
+        amountLamports,
+        tokenMintPubkey,
+        targetMarketCap,
+        endTimestamp
       )
 
       const transaction = new Transaction().add(instruction)

@@ -1,7 +1,7 @@
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js"
 import * as anchor from "@coral-xyz/anchor"
 import { getProgram, getMarketPda, getMarketVaultPda, PROGRAM_ID } from "./program"
-import type { MemebetArena } from "../../target/types/memebet_arena"
+import type { MemebetArena } from "../../../target/types/memebet_arena"
 
 export interface MarketData {
   marketId: number

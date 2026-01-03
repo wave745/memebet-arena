@@ -114,7 +114,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
   // Filter markets based on category and search query
   const filteredMarkets = useMemo(() => {
-    return markets.filter((market) => {
+    let filtered = markets.filter((market) => {
       // Search filter: check if search query matches token mint (first 4 and last 4 chars)
       if (searchQuery.trim()) {
         const tokenMintStr = market.tokenMint.toString()
@@ -161,7 +161,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
     // Special sorting for trenches: new markets first
     if (categoryFilter === "trenches") {
-      filteredMarkets = filteredMarkets.sort((a, b) => {
+      filtered = filtered.sort((a, b) => {
         // Helper function to determine if market is "new"
         const isNewMarket = (market: any) => {
           const totalPool = Number(market.yesPool) + Number(market.noPool)
@@ -186,7 +186,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
       })
     }
 
-    return filteredMarkets
+    return filtered
   }, [markets, searchQuery, categoryFilter])
 
   const handleBetPlaced = async () => {

@@ -9,17 +9,24 @@ import { SolanaLogo } from "./solana-logo"
 import { getPositionPda } from "@/lib/anchor/program"
 import { buildPlaceBetInstruction } from "@/lib/solana/instructions"
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js"
+import * as anchor from "@coral-xyz/anchor"
 
 interface BetSectionProps {
   side: "YES" | "NO"
   marketPda: PublicKey // Market PDA - required for betting
+  tokenMint: PublicKey
+  targetMarketCap: anchor.BN
+  endTimestamp: anchor.BN
   onBetPlaced?: () => void
 }
 
-export function BetSection({ 
-  side, 
+export function BetSection({
+  side,
   marketPda,
-  onBetPlaced 
+  tokenMint,
+  targetMarketCap,
+  endTimestamp,
+  onBetPlaced
 }: BetSectionProps) {
   const [amount, setAmount] = useState("")
   const [loading, setLoading] = useState(false)
@@ -82,7 +89,10 @@ export function BetSection({
         positionPda,
         userPubkey,
         outcome,
-        amountLamports
+        amountLamports,
+        tokenMint,
+        targetMarketCap,
+        endTimestamp
       )
 
       // Step 4: Build transaction

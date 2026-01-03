@@ -9,7 +9,7 @@ import * as anchor from "@coral-xyz/anchor"
 import bs58 from "bs58"
 
 // No hardcoded seeded markets - all markets come from user creation or API
-const SEEDED_MARKETS: { pda: string; ticker: string; category: string }[] = []
+export const SEEDED_MARKETS: { pda: string; ticker: string; category: string }[] = []
 
 // Helper function to validate if a string is a valid base58-encoded Solana address
 function isValidSolanaAddress(address: string): boolean {
@@ -164,7 +164,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
   // Filter markets based on category and search query
   const filteredMarkets = useMemo(() => {
-    return markets.filter((market) => {
+    let filtered = markets.filter((market) => {
       // Search filter: check if search query matches token mint (first 4 and last 4 chars)
       if (searchQuery.trim()) {
         const tokenMintStr = market.tokenMint.toString()

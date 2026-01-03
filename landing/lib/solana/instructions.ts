@@ -1,4 +1,6 @@
 import { PublicKey, TransactionInstruction, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
+import * as anchor from "@coral-xyz/anchor"
+import { getMarketVaultPda } from "@/lib/anchor/program"
 
 export const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
 
@@ -37,11 +39,11 @@ function serializePlaceBetArgs(outcome: boolean, amount: bigint): Buffer {
 
 /**
  * Build a raw place_bet instruction
- * 
+ *
  * Account order (must match PlaceBet struct in Rust):
  * 0. market (mut, Account<Market>)
  * 1. position (mut, init, Account<Position>, PDA seeds: [b"position", market, user])
- * 2. market_escrow (mut, UncheckedAccount - same as market PDA)
+ * 2. market_escrow (mut, UncheckedAccount - vault PDA)
  * 3. user (mut, signer)
  * 4. system_program (Program<System>)
  */
@@ -50,14 +52,20 @@ export function buildPlaceBetInstruction(
   positionPda: PublicKey,
   user: PublicKey,
   outcome: boolean,
-  amountLamports: bigint
+  amountLamports: bigint,
+  tokenMint: PublicKey,
+  targetMarketCap: anchor.BN,
+  endTimestamp: anchor.BN
 ): TransactionInstruction {
   // Serialize instruction args (manual Borsh serialization)
   const argsBuffer = serializePlaceBetArgs(outcome, amountLamports)
-  
+
   // Combine discriminator + args
   const data = Buffer.concat([PLACE_BET_DISCRIMINATOR, argsBuffer])
-  
+
+  // Get the correct vault PDA for market_escrow
+  const [marketVaultPda] = getMarketVaultPda(tokenMint, targetMarketCap, endTimestamp)
+
   // Build accounts in exact order (matches PlaceBet struct)
   const keys = [
     {
@@ -71,7 +79,7 @@ export function buildPlaceBetInstruction(
       isWritable: true,
     },
     {
-      pubkey: marketPda, // market_escrow is the same as market PDA
+      pubkey: marketVaultPda, // market_escrow is the vault PDA
       isSigner: false,
       isWritable: true,
     },
