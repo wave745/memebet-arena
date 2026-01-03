@@ -77,11 +77,18 @@ async function fetchIdl(): Promise<any> {
       if (!idl || typeof idl !== 'object' || Object.keys(idl).length === 0) {
         throw new Error("Fetched IDL is empty or invalid")
       }
-      
-      if (!idl.version || !idl.name) {
+
+      // Check for version and name in metadata object (standard Anchor IDL format)
+      const idlVersion = idl.version || idl.metadata?.version
+      const idlName = idl.name || idl.metadata?.name
+
+      if (!idlVersion || !idlName) {
         console.error("❌ Fetched IDL missing version or name:", {
-          hasVersion: !!idl.version,
-          hasName: !!idl.name,
+          hasVersion: !!idlVersion,
+          hasName: !!idlName,
+          hasMetadata: !!idl.metadata,
+          metadataVersion: idl.metadata?.version,
+          metadataName: idl.metadata?.name,
           keys: Object.keys(idl),
         })
         throw new Error("Fetched IDL missing version or name")
@@ -89,8 +96,8 @@ async function fetchIdl(): Promise<any> {
       
       if (process.env.NODE_ENV === 'development') {
       console.log("✅ Fetched IDL loaded:", {
-        name: idl.name,
-        version: idl.version,
+        name: idlName,
+        version: idlVersion,
         instructions: idl.instructions?.length,
         accounts: idl.accounts?.length,
       })
@@ -144,17 +151,36 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
   if (!idl || typeof idl !== 'object' || Object.keys(idl).length === 0) {
     throw new Error("IDL is empty or invalid - check IDL file")
   }
-  
-  if (!idl.version || !idl.name) {
+
+  // Check for version and name in metadata object (standard Anchor IDL format)
+  const idlVersion = idl.version || idl.metadata?.version
+  const idlName = idl.name || idl.metadata?.name
+
+  if (!idlVersion || !idlName) {
     console.error("❌ IDL missing required fields:", {
-      hasVersion: !!idl.version,
-      hasName: !!idl.name,
+      hasVersion: !!idlVersion,
+      hasName: !!idlName,
+      hasMetadata: !!idl.metadata,
+      metadataVersion: idl.metadata?.version,
+      metadataName: idl.metadata?.name,
       version: idl.version,
       name: idl.name,
       allKeys: Object.keys(idl),
     })
     throw new Error("IDL missing version or name - use full generated IDL from target/idl/")
   }
+
+  // Debug logging for validation
+  console.log("RAW IDL CHECK:", {
+    name: idlName,
+    version: idlVersion,
+    hasAccounts: Array.isArray(idl?.accounts),
+    accountCount: idl?.accounts?.length,
+    hasInstructions: Array.isArray(idl?.instructions),
+    instructionCount: idl?.instructions?.length,
+    isEmpty: Object.keys(idl).length === 0,
+    isObject: typeof idl === 'object',
+  })
   
   if (!idl.instructions || !Array.isArray(idl.instructions) || idl.instructions.length === 0) {
     throw new Error("IDL missing instructions array")
@@ -177,7 +203,15 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
     console.error("Original IDL keys:", idl ? Object.keys(idl) : 'null')
     throw new Error(`Failed to clone IDL: ${e instanceof Error ? e.message : String(e)}`)
   }
-  
+
+  // Step 5.5: Ensure version and name are set at top level immediately after cloning
+  if (!idlCopy.version && idlCopy.metadata?.version) {
+    idlCopy.version = idlCopy.metadata.version
+  }
+  if (!idlCopy.name && idlCopy.metadata?.name) {
+    idlCopy.name = idlCopy.metadata.name
+  }
+
   // Step 6: Ensure arrays exist
   if (!Array.isArray(idlCopy.accounts)) {
     idlCopy.accounts = []
@@ -185,7 +219,17 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
   if (!Array.isArray(idlCopy.types)) {
     idlCopy.types = []
   }
-  
+
+  // Step 6.5: If accounts is empty but types exist, use types as accounts
+  // (Some IDL formats put account definitions in types instead of accounts)
+  if (idlCopy.accounts.length === 0 && idlCopy.types.length > 0) {
+    console.log("📝 Using types as accounts (IDL has no accounts array)")
+    idlCopy.accounts = idlCopy.types.map((type: any) => ({
+      name: type.name,
+      type: type.name  // Just the type name, not the full type object
+    }))
+  }
+
   // Step 7: Fix accounts (add type references and sizes)
   // CRITICAL: Filter out any invalid entries first, then process
   const validAccounts: any[] = []
@@ -198,7 +242,7 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
     
     // Create a clean account object with all required properties
     const cleanAcc: any = {
-      name: acc.name,
+      ...acc,  // Preserve all original properties
       discriminator: acc.discriminator || [],
     }
     
@@ -213,6 +257,8 @@ export async function getProgram(connection: Connection, wallet: anchor.Wallet):
       cleanAcc.size = 107 // 8 discriminator + 99 data
     } else if (acc.name === "Position") {
       cleanAcc.size = 82 // 8 discriminator + 74 data
+    } else if (acc.name === "Treasury") {
+      cleanAcc.size = 52 // 8 discriminator + 32 (pubkey) + 8 (u64) + 4 (u32)
     } else if (acc.size !== undefined) {
       cleanAcc.size = acc.size
     } else {
@@ -294,6 +340,22 @@ export function getMarketPda(
   return PublicKey.findProgramAddressSync(
     [
       Buffer.from("market"),
+      tokenMint.toBuffer(),
+      targetMarketCap.toArrayLike(Buffer, "le", 8),
+      endTimestamp.toArrayLike(Buffer, "le", 8),
+    ],
+    PROGRAM_ID
+  )
+}
+
+export function getMarketVaultPda(
+  tokenMint: PublicKey,
+  targetMarketCap: anchor.BN,
+  endTimestamp: anchor.BN
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("vault"),
       tokenMint.toBuffer(),
       targetMarketCap.toArrayLike(Buffer, "le", 8),
       endTimestamp.toArrayLike(Buffer, "le", 8),

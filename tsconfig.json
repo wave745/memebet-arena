@@ -52,7 +52,6 @@
     "node_modules",
     "tests",
     "scripts",
-    "target",
     "programs",
     "**/*.test.ts",
     "**/*.test.tsx",

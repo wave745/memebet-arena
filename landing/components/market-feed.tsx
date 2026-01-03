@@ -161,7 +161,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
 
     // Special sorting for trenches: new markets first
     if (categoryFilter === "trenches") {
-      filtered = filtered.sort((a, b) => {
+      filteredMarkets = filteredMarkets.sort((a, b) => {
         // Helper function to determine if market is "new"
         const isNewMarket = (market: any) => {
           const totalPool = Number(market.yesPool) + Number(market.noPool)
@@ -186,7 +186,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
       })
     }
 
-    return filtered
+    return filteredMarkets
   }, [markets, searchQuery, categoryFilter])
 
   const handleBetPlaced = async () => {

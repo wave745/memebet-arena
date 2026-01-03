@@ -1,6 +1,6 @@
-import { Connection, PublicKey } from "@solana/web3.js"
+import { Connection, PublicKey, SystemProgram } from "@solana/web3.js"
 import * as anchor from "@coral-xyz/anchor"
-import { getProgram, getMarketPda, PROGRAM_ID } from "./program"
+import { getProgram, getMarketPda, getMarketVaultPda, PROGRAM_ID } from "./program"
 import type { MemebetArena } from "../../target/types/memebet_arena"
 
 export interface MarketData {
@@ -148,15 +148,19 @@ export async function createMarket(
     const program = await getProgram(connection, wallet)
     console.log("Program loaded successfully")
 
-    const [marketPda, bump] = getMarketPda(tokenMint, targetMarketCap, endTimestamp)
-    console.log("Market PDA:", marketPda.toString(), "bump:", bump)
+    const [marketPda, marketBump] = getMarketPda(tokenMint, targetMarketCap, endTimestamp)
+    const [marketVaultPda, vaultBump] = getMarketVaultPda(tokenMint, targetMarketCap, endTimestamp)
+    console.log("Market PDA:", marketPda.toString(), "bump:", marketBump)
+    console.log("Market Vault PDA:", marketVaultPda.toString(), "bump:", vaultBump)
 
     // Build transaction without sending (to handle signing manually)
     const tx = await (program.methods as any)
-      .createMarket(tokenMint, targetMarketCap, endTimestamp, bump)
+      .createMarket(tokenMint, targetMarketCap, endTimestamp, marketBump, vaultBump)
       .accounts({
         market: marketPda,
+        market_vault: marketVaultPda,
         creator: wallet.publicKey,
+        system_program: SystemProgram.programId,
       })
       .transaction()
 
