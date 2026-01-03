@@ -9,7 +9,7 @@ const __dirname = dirname(__filename)
 const require = createRequire(import.meta.url)
 
 const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
-const RPC_URL = process.env.RPC_URL || "https://api.devnet.solana.com"
+const RPC_URL = process.env.RPC_URL || "https://api.mainnet-beta.solana.com"
 const WALLET_PATH = process.env.WALLET_PATH || "~/.config/solana/id.json"
 
 interface MarketSeed {
@@ -53,7 +53,7 @@ function loadWallet(): Keypair {
 }
 
 async function seedMarkets() {
-  console.log("🌱 Seeding markets on devnet...")
+  console.log("🌱 Seeding markets on mainnet...")
   console.log(`Program ID: ${PROGRAM_ID.toString()}`)
   console.log(`RPC: ${RPC_URL}\n`)
 
@@ -168,7 +168,7 @@ async function seedMarkets() {
         .rpc()
 
       console.log(`  ✅ Created! Signature: ${signature}`)
-      console.log(`  🔗 https://solscan.io/tx/${signature}?cluster=devnet`)
+      console.log(`  🔗 https://solscan.io/tx/${signature}?cluster=mainnet`)
       
       await new Promise((resolve) => setTimeout(resolve, 2000))
     } catch (error: any) {

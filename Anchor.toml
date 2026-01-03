@@ -5,12 +5,6 @@ anchor_version = "0.32.1"
 resolution = true
 skip-lint = false
 
-[programs.devnet]
-memebet_arena = "CDjZHPYdWGK3p4cgWAT2nkrm45V2UmjSWoXTruadz3ty"
-
-[programs.localnet]
-memebet_arena = "Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb"
-
 [programs.mainnet]
 memebet_arena = "ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL"
 

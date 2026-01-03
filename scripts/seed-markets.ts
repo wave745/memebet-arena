@@ -3,7 +3,7 @@ import { Program } from "@coral-xyz/anchor"
 import { PublicKey } from "@solana/web3.js"
 import type { MemebetArena } from "../target/types/memebet_arena"
 
-// Set provider from environment (devnet)
+// Set provider from environment (mainnet)
 anchor.setProvider(anchor.AnchorProvider.env())
 
 // Use workspace program with full types - this handles BN serialization correctly
@@ -50,7 +50,7 @@ const MARKETS: MarketSeed[] = [
 ]
 
 async function seedMarkets() {
-  console.log("🌱 Seeding markets on devnet...")
+  console.log("🌱 Seeding markets on mainnet...")
   console.log(`Program ID: ${program.programId.toString()}`)
   console.log(`Provider: ${anchor.getProvider().connection.rpcEndpoint}\n`)
 
@@ -106,7 +106,7 @@ async function seedMarkets() {
         .rpc()
 
       console.log(`  ✅ Created! Signature: ${txSig}`)
-      console.log(`  🔗 https://solscan.io/tx/${txSig}?cluster=devnet`)
+      console.log(`  🔗 https://solscan.io/tx/${txSig}?cluster=mainnet`)
       
       // Wait between transactions
       await new Promise((resolve) => setTimeout(resolve, 2000))

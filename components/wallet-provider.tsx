@@ -48,10 +48,8 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined)
 
 export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Use Mainnet for production, Devnet for development
-  const network = process.env.NODE_ENV === 'production'
-    ? WalletAdapterNetwork.Mainnet
-    : WalletAdapterNetwork.Devnet
+  // Always use Mainnet for production deployment
+  const network = WalletAdapterNetwork.Mainnet
 
   // RPC endpoint with fallback options for reliability
   const getEndpoint = () => {
