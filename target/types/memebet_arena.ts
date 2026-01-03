@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/memebet_arena.json`.
  */
 export type MemebetArena = {
-  "address": "9Can7fzpUB1JABLVtHXq2HuGsWU38wUpBLTRtxEgNwzs",
+  "address": "6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV",
   "metadata": {
     "name": "memebetArena",
     "version": "0.1.0",
@@ -14,9 +14,6 @@ export type MemebetArena = {
   "instructions": [
     {
       "name": "createMarket",
-      "docs": [
-        "Creates a new market with immutable rules"
-      ],
       "discriminator": [
         103,
         226,
@@ -31,7 +28,63 @@ export type MemebetArena = {
         {
           "name": "market",
           "writable": true,
-          "signer": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "tokenMint"
+              },
+              {
+                "kind": "arg",
+                "path": "targetMarketCap"
+              },
+              {
+                "kind": "arg",
+                "path": "endTimestamp"
+              }
+            ]
+          }
+        },
+        {
+          "name": "marketVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "tokenMint"
+              },
+              {
+                "kind": "arg",
+                "path": "targetMarketCap"
+              },
+              {
+                "kind": "arg",
+                "path": "endTimestamp"
+              }
+            ]
+          }
         },
         {
           "name": "creator",
@@ -45,10 +98,6 @@ export type MemebetArena = {
       ],
       "args": [
         {
-          "name": "marketId",
-          "type": "u64"
-        },
-        {
           "name": "tokenMint",
           "type": "pubkey"
         },
@@ -59,14 +108,65 @@ export type MemebetArena = {
         {
           "name": "endTimestamp",
           "type": "i64"
+        },
+        {
+          "name": "marketBump",
+          "type": "u8"
+        },
+        {
+          "name": "vaultBump",
+          "type": "u8"
         }
       ]
     },
     {
-      "name": "placeBet",
-      "docs": [
-        "Place a bet on YES or NO"
+      "name": "initializeTreasury",
+      "discriminator": [
+        124,
+        186,
+        211,
+        195,
+        85,
+        165,
+        129,
+        166
       ],
+      "accounts": [
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "placeBet",
       "discriminator": [
         222,
         62,
@@ -84,8 +184,7 @@ export type MemebetArena = {
         },
         {
           "name": "position",
-          "writable": true,
-          "signer": true
+          "writable": true
         },
         {
           "name": "marketEscrow",
@@ -130,14 +229,94 @@ export type MemebetArena = {
       "accounts": [
         {
           "name": "market",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.token_mint",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.target_market_cap",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.end_timestamp",
+                "account": "market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "marketVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.token_mint",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.target_market_cap",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.end_timestamp",
+                "account": "market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "position",
-          "writable": true
-        },
-        {
-          "name": "marketEscrow",
           "writable": true
         },
         {
@@ -149,7 +328,12 @@ export type MemebetArena = {
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "outcome",
+          "type": "bool"
+        }
+      ]
     },
     {
       "name": "resolveMarket",
@@ -183,6 +367,189 @@ export type MemebetArena = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "sellShares",
+      "discriminator": [
+        184,
+        164,
+        169,
+        16,
+        231,
+        158,
+        199,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.token_mint",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.target_market_cap",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.end_timestamp",
+                "account": "market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "marketVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.token_mint",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.target_market_cap",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.end_timestamp",
+                "account": "market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "outcome",
+          "type": "bool"
+        },
+        {
+          "name": "amountToSell",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdrawFromTreasury",
+      "docs": [
+        "Withdraw from protocol treasury (unlimited, admin only)"
+      ],
+      "discriminator": [
+        0,
+        164,
+        86,
+        76,
+        56,
+        72,
+        12,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -211,83 +578,106 @@ export type MemebetArena = {
         247,
         208
       ]
+    },
+    {
+      "name": "treasury",
+      "discriminator": [
+        238,
+        239,
+        123,
+        238,
+        89,
+        1,
+        168,
+        253
+      ]
     }
   ],
   "errors": [
     {
       "code": 6000,
       "name": "marketResolved",
-      "msg": "Market already resolved"
+      "msg": "resolved"
     },
     {
       "code": 6001,
       "name": "marketExpired",
-      "msg": "Market has expired"
+      "msg": "expired"
     },
     {
       "code": 6002,
       "name": "alreadyResolved",
-      "msg": "Market already resolved"
+      "msg": "done"
     },
     {
       "code": 6003,
       "name": "marketNotEnded",
-      "msg": "Market has not ended yet"
+      "msg": "active"
     },
     {
       "code": 6004,
       "name": "marketNotResolved",
-      "msg": "Market not resolved"
+      "msg": "open"
     },
     {
       "code": 6005,
       "name": "alreadyClaimed",
-      "msg": "Position already claimed"
+      "msg": "paid"
     },
     {
       "code": 6006,
       "name": "userDidNotWin",
-      "msg": "User did not win"
+      "msg": "loss"
     },
     {
       "code": 6007,
       "name": "noOutcome",
-      "msg": "No outcome set"
+      "msg": "none"
     },
     {
       "code": 6008,
       "name": "overflow",
-      "msg": "Overflow error"
+      "msg": "math"
     },
     {
       "code": 6009,
       "name": "invalidPool",
-      "msg": "Invalid pool"
+      "msg": "pool"
     },
     {
       "code": 6010,
       "name": "invalidEndTimestamp",
-      "msg": "Invalid end timestamp - must be in the future"
+      "msg": "time"
     },
     {
       "code": 6011,
       "name": "invalidBetAmount",
-      "msg": "Invalid bet amount - must be greater than zero"
+      "msg": "amt"
     },
     {
       "code": 6012,
       "name": "marketNotExpired",
-      "msg": "Market has not expired yet"
+      "msg": "early"
     },
     {
       "code": 6013,
       "name": "positionNotWinner",
-      "msg": "Position did not win"
+      "msg": "wrong"
     },
     {
       "code": 6014,
       "name": "positionAlreadyClaimed",
-      "msg": "Position already claimed"
+      "msg": "paid"
+    },
+    {
+      "code": 6015,
+      "name": "positionOutcomeMismatch",
+      "msg": "side"
+    },
+    {
+      "code": 6016,
+      "name": "unauthorized",
+      "msg": "auth"
     }
   ],
   "types": [
@@ -297,8 +687,8 @@ export type MemebetArena = {
         "kind": "struct",
         "fields": [
           {
-            "name": "marketId",
-            "type": "u64"
+            "name": "creator",
+            "type": "pubkey"
           },
           {
             "name": "tokenMint",
@@ -357,6 +747,26 @@ export type MemebetArena = {
           {
             "name": "claimed",
             "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "treasury",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "totalFeesCollected",
+            "type": "u64"
+          },
+          {
+            "name": "lastWithdrawal",
+            "type": "u32"
           }
         ]
       }

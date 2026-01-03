@@ -1,0 +1,3 @@
+module.exports=[82303,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(74751);a.n(d("[project]/memebet-arena/landing/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},50336,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(74751);a.n(d("[project]/memebet-arena/landing/node_modules/next/dist/client/components/builtin/global-error.js"))},10563,a=>{"use strict";a.i(82303);var b=a.i(50336);a.n(b)}];
+
+//# sourceMappingURL=d6278_next_dist_client_components_builtin_global-error_810e367a.js.map
