@@ -6,8 +6,21 @@ import { fetchMarketByPda } from "@/lib/anchor/markets"
 import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { MarketCard } from "@/components/market-card"
 import * as anchor from "@coral-xyz/anchor"
+import bs58 from "bs58"
 
 // No hardcoded seeded markets - all markets come from user creation or API
+
+// Helper function to validate if a string is a valid base58-encoded Solana address
+function isValidSolanaAddress(address: string): boolean {
+  try {
+    // Check if it's a valid base58 string and decodes to exactly 32 bytes
+    const decoded = bs58.decode(address)
+    return decoded.length === 32
+  } catch (error) {
+    // Invalid base58 or wrong length
+    return false
+  }
+}
 
 // Helper to get all markets from API and localStorage
 async function getAllMarkets(): Promise<{ pda: string; ticker: string; category: string }[]> {
@@ -22,11 +35,16 @@ async function getAllMarkets(): Promise<{ pda: string; ticker: string; category:
       const dbMarkets = await response.json()
       console.log("Markets from API:", dbMarkets.length, dbMarkets)
       for (const market of dbMarkets) {
-        allMarkets.push({
-          pda: market.pda,
-          ticker: market.ticker,
-          category: market.category || 'new'
-        })
+        // Validate PDA before adding
+        if (market.pda && isValidSolanaAddress(market.pda)) {
+          allMarkets.push({
+            pda: market.pda,
+            ticker: market.ticker,
+            category: market.category || 'new'
+          })
+        } else {
+          console.warn("Skipping invalid PDA from API:", market.pda)
+        }
       }
     } else {
       console.error("API response not ok:", response.status)
@@ -44,7 +62,12 @@ async function getAllMarkets(): Promise<{ pda: string; ticker: string; category:
         // Add local markets that aren't already in the API results
         for (const m of createdMarkets) {
           if (!allMarkets.find(existing => existing.pda === m.pda)) {
-            allMarkets.push({ pda: m.pda, ticker: m.ticker, category: m.category || 'new' })
+            // Validate PDA before adding
+            if (m.pda && isValidSolanaAddress(m.pda)) {
+              allMarkets.push({ pda: m.pda, ticker: m.ticker, category: m.category || 'new' })
+            } else {
+              console.warn("Skipping invalid PDA from localStorage:", m.pda)
+            }
           }
         }
       }
@@ -84,6 +107,12 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
       const marketData = await Promise.all(
         allMarketsList.map(async ({ pda, ticker }) => {
           try {
+            // Additional validation (should already be validated upstream)
+            if (!isValidSolanaAddress(pda)) {
+              console.warn("Skipping invalid PDA in fetchMarkets:", pda)
+              return null
+            }
+
             const marketPda = new PublicKey(pda)
             const market = await fetchMarketByPda(connection, null, marketPda)
             if (market) {
