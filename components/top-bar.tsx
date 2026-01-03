@@ -168,7 +168,6 @@ export function TopBar({
                                         <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-neon-green shadow-[0_0_15px_rgba(105,255,148,0.8)] animate-in fade-in slide-in-from-left-2 duration-300" />
                                     )}
                                 </button>
-
                             </div>
                         ))}
                     </div>

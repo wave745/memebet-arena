@@ -11,8 +11,6 @@ import {
 import { WalletAdapterNetwork, WalletError } from "@solana/wallet-adapter-base"
 import {
   WalletModalProvider,
-  useWalletModal,
-  WalletMultiButton,
 } from "@solana/wallet-adapter-react-ui"
 import {
   PhantomWalletAdapter,
@@ -39,46 +37,6 @@ if (typeof window !== "undefined" && typeof window.Buffer === "undefined") {
   } catch (e) {
     // Silently fail - Buffer might already be polyfilled
   }
-}
-
-// Custom Wallet Modal Provider with custom text
-import { X } from "lucide-react"
-
-const CustomWalletModalProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { visible, setVisible } = useWalletModal()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) return <>{children}</>
-
-  return (
-    <>
-      {children}
-      <Dialog open={visible} onOpenChange={setVisible}>
-        <DialogContent className="max-w-md w-[95vw] sm:w-[400px] p-0 gap-0 opaque-panel shining-modal">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg font-bold text-center flex-1">
-                CONNECT SOLANA WALLET
-              </DialogTitle>
-              <button
-                onClick={() => setVisible(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors p-1"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-          </DialogHeader>
-          <div className="p-6">
-            <WalletMultiButton className="w-full" />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  )
 }
 
 interface WalletContextType {
@@ -143,9 +101,9 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
   return (
     <ConnectionProvider endpoint={endpoint}>
       <SolanaWalletProvider wallets={wallets} autoConnect onError={onError}>
-        <CustomWalletModalProvider>
+        <WalletModalProvider>
           <WalletStateWrapper>{children}</WalletStateWrapper>
-        </CustomWalletModalProvider>
+        </WalletModalProvider>
       </SolanaWalletProvider>
     </ConnectionProvider>
   )
