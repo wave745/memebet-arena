@@ -19,9 +19,10 @@ async function syncMarketsToDatabase() {
   // Initialize wallet (dummy wallet for read-only operations)
   const dummyWallet = {
     publicKey: new PublicKey("11111111111111111111111111111112"),
+    payer: new PublicKey("11111111111111111111111111111112"),
     signTransaction: async () => { throw new Error("Read-only") },
     signAllTransactions: async () => { throw new Error("Read-only") },
-  } as anchor.Wallet
+  } as unknown as anchor.Wallet
 
   try {
     // For now, we'll need to know the market PDAs to sync
@@ -44,7 +45,7 @@ async function syncMarketsToDatabase() {
         const marketData = await fetchMarketByPda(connection, dummyWallet, marketPda)
 
         if (marketData) {
-          console.log(`💾 Syncing market: ${marketData.tokenSymbol} (${marketData.tokenMint.slice(0, 8)}...)`)
+          console.log(`💾 Syncing market: ${marketData.tokenSymbol} (${marketData.tokenMint.toString().slice(0, 8)}...)`)
 
           await DatabaseService.upsertMarket({
             pda: marketData.marketPda.toString(),
@@ -86,9 +87,10 @@ export async function syncMarketFromBlockchain(marketPda: string) {
 
   const dummyWallet = {
     publicKey: new PublicKey("11111111111111111111111111111112"),
+    payer: new PublicKey("11111111111111111111111111111112"),
     signTransaction: async () => { throw new Error("Read-only") },
     signAllTransactions: async () => { throw new Error("Read-only") },
-  } as anchor.Wallet
+  } as unknown as anchor.Wallet
 
   try {
     const marketData = await fetchMarketByPda(connection, dummyWallet, new PublicKey(marketPda))
