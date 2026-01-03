@@ -94,11 +94,11 @@ if [ $? -eq 0 ]; then
     echo "✅ Deployment successful!"
     echo ""
     echo "🔍 Verifying deployment..."
-    solana program show 6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV
+    solana program show Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb
 
     echo ""
     echo "🎉 Program deployed to mainnet!"
-    echo "📝 Program ID: 6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV"
+    echo "📝 Program ID: Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb"
     echo ""
     echo "🚀 Now redeploy your Vercel app:"
     echo "   ./deploy.sh"

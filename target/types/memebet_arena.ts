@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/memebet_arena.json`.
  */
 export type MemebetArena = {
-  "address": "6fQsRy2d91RaaHZrd9ymmaQuR4bWDL7x5hD6WqpdgLMV",
+  "address": "Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb",
   "metadata": {
     "name": "memebetArena",
     "version": "0.1.0",
