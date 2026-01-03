@@ -1,7 +1,5 @@
 {
-  "version": "0.1.0",
-  "name": "memebet_arena",
-  "address": "Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb",
+  "address": "ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL",
   "metadata": {
     "name": "memebet_arena",
     "version": "0.1.0",
@@ -10,9 +8,6 @@
   "instructions": [
     {
       "name": "create_market",
-      "docs": [
-        "Creates a new market with immutable rules"
-      ],
       "discriminator": [
         103,
         226,
@@ -27,7 +22,63 @@
         {
           "name": "market",
           "writable": true,
-          "signer": false
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "token_mint"
+              },
+              {
+                "kind": "arg",
+                "path": "target_market_cap"
+              },
+              {
+                "kind": "arg",
+                "path": "end_timestamp"
+              }
+            ]
+          }
+        },
+        {
+          "name": "market_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "token_mint"
+              },
+              {
+                "kind": "arg",
+                "path": "target_market_cap"
+              },
+              {
+                "kind": "arg",
+                "path": "end_timestamp"
+              }
+            ]
+          }
         },
         {
           "name": "creator",
@@ -53,16 +104,63 @@
           "type": "i64"
         },
         {
-          "name": "bump",
+          "name": "market_bump",
+          "type": "u8"
+        },
+        {
+          "name": "vault_bump",
           "type": "u8"
         }
       ]
     },
     {
-      "name": "place_bet",
-      "docs": [
-        "Place a bet on YES or NO"
+      "name": "initialize_treasury",
+      "discriminator": [
+        124,
+        186,
+        211,
+        195,
+        85,
+        165,
+        129,
+        166
       ],
+      "accounts": [
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "place_bet",
       "discriminator": [
         222,
         62,
@@ -80,8 +178,7 @@
         },
         {
           "name": "position",
-          "writable": true,
-          "signer": false
+          "writable": true
         },
         {
           "name": "market_escrow",
@@ -126,14 +223,94 @@
       "accounts": [
         {
           "name": "market",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.token_mint",
+                "account": "Market"
+              },
+              {
+                "kind": "account",
+                "path": "market.target_market_cap",
+                "account": "Market"
+              },
+              {
+                "kind": "account",
+                "path": "market.end_timestamp",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "market_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.token_mint",
+                "account": "Market"
+              },
+              {
+                "kind": "account",
+                "path": "market.target_market_cap",
+                "account": "Market"
+              },
+              {
+                "kind": "account",
+                "path": "market.end_timestamp",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "position",
-          "writable": true
-        },
-        {
-          "name": "market_escrow",
           "writable": true
         },
         {
@@ -145,7 +322,12 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "_outcome",
+          "type": "bool"
+        }
+      ]
     },
     {
       "name": "resolve_market",
@@ -179,6 +361,189 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "sell_shares",
+      "discriminator": [
+        184,
+        164,
+        169,
+        16,
+        231,
+        158,
+        199,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.token_mint",
+                "account": "Market"
+              },
+              {
+                "kind": "account",
+                "path": "market.target_market_cap",
+                "account": "Market"
+              },
+              {
+                "kind": "account",
+                "path": "market.end_timestamp",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "market_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.token_mint",
+                "account": "Market"
+              },
+              {
+                "kind": "account",
+                "path": "market.target_market_cap",
+                "account": "Market"
+              },
+              {
+                "kind": "account",
+                "path": "market.end_timestamp",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "_outcome",
+          "type": "bool"
+        },
+        {
+          "name": "amount_to_sell",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdraw_from_treasury",
+      "docs": [
+        "Withdraw from protocol treasury (unlimited, admin only)"
+      ],
+      "discriminator": [
+        0,
+        164,
+        86,
+        76,
+        56,
+        72,
+        12,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -207,83 +572,106 @@
         247,
         208
       ]
+    },
+    {
+      "name": "Treasury",
+      "discriminator": [
+        238,
+        239,
+        123,
+        238,
+        89,
+        1,
+        168,
+        253
+      ]
     }
   ],
   "errors": [
     {
       "code": 6000,
       "name": "MarketResolved",
-      "msg": "Market already resolved"
+      "msg": "Resolved"
     },
     {
       "code": 6001,
       "name": "MarketExpired",
-      "msg": "Market has expired"
+      "msg": "Expired"
     },
     {
       "code": 6002,
       "name": "AlreadyResolved",
-      "msg": "Market already resolved"
+      "msg": "Done"
     },
     {
       "code": 6003,
       "name": "MarketNotEnded",
-      "msg": "Market has not ended yet"
+      "msg": "Active"
     },
     {
       "code": 6004,
       "name": "MarketNotResolved",
-      "msg": "Market not resolved"
+      "msg": "Open"
     },
     {
       "code": 6005,
       "name": "AlreadyClaimed",
-      "msg": "Position already claimed"
+      "msg": "Paid"
     },
     {
       "code": 6006,
       "name": "UserDidNotWin",
-      "msg": "User did not win"
+      "msg": "Loss"
     },
     {
       "code": 6007,
       "name": "NoOutcome",
-      "msg": "No outcome set"
+      "msg": "None"
     },
     {
       "code": 6008,
       "name": "Overflow",
-      "msg": "Overflow error"
+      "msg": "Math"
     },
     {
       "code": 6009,
       "name": "InvalidPool",
-      "msg": "Invalid pool"
+      "msg": "Pool"
     },
     {
       "code": 6010,
       "name": "InvalidEndTimestamp",
-      "msg": "Invalid end timestamp - must be in the future"
+      "msg": "Time"
     },
     {
       "code": 6011,
       "name": "InvalidBetAmount",
-      "msg": "Invalid bet amount - must be greater than zero"
+      "msg": "Amt"
     },
     {
       "code": 6012,
       "name": "MarketNotExpired",
-      "msg": "Market has not expired yet"
+      "msg": "Early"
     },
     {
       "code": 6013,
       "name": "PositionNotWinner",
-      "msg": "Position did not win"
+      "msg": "Wrong"
     },
     {
       "code": 6014,
       "name": "PositionAlreadyClaimed",
-      "msg": "Position already claimed"
+      "msg": "Paid"
+    },
+    {
+      "code": 6015,
+      "name": "PositionOutcomeMismatch",
+      "msg": "Side"
+    },
+    {
+      "code": 6016,
+      "name": "Unauthorized",
+      "msg": "Auth"
     }
   ],
   "types": [
@@ -293,8 +681,8 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "market_id",
-            "type": "u64"
+            "name": "creator",
+            "type": "pubkey"
           },
           {
             "name": "token_mint",
@@ -353,6 +741,26 @@
           {
             "name": "claimed",
             "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Treasury",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_fees_collected",
+            "type": "u64"
+          },
+          {
+            "name": "last_withdrawal",
+            "type": "u32"
           }
         ]
       }

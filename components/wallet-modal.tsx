@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 
-const PROGRAM_ID = new PublicKey("Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb")
+const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
