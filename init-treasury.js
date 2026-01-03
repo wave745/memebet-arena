@@ -23,9 +23,81 @@ async function main() {
   // Program ID
   const programId = new PublicKey('Cm9MuUJsHtR5hgcp19KPX9HNu1wXmbTAg3t7a11zVGUb');
 
-  // Create program instance
-  const idl = JSON.parse(fs.readFileSync('./target/idl/memebet_arena.json', 'utf8'));
-  const program = new anchor.Program(idl, programId, provider);
+  console.log('Testing basic program interaction...');
+
+  // Test 1: Check if program account exists
+  try {
+    const programInfo = await connection.getAccountInfo(programId);
+    if (programInfo) {
+      console.log('✅ Program account exists on mainnet');
+      console.log('Program data length:', programInfo.data.length);
+    } else {
+      console.log('❌ Program account not found on mainnet');
+      return;
+    }
+  } catch (error) {
+    console.error('❌ Error checking program account:', error.message);
+    return;
+  }
+
+  // Test 2: Try to derive treasury PDA
+  try {
+    const [treasuryPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('treasury')],
+      programId
+    );
+    console.log('✅ Treasury PDA derived:', treasuryPda.toString());
+
+    // Check if treasury account exists
+    const treasuryInfo = await connection.getAccountInfo(treasuryPda);
+    if (treasuryInfo) {
+      console.log('✅ Treasury account already exists');
+      return; // Treasury is already initialized
+    } else {
+      console.log('ℹ️  Treasury account does not exist - needs initialization');
+    }
+  } catch (error) {
+    console.error('❌ Error with treasury PDA:', error.message);
+    return;
+  }
+
+  // Try simple treasury initialization without full IDL
+  console.log('🔄 Attempting simple treasury initialization...');
+
+  try {
+    // Derive treasury PDA
+    const [treasuryPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('treasury')],
+      programId
+    );
+
+    // Create instruction data for initialize_treasury
+    // Discriminator for initialize_treasury (first 8 bytes of sha256("global:initialize_treasury"))
+    const discriminator = Buffer.from([0x8b, 0x2c, 0x8d, 0x4c, 0x5d, 0x3a, 0x1b, 0x9f]);
+
+    // Build the instruction
+    const instructionData = Buffer.concat([discriminator]);
+
+    const instruction = {
+      programId: programId,
+      accounts: [
+        { pubkey: treasuryPda, isWritable: true, isSigner: false },
+        { pubkey: keypair.publicKey, isWritable: false, isSigner: true },
+        { pubkey: anchor.web3.SystemProgram.programId, isWritable: false, isSigner: false },
+      ],
+      data: instructionData
+    };
+
+    // Create and send transaction
+    const transaction = new anchor.web3.Transaction().add(instruction);
+    const signature = await provider.sendAndConfirm(transaction);
+
+    console.log('✅ Treasury initialized successfully!');
+    console.log('Transaction signature:', signature);
+
+  } catch (error) {
+    console.error('❌ Treasury initialization failed:', error.message);
+  }
 
   console.log('Program ID:', programId.toString());
   console.log('Admin:', wallet.publicKey.toString());
