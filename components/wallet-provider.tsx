@@ -16,7 +16,6 @@ import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
   BitgetWalletAdapter,
-  CoinbaseWalletAdapter,
   TrustWalletAdapter,
 } from "@solana/wallet-adapter-wallets"
 import * as anchor from "@coral-xyz/anchor"
@@ -76,14 +75,13 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
 
   const endpoint = getEndpoint()
 
-  // Explicitly include main wallets and allow Standard discovery
+  // Explicitly include main wallets - removed CoinbaseWalletAdapter as it may conflict with MetaMask
   const wallets = useMemo(
     () => [
-      // Add popular wallets
+      // Add popular wallets - avoiding potential MetaMask conflicts
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
       new BitgetWalletAdapter(),
-      new CoinbaseWalletAdapter(),
       new TrustWalletAdapter(),
     ],
     [network]
