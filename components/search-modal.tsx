@@ -8,8 +8,21 @@ import { useWallet } from "./wallet-provider"
 import { fetchMarketByPda } from "@/lib/anchor/markets"
 import { PublicKey } from "@solana/web3.js"
 import { useRouter } from "next/navigation"
+import bs58 from "bs58"
 import { XLogo } from "./x-logo"
 import { formatMarketCapShort } from "@/lib/utils/format-market-cap"
+
+// Helper function to validate if a string is a valid base58-encoded Solana address
+function isValidSolanaAddress(address: string): boolean {
+  try {
+    // Check if it's a valid base58 string and decodes to exactly 32 bytes
+    const decoded = bs58.decode(address)
+    return decoded.length === 32
+  } catch (error) {
+    // Invalid base58 or wrong length
+    return false
+  }
+}
 
 interface SearchModalProps {
   isOpen: boolean
@@ -66,6 +79,12 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
         // Fetch blockchain data for each market
         for (const market of dbMarkets.slice(0, 20)) { // Limit to 20 for search performance
         try {
+            // Validate PDA before creating PublicKey
+            if (!market.pda || !isValidSolanaAddress(market.pda)) {
+              console.warn("Skipping invalid PDA in search modal:", market.pda)
+              continue
+            }
+
             const marketPda = new PublicKey(market.pda)
             const blockchainData = await fetchMarketByPda(connection, null, marketPda)
             if (blockchainData) {
