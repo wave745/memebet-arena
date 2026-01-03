@@ -609,6 +609,58 @@ export default function AdminPage() {
                             </div>
                         </div>
 
+                        {/* Market Sync Section */}
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-4">
+                                <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] whitespace-nowrap">Market Sync</span>
+                                <div className="h-px flex-1 bg-white/10" />
+                            </div>
+
+                            <div className="glass-card p-6 border border-white/5 bg-white/[0.01] space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+                                    <h3 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em]">Database Sync</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    <p className="text-[11px] text-white/40 leading-relaxed">
+                                        Sync all markets from the blockchain to the database. This ensures the latest market data is available.
+                                    </p>
+                                    <Button
+                                        onClick={async () => {
+                                            setStatus({ type: 'success', msg: 'Syncing markets...' })
+                                            try {
+                                                const response = await fetch('/api/markets/sync-all', {
+                                                    method: 'POST'
+                                                })
+                                                const result = await response.json()
+
+                                                if (result.success) {
+                                                    setStatus({
+                                                        type: 'success',
+                                                        msg: `✅ Markets synced! Database now contains ${result.marketsCount} markets.`
+                                                    })
+                                                } else {
+                                                    setStatus({
+                                                        type: 'error',
+                                                        msg: `❌ Sync failed: ${result.error}`
+                                                    })
+                                                }
+                                            } catch (error: any) {
+                                                setStatus({
+                                                    type: 'error',
+                                                    msg: `❌ Sync failed: ${error.message}`
+                                                })
+                                            }
+                                        }}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-widest text-sm"
+                                        disabled={loading}
+                                    >
+                                        Sync Markets to Database
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="glass-card p-8 border border-white/5 bg-white/[0.01] space-y-4">
                             <div className="flex items-center gap-3">
                                 <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-ping" />
