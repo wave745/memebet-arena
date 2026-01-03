@@ -14,9 +14,6 @@ import {
 } from "@solana/wallet-adapter-react-ui"
 import {
   PhantomWalletAdapter,
-  SolflareWalletAdapter,
-  BitgetWalletAdapter,
-  TrustWalletAdapter,
 } from "@solana/wallet-adapter-wallets"
 import * as anchor from "@coral-xyz/anchor"
 
@@ -75,14 +72,11 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
 
   const endpoint = getEndpoint()
 
-  // Explicitly include main wallets - removed CoinbaseWalletAdapter as it may conflict with MetaMask
+  // Minimal wallet configuration to avoid MetaMask conflicts
   const wallets = useMemo(
     () => [
-      // Add popular wallets - avoiding potential MetaMask conflicts
+      // Only include Phantom for now to test if this resolves the MetaMask key collision
       new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-      new BitgetWalletAdapter(),
-      new TrustWalletAdapter(),
     ],
     [network]
   )
@@ -98,7 +92,7 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <SolanaWalletProvider wallets={wallets} autoConnect onError={onError}>
+      <SolanaWalletProvider wallets={wallets} autoConnect localStorageKey="trench-market-wallet" onError={onError}>
         <WalletModalProvider>
           <WalletStateWrapper>{children}</WalletStateWrapper>
         </WalletModalProvider>
