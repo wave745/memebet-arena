@@ -1,13 +1,5 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "env": {
-    "NEXT_PRIVATE_TARGET": "standalone"
-  },
-  "functions": {
-    "app/**/*.ts": {
-      "runtime": "@vercel/node"
-    }
-  }
+  "installCommand": "npm install"
 }
