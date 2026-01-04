@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { fetchUserPositions, type PositionData } from "@/lib/solana/positions"
 import { fetchMarketByPdaFrontend } from "@/lib/market-frontend"
 import { useWallet } from "./wallet-provider"
+import { getTokenData, type TokenData } from "@/lib/dexscreener"
 import { Copy, ExternalLink, ArrowUpRight, ArrowDownRight, Share2 } from "lucide-react"
 import { SolanaLogo } from "./solana-logo"
 import { generatePnLImage, type PnLData } from "@/lib/pnl-generator"
@@ -53,6 +54,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const [claiming, setClaiming] = useState<string | null>(null)
   const [claimError, setClaimError] = useState<string | null>(null)
   const [markets, setMarkets] = useState<Map<string, any>>(new Map())
+  const [tokenData, setTokenData] = useState<Map<string, TokenData>>(new Map())
   const [transactions, setTransactions] = useState<TransactionData[]>([])
   const [txLoading, setTxLoading] = useState(false)
 
@@ -91,6 +93,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
     } else {
       setPositions([])
       setMarkets(new Map())
+      setTokenData(new Map())
       setTransactions([])
       setIsInitialLoad(true)
     }
@@ -129,15 +132,40 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
       const marketResults = await Promise.all(marketPromises)
       const marketMap = new Map<string, any>()
+      const tokenPromises: Promise<void>[] = []
+
       marketResults.forEach((result) => {
         if (result) {
           const [pdaStr, marketData] = result
           marketMap.set(pdaStr, {
             ...marketData,
-            ticker: marketData.tokenSymbol // Use actual token symbol from metadata
+            ticker: marketData.tokenSymbol // Will be updated with real data
           })
+
+          // Fetch token data from DexScreener
+          if (marketData.tokenMint) {
+            tokenPromises.push(
+              getTokenData(marketData.tokenMint.toString())
+                .then((tokenInfo) => {
+                  if (tokenInfo) {
+                    setTokenData(prev => new Map(prev.set(pdaStr, tokenInfo)))
+                    // Update market with real token symbol
+                    marketMap.set(pdaStr, {
+                      ...marketData,
+                      ticker: tokenInfo.symbol || marketData.tokenSymbol
+                    })
+                  }
+                })
+                .catch((error) => {
+                  console.warn('Failed to fetch token data for market:', pdaStr, error)
+                })
+            )
+          }
         }
       })
+
+      // Wait for token data fetching to complete
+      await Promise.allSettled(tokenPromises)
 
       // Update markets map, preserving existing entries for markets not in current positions
       setMarkets((prevMarkets) => {
@@ -541,6 +569,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
             <ActiveBetsTab
               positions={activePositions}
               markets={markets}
+              tokenData={tokenData}
               onPositionClick={(marketPda) => {
                 router.push(`/market/${marketPda.toString()}`)
                 onClose() // Close modal when navigating
@@ -552,6 +581,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
             <HistoryTab
               positions={historyPositions}
               markets={markets}
+              tokenData={tokenData}
               onClaim={handleClaim}
               claiming={claiming}
               claimError={claimError}
@@ -576,12 +606,14 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
 function ActiveBetsTab({
   positions,
   markets,
+  tokenData,
   onPositionClick,
   onShare,
   sharingLoading,
 }: {
   positions: PositionData[]
   markets: Map<string, any>
+  tokenData: Map<string, TokenData>
   onPositionClick: (marketPda: PublicKey) => void
   onShare: (data: PnLData, positionId: string) => void
   sharingLoading: string | null
@@ -675,9 +707,10 @@ function ActiveBetsTab({
                 {market && (
                   <div className="text-xs sm:text-sm text-[#E5E5E5] font-medium mb-1 truncate">
                     {(() => {
-                      const ticker = (market as any)?.ticker
+                      const marketTokenData = tokenData.get(position.marketPda.toString())
+                      const ticker = marketTokenData?.symbol || (market as any)?.ticker
                       const tokenMintStr = market?.tokenMint?.toString() || ""
-                      const tokenDisplay = ticker || (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
+                      const tokenDisplay = ticker && ticker !== 'UNKNOWN' ? ticker : (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
                       return `Will ${tokenDisplay} hit $${formatMarketCapShort(Number(market.targetMarketCap))}?`
                     })()}
                   </div>
@@ -709,9 +742,10 @@ function ActiveBetsTab({
                   onClick={(e) => {
                     e.stopPropagation()
                     const pdaStr = position.positionPda.toString()
-                    const ticker = (market as any)?.ticker
+                    const marketTokenData = tokenData.get(position.marketPda.toString())
+                    const ticker = marketTokenData?.symbol || (market as any)?.ticker
                     const tokenMintStr = market?.tokenMint?.toString() || ""
-                    const tokenDisplay = ticker || (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
+                    const tokenDisplay = ticker && ticker !== 'UNKNOWN' ? ticker : (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
                     const question = `Will ${tokenDisplay} hit $${formatMarketCapShort(Number(market?.targetMarketCap || 0))}?`
 
                     onShare({
@@ -757,12 +791,14 @@ function ActiveBetsTab({
 function HistoryTab({
   positions,
   markets,
+  tokenData,
   onClaim,
   claiming,
   claimError,
 }: {
   positions: PositionData[]
   markets: Map<string, any>
+  tokenData: Map<string, TokenData>
   onClaim: (position: PositionData, marketPda: PublicKey) => void
   claiming: string | null
   claimError: string | null
@@ -883,9 +919,10 @@ function HistoryTab({
                 </div>
                 <div className="text-xs sm:text-sm text-foreground mb-1 truncate">
                   {(() => {
-                    const ticker = (market as any)?.ticker
+                    const marketTokenData = tokenData.get(position.marketPda.toString())
+                    const ticker = marketTokenData?.symbol || (market as any)?.ticker
                     const tokenMintStr = market?.tokenMint?.toString() || ""
-                    const tokenDisplay = ticker || (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
+                    const tokenDisplay = ticker && ticker !== 'UNKNOWN' ? ticker : (tokenMintStr ? `${tokenMintStr.slice(0, 4)}...${tokenMintStr.slice(-4)}` : "Token")
                     return `Will ${tokenDisplay} hit $${formatMarketCapShort(Number(market.targetMarketCap))}?`
                   })()}
                 </div>
