@@ -149,16 +149,13 @@ export default function Home() {
             <DiscordIcon className="w-5 h-5 group-hover:text-neon-magenta transition-colors" />
             <span className="text-sm sm:text-base font-medium underline underline-offset-4 decoration-1 hover:decoration-neon-magenta transition-all">Join Discord</span>
           </a>
-        </div>
 
-        {/* Docs Link */}
-        <div className="mt-6 sm:mt-8">
           <a
             href="/docs"
-            className="flex items-center gap-2 text-muted-foreground hover:text-neon-cyan transition-colors duration-300 group"
+            className="flex items-center gap-2 text-muted-foreground hover:text-neon-green transition-colors duration-300 group"
           >
-            <DocsIcon className="w-5 h-5 group-hover:text-neon-cyan transition-colors" />
-            <span className="text-sm sm:text-base font-medium underline underline-offset-4 decoration-1 hover:decoration-neon-cyan transition-all">Documentation</span>
+            <DocsIcon className="w-5 h-5 group-hover:text-neon-green transition-colors" />
+            <span className="text-sm sm:text-base font-medium underline underline-offset-4 decoration-1 hover:decoration-neon-green transition-all">Documentation</span>
           </a>
         </div>
       </div>
