@@ -1,70 +1,63 @@
 import { NextResponse } from "next/server"
-import sqlite3 from 'sqlite3'
-import { open } from 'sqlite'
+import { Pool } from '@neondatabase/serverless'
 
-// Global in-memory storage for activities (Vercel-compatible)
-let globalActivities: any[] = []
-
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        let activities = [...globalActivities]
+        console.log("Leaderboard API called")
+        const { searchParams } = new URL(request.url)
+        const sortBy = (searchParams.get("sortBy") as 'volume' | 'pnl' | 'wins') || 'volume'
+        const limit = Number(searchParams.get("limit")) || 50
 
-        // In development, try to merge with database
-        if (process.env.NODE_ENV !== 'production') {
-            try {
-                const db = await open({
-                    filename: './dev.db',
-                    driver: sqlite3.Database
-                })
+        console.log("Leaderboard params:", { sortBy, limit })
 
-                const dbActivities = await db.all(`
-                    SELECT user, amount, timestamp, type
-                    FROM Activity
-                    WHERE type IN ('BET_YES', 'BET_NO', 'SELL')
-                `)
+        // Get leaderboard from Neon database inline
+        console.log("Creating database pool...")
+        const dbUrl = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_DFs85ANlpHJC@ep-royal-paper-ahfywd90-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+        console.log("Database URL available:", !!dbUrl)
 
-                // Merge with global activities, avoiding duplicates
-                const existingTxHashes = new Set(globalActivities.map(a => a.txHash))
-                for (const activity of dbActivities) {
-                    if (!existingTxHashes.has(activity.txHash)) {
-                        activities.push(activity)
-                    }
-                }
-
-                await db.close()
-            } catch (dbError: any) {
-                console.warn("Leaderboard API: Database not available, using global activities only:", dbError.message)
-            }
-        }
-
-        // Process activities to calculate volume and counts
-        const userStats = new Map<string, { volume: number, txCount: number, lastActive: number }>()
-
-        activities.forEach((activity: any) => {
-            if (activity.type && ['BET_YES', 'BET_NO', 'SELL'].includes(activity.type)) {
-                const amount = parseFloat(activity.amount) / 1_000_000_000 // Lamports to SOL
-                const current = userStats.get(activity.user) || { volume: 0, txCount: 0, lastActive: 0 }
-
-                userStats.set(activity.user, {
-                    volume: current.volume + amount,
-                    txCount: current.txCount + 1,
-                    lastActive: Math.max(current.lastActive, activity.timestamp)
-                })
-            }
+        const pool = new Pool({
+            connectionString: dbUrl,
         })
 
-        // Convert to array and sort by volume
-        const leaderboard = Array.from(userStats.entries())
-            .map(([user, stats]) => ({
-                user,
-                ...stats
-            }))
-            .sort((a, b) => b.volume - a.volume)
-            .slice(0, 50) // Top 50
+        console.log("Connecting to database...")
+        const client = await pool.connect()
+        console.log("Connected to database")
 
-        return NextResponse.json(leaderboard)
+        let orderBy = '"totalVolume" DESC'
+        if (sortBy === 'pnl') {
+            orderBy = 'pnl DESC'
+        } else if (sortBy === 'wins') {
+            orderBy = 'wins DESC'
+        }
+
+        const query = `SELECT * FROM "UserStats" ORDER BY ${orderBy} LIMIT $1`
+        console.log("Executing query:", query, "with limit:", limit)
+
+        const result = await client.query(query, [limit])
+        console.log("Query executed, found", result.rows.length, "rows")
+
+        client.release()
+        await pool.end()
+
+        // Transform to expected format
+        const formattedLeaderboard = result.rows.map(user => ({
+            user: user.user,
+            volume: parseFloat(user.totalVolume) / 1_000_000_000, // Convert lamports to SOL
+            pnl: parseFloat(user.pnl) / 1_000_000_000, // Convert lamports to SOL
+            totalBets: user.totalBets,
+            wins: user.wins,
+            losses: user.losses,
+            lastActive: user.lastActive.getTime() / 1000 // Unix timestamp
+        }))
+
+        console.log("Returning leaderboard with", formattedLeaderboard.length, "users")
+        return NextResponse.json(formattedLeaderboard)
     } catch (e) {
         console.error("Failed to fetch leaderboard:", e)
-        return NextResponse.json({ error: "Failed to fetch leaderboard" }, { status: 500 })
+        console.error("Error stack:", e.stack)
+
+        // Return empty array instead of 500 error to prevent frontend crashes
+        console.log("Returning empty leaderboard due to error")
+        return NextResponse.json([])
     }
 }

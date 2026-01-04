@@ -9,7 +9,10 @@ import { useWallet } from "@/components/wallet-provider"
 interface LeaderboardEntry {
     user: string
     volume: number
-    txCount: number
+    pnl: number
+    totalBets: number
+    wins: number
+    losses: number
     lastActive: number
 }
 
@@ -21,12 +24,17 @@ export function LeaderboardFeed() {
     useEffect(() => {
         const fetchLeaderboard = async () => {
             try {
+                console.log("LeaderboardFeed: Fetching leaderboard...")
                 const res = await fetch("/api/leaderboard")
+                console.log("LeaderboardFeed: Response status:", res.status, res.ok)
                 if (!res.ok) throw new Error(`API error: ${res.status}`)
                 const data = await res.json()
+                console.log("LeaderboardFeed: Response data:", data)
                 if (Array.isArray(data)) setStats(data)
             } catch (e) {
-                console.error(e)
+                console.error("LeaderboardFeed: Error fetching leaderboard:", e)
+                // Always set empty array to prevent UI crashes
+                setStats([])
             } finally {
                 setLoading(false)
             }
@@ -87,9 +95,9 @@ export function LeaderboardFeed() {
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Activity className="h-20 w-20 -rotate-12" />
                     </div>
-                    <div className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Total Trades</div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Total Bets</div>
                     <div className="text-3xl font-black text-white">
-                        {stats.reduce((acc, curr) => acc + curr.txCount, 0)}
+                        {stats.reduce((acc, curr) => acc + curr.totalBets, 0)}
                     </div>
                     <div className="h-1 w-20 bg-neon-magenta/50 mt-4 rounded-full" />
                 </div>
@@ -114,8 +122,8 @@ export function LeaderboardFeed() {
                             <tr className="border-b border-white/10 bg-white/[0.02]">
                                 <th className="p-4 text-[10px] font-black uppercase tracking-widest text-white/30">Rank</th>
                                 <th className="p-4 text-[10px] font-black uppercase tracking-widest text-white/30">Trader</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">Volume</th>
-                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">Activity</th>
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">PnL</th>
+                                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">Win Rate</th>
                                 <th className="p-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right hidden sm:table-cell">Last Seen</th>
                             </tr>
                         </thead>
@@ -160,15 +168,15 @@ export function LeaderboardFeed() {
                                             </div>
                                         </td>
                                         <td className="p-4 text-right">
-                                            <div className="flex items-center justify-end gap-1.5 font-bold text-white text-sm sm:text-base">
+                                            <div className={`flex items-center justify-end gap-1.5 font-bold text-sm sm:text-base ${user.pnl >= 0 ? 'text-neon-green' : 'text-red-400'}`}>
                                                 <SolanaLogo size={14} />
-                                                {user.volume.toFixed(3)}
+                                                {user.pnl >= 0 ? '+' : ''}{user.pnl.toFixed(3)}
                                             </div>
                                         </td>
                                         <td className="p-4 text-right">
                                             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-xs">
                                                 <TrendingUp className="h-3 w-3 text-neon-green" />
-                                                <span className="text-white/80 font-mono">{user.txCount}</span>
+                                                <span className="text-white/80 font-mono">{user.totalBets > 0 ? Math.round((user.wins / user.totalBets) * 100) : 0}%</span>
                                             </div>
                                         </td>
                                         <td className="p-4 text-right hidden sm:table-cell">

@@ -132,8 +132,10 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
       marketResults.forEach((result) => {
         if (result) {
           const [pdaStr, marketData] = result
-          // TODO: Get ticker from API or user input - no hardcoded data
-          marketMap.set(pdaStr, { ...marketData, ticker: 'UNKNOWN' })
+          marketMap.set(pdaStr, {
+            ...marketData,
+            ticker: marketData.tokenSymbol // Use actual token symbol from metadata
+          })
         }
       })
 
@@ -141,7 +143,10 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
       setMarkets((prevMarkets) => {
         const newMap = new Map(prevMarkets)
         marketMap.forEach((market, key) => {
-          newMap.set(key, market)
+          newMap.set(key, {
+            ...market,
+            ticker: market.tokenSymbol || 'UNKNOWN' // Use tokenSymbol instead of hardcoded UNKNOWN
+          })
         })
         return newMap
       })

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { Connection, clusterApiUrl } from "@solana/web3.js"
-import { syncMarketsOnce } from "../../../../scripts/sync-markets-to-db"
-import { DatabaseService } from "../../../../lib/database"
+import { runMarketSync } from "../../../../scripts/simple-sync"
+import { basicDatabase } from "../../../lib/basic-database"
 
 export async function POST(request: Request) {
     try {
@@ -22,10 +22,10 @@ export async function POST(request: Request) {
         )
 
         // This will trigger the full sync process
-        await syncMarketsOnce()
+        await runMarketSync()
 
         // Get updated market count
-        const dbMarkets = await DatabaseService.getAllMarkets()
+        const dbMarkets = await basicDatabase.getAllMarkets()
 
         return NextResponse.json({
             success: true,

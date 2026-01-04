@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
-
-// Global in-memory storage for activities (Vercel-compatible)
-let globalActivities: any[] = []
+import { Pool } from '@neondatabase/serverless'
 
 export async function GET(request: Request) {
     try {
@@ -9,86 +7,66 @@ export async function GET(request: Request) {
         const limit = Number(searchParams.get("limit")) || 50
         const marketPda = searchParams.get("marketPda")
 
-        // In production (Vercel), use global activities
-        // In development, try to merge with database
-        let activities = [...globalActivities]
+        // Get activities from Neon database inline
+        const pool = new Pool({
+            connectionString: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_DFs85ANlpHJC@ep-royal-paper-ahfywd90-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+        })
 
-        if (process.env.NODE_ENV !== 'production') {
-            try {
-                const sqlite3 = require('sqlite3')
-                const { open } = require('sqlite')
+        const client = await pool.connect()
 
-                const db = await open({
-                    filename: './dev.db',
-                    driver: sqlite3.Database
-                })
+        let query = `
+            SELECT a.*, m.* as market
+            FROM "Activity" a
+            LEFT JOIN "Market" m ON a."marketId" = m.id
+            WHERE 1=1
+        `
+        const values: any[] = []
+        let paramCount = 0
 
-                let query = `
-                    SELECT
-                        a.id,
-                        a.txHash,
-                        a.type,
-                        a.user,
-                        a.amount,
-                        a.timestamp,
-                        m.ticker,
-                        m.tokenMint,
-                        m.category
-                    FROM Activity a
-                    LEFT JOIN Market m ON a.marketPda = m.pda
-                `
-
-                const params: any[] = []
-
-                if (marketPda) {
-                    query += ` WHERE a.marketPda = ?`
-                    params.push(marketPda)
-                }
-
-                query += ` ORDER BY a.timestamp DESC LIMIT ?`
-                params.push(limit)
-
-                const dbActivities = await db.all(query, params)
-                await db.close()
-
-                // Merge database activities with global activities
-                const existingTxHashes = new Set(globalActivities.map(a => a.txHash))
-                for (const activity of dbActivities) {
-                    if (!existingTxHashes.has(activity.txHash)) {
-                        globalActivities.push({
-                            id: activity.id,
-                            txHash: activity.txHash,
-                            type: activity.type,
-                            user: activity.user,
-                            amount: activity.amount,
-                            timestamp: activity.timestamp,
-                            market: {
-                                ticker: activity.ticker,
-                                tokenMint: activity.tokenMint,
-                                category: activity.category || 'new'
-                            }
-                        })
-                    }
-                }
-
-                activities = [...globalActivities]
-            } catch (dbError) {
-                console.warn("Database not available, using global activities only:", dbError.message)
+        if (marketPda) {
+            // If marketId is a PDA, find the actual market ID
+            const marketQuery = 'SELECT id FROM "Market" WHERE pda = $1'
+            const marketResult = await client.query(marketQuery, [marketPda])
+            if (marketResult.rows[0]) {
+                query += ` AND a."marketId" = $${++paramCount}`
+                values.push(marketResult.rows[0].id)
+            } else {
+                query += ` AND a."marketId" = $${++paramCount}`
+                values.push(marketPda)
             }
         }
 
-        // Filter by market if specified
-        if (marketPda) {
-            activities = activities.filter(a => a.marketPda === marketPda)
-        }
+        // Filter for specific activity types
+        query += ` AND a.type = ANY($${++paramCount})`
+        values.push(['BET_YES', 'BET_NO', 'RESOLVE', 'SELL'])
 
-        // Sort by timestamp descending and limit
-        activities.sort((a, b) => b.timestamp - a.timestamp)
-        activities = activities.slice(0, limit)
+        query += ` ORDER BY a.timestamp DESC LIMIT $${++paramCount}`
+        values.push(limit)
 
-        console.log(`📊 Returning ${activities.length} activities ${marketPda ? `for market ${marketPda}` : 'globally'}`)
+        const result = await client.query(query, values)
+        const activities = result.rows
 
-        return NextResponse.json(activities)
+        client.release()
+        await pool.end()
+
+        // Transform to expected format
+        const formattedActivities = activities.map(activity => ({
+            id: activity.id,
+            txHash: activity.txHash,
+            type: activity.type,
+            user: activity.user,
+            amount: activity.amount,
+            timestamp: Number(activity.timestamp),
+            market: {
+                ticker: activity.market?.tokenSymbol,
+                tokenMint: activity.market?.tokenMint,
+                category: activity.market?.category || 'new'
+            }
+        }))
+
+        console.log(`📊 Returning ${formattedActivities.length} activities ${marketPda ? `for market ${marketPda}` : 'globally'}`)
+
+        return NextResponse.json(formattedActivities)
     } catch (e) {
         console.error("Failed to fetch activities:", e)
         return NextResponse.json({ error: "Failed to fetch activities" }, { status: 500 })
@@ -100,83 +78,165 @@ export async function POST(request: Request) {
         const body = await request.json()
         const { txHash, type, marketPda, user, amount, outcome, timestamp, marketInfo } = body
 
-        const activityTimestamp = timestamp || Math.floor(Date.now() / 1000)
+        const activityTimestamp = BigInt(timestamp || Math.floor(Date.now() / 1000))
 
-        // Create activity object
-        const newActivity = {
-            id: Date.now().toString(), // Simple ID for global storage
-            txHash,
-            type,
-            user,
-            amount: amount.toString(),
-            timestamp: activityTimestamp,
-            marketPda,
-            market: marketInfo ? {
-                ticker: marketInfo.ticker,
-                tokenMint: marketInfo.tokenMint,
-                category: marketInfo.category || 'new'
-            } : null
+        // Skip CREATE_MARKET activities as requested
+        if (type === 'CREATE_MARKET') {
+            console.log(`⏭️ Skipping CREATE_MARKET activity for ${marketPda}`)
+            return NextResponse.json({ message: "CREATE_MARKET activities are not logged" })
         }
 
-        // Add to global activities (always available)
-        globalActivities.unshift(newActivity) // Add to beginning for latest first
+        const pool = new Pool({
+            connectionString: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_DFs85ANlpHJC@ep-royal-paper-ahfywd90-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+        })
 
-        // Keep only last 1000 activities to prevent memory bloat
-        if (globalActivities.length > 1000) {
-            globalActivities = globalActivities.slice(0, 1000)
-        }
+        const client = await pool.connect()
 
-        // Also save to database in development
-        if (process.env.NODE_ENV !== 'production') {
+        try {
+            // Create or update market in database first
+            if (marketInfo) {
+                const query = `
+                    INSERT INTO "Market" (
+                      pda, "tokenMint", "tokenSymbol", "tokenName", "tokenImage",
+                      "targetCap", "endTimestamp", resolved, outcome, "finalMarketCap"
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                    ON CONFLICT (pda) DO UPDATE SET
+                      "tokenSymbol" = EXCLUDED."tokenSymbol",
+                      "tokenName" = EXCLUDED."tokenName",
+                      "tokenImage" = EXCLUDED."tokenImage",
+                      resolved = EXCLUDED.resolved,
+                      outcome = EXCLUDED.outcome,
+                      "finalMarketCap" = EXCLUDED."finalMarketCap"
+                    RETURNING *
+                `
+
+                const values = [
+                    marketPda,
+                    marketInfo.tokenMint,
+                    marketInfo.ticker,
+                    marketInfo.tokenName,
+                    marketInfo.tokenImage,
+                    marketInfo.targetCap?.toString() || '0',
+                    Math.floor(Number(marketInfo.endTimestamp)).toString(),
+                    marketInfo.resolved || false,
+                    marketInfo.outcome !== undefined ? marketInfo.outcome : null,
+                    marketInfo.finalMarketCap
+                ]
+
+                await client.query(query, values)
+            }
+
+            // Create activity in database
+            // First, get the market ID from PDA if needed
+            let marketId = marketPda
+            const marketQuery = 'SELECT id FROM "Market" WHERE pda = $1'
+            const marketResult = await client.query(marketQuery, [marketPda])
+
+            if (marketResult.rows[0]) {
+                marketId = marketResult.rows[0].id
+            }
+
+            const activityQuery = `
+                INSERT INTO "Activity" (
+                  "txHash", type, "marketId", "user", amount, slot, timestamp
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING *
+            `
+
+            const activityValues = [
+                txHash,
+                type,
+                marketId,
+                user,
+                amount.toString(),
+                '0', // slot
+                activityTimestamp.toString()
+            ]
+
+            const activityResult = await client.query(activityQuery, activityValues)
+            const activity = activityResult.rows[0]
+
+            // Update user stats
             try {
-                const sqlite3 = require('sqlite3')
-                const { open } = require('sqlite')
-
-                const db = await open({
-                    filename: './dev.db',
-                    driver: sqlite3.Database
-                })
-
-                // Ensure market exists
-                if (marketInfo) {
-                    await db.run(`
-                        INSERT OR REPLACE INTO Market (pda, tokenMint, ticker, category, targetCap, endTimestamp, resolved, createdAt)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    `, [
-                        marketPda,
-                        marketInfo.tokenMint,
-                        marketInfo.ticker,
-                        marketInfo.category || 'new',
-                        marketInfo.targetCap?.toString() || '0',
-                        Number(marketInfo.endTimestamp),
-                        marketInfo.resolved || false,
-                        new Date().toISOString()
-                    ])
+                let isWin: boolean | undefined
+                if (type === 'RESOLVE' && outcome !== undefined) {
+                    // For resolution, we don't know individual wins/losses here
+                    // This would need more complex logic to track individual positions
                 }
 
-                // Create activity
-                await db.run(`
-                    INSERT INTO Activity (txHash, slot, timestamp, type, marketPda, user, amount)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                `, [
-                    txHash,
-                    0,
-                    activityTimestamp,
-                    type,
-                    marketPda,
-                    user,
-                    amount.toString()
-                ])
+                const amountNum = parseFloat(amount.toString()) / 1_000_000_000 // Convert lamports to SOL
 
-                await db.close()
-            } catch (dbError) {
-                console.warn("Database save failed, using global storage only:", dbError.message)
+                // Check if user stats exist
+                const checkQuery = 'SELECT * FROM "UserStats" WHERE "user" = $1'
+                const checkResult = await client.query(checkQuery, [user])
+
+                if (checkResult.rows.length === 0) {
+                    // Create new user stats
+                    const insertQuery = `
+                      INSERT INTO "UserStats" (
+                        "user", "totalVolume", "totalBets", wins, losses, pnl
+                      ) VALUES ($1, $2, $3, $4, $5, $6)
+                    `
+                    await client.query(insertQuery, [
+                        user,
+                        amount.toString(),
+                        1,
+                        isWin ? 1 : 0,
+                        isWin === false ? 1 : 0,
+                        isWin ? amount.toString() : '0'
+                    ])
+                } else {
+                    // Update existing stats
+                    const currentStats = checkResult.rows[0]
+                    const currentVolume = parseFloat(currentStats.totalVolume) / 1_000_000_000
+                    const currentPnl = parseFloat(currentStats.pnl) / 1_000_000_000
+
+                    let newPnl = currentPnl
+                    if (type === 'BET_YES' || type === 'BET_NO') {
+                        newPnl = currentPnl
+                    } else if (type === 'SELL') {
+                        newPnl = currentPnl + amountNum
+                    }
+
+                    const updateQuery = `
+                      UPDATE "UserStats"
+                      SET
+                        "totalVolume" = $1,
+                        "totalBets" = "totalBets" + 1,
+                        wins = CASE WHEN $2 THEN wins + 1 ELSE wins END,
+                        losses = CASE WHEN $3 THEN losses + 1 ELSE losses END,
+                        pnl = $4,
+                        "lastActive" = NOW()
+                      WHERE "user" = $5
+                    `
+
+                    await client.query(updateQuery, [
+                        (currentVolume + amountNum).toString(),
+                        isWin ? true : false,
+                        isWin === false ? true : false,
+                        newPnl.toString(),
+                        user
+                    ])
+                }
+            } catch (statsError) {
+                console.warn("Failed to update user stats:", statsError)
+                // Don't fail the whole request for stats errors
             }
+
+            console.log(`📊 Activity logged to DB: ${type} by ${user} for ${amount} on market ${marketPda}`)
+
+            return NextResponse.json({
+                id: activity.id,
+                txHash: activity.txHash,
+                type: activity.type,
+                user: activity.user,
+                amount: activity.amount,
+                timestamp: Number(activity.timestamp)
+            })
+        } finally {
+            client.release()
+            await pool.end()
         }
-
-        console.log(`📊 Activity logged: ${type} by ${user} for ${amount} lamports on market ${marketPda}`)
-
-        return NextResponse.json(newActivity)
     } catch (e) {
         console.error("Failed to create activity:", e)
         return NextResponse.json({ error: "Failed to create activity" }, { status: 500 })

@@ -1,10 +1,9 @@
 // Comment system for Trenchmarket
-// v1: Uses localStorage (temporary, per-browser)
-// Future: Upgrade to Arweave/IPFS for permanent, decentralized storage
+// Uses Neon database for persistent storage
 
 export interface Comment {
-  id: string // Unique ID (timestamp + random)
-  marketPda: string // Market PDA address
+  id: string // Unique ID
+  marketPda: string // Market PDA address (for backward compatibility)
   author: string // Wallet address
   content: string // Comment text
   timestamp: number // Unix timestamp in milliseconds
@@ -13,66 +12,57 @@ export interface Comment {
   isHolder?: boolean // Whether the author held a position when commenting
 }
 
-const STORAGE_KEY_PREFIX = "trenchmarket_comments_"
-
-// Get storage key for a market
-function getStorageKey(marketPda: string): string {
-  return `${STORAGE_KEY_PREFIX}${marketPda}`
-}
-
-// Load comments for a market
-export function loadComments(marketPda: string): Comment[] {
-  if (typeof window === "undefined") return []
-
+// Load comments for a market from the API
+export async function loadComments(marketPda: string): Promise<Comment[]> {
   try {
-    const key = getStorageKey(marketPda)
-    const stored = localStorage.getItem(key)
-    if (!stored) return []
+    const response = await fetch(`/api/comments?marketId=${encodeURIComponent(marketPda)}`)
+    if (!response.ok) {
+      console.error("Failed to fetch comments:", response.status)
+      return []
+    }
 
-    const comments = JSON.parse(stored) as Comment[]
+    const comments = await response.json()
 
-    // Validate comments structure
-    const validComments = comments.filter(c =>
-      c &&
-      typeof c.id === 'string' &&
-      typeof c.marketPda === 'string' &&
-      typeof c.author === 'string' &&
-      typeof c.content === 'string' &&
-      typeof c.timestamp === 'number'
-    )
+    // Transform API response to Comment interface
+    const transformedComments: Comment[] = comments.map((c: any) => ({
+      id: c.id,
+      marketPda: c.marketPda || marketPda,
+      author: c.author,
+      content: c.content,
+      timestamp: c.timestamp,
+      isHolder: c.isHolder || false
+    }))
 
     // Sort by timestamp (newest first)
-    return validComments.sort((a, b) => b.timestamp - a.timestamp)
+    return transformedComments.sort((a, b) => b.timestamp - a.timestamp)
   } catch (error) {
     console.error("Failed to load comments:", error)
     return []
   }
 }
 
-// Save a comment
-export function saveComment(comment: Comment): void {
-  if (typeof window === "undefined") return
-
+// Save a comment via API
+export async function saveComment(comment: Comment): Promise<void> {
   try {
-    const key = getStorageKey(comment.marketPda)
-    const existing = loadComments(comment.marketPda)
+    const response = await fetch('/api/comments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        marketId: comment.marketPda,
+        author: comment.author,
+        content: comment.content,
+        isHolder: comment.isHolder || false
+      })
+    })
 
-    // Check if comment already exists (by ID) to avoid duplicates
-    const existingIds = new Set(existing.map(c => c.id))
-    if (existingIds.has(comment.id)) {
-      // Update existing
-      const updated = existing.map(c => c.id === comment.id ? comment : c)
-      localStorage.setItem(key, JSON.stringify(updated))
-    } else {
-      // Add new
-      const updated = [comment, ...existing]
-      localStorage.setItem(key, JSON.stringify(updated))
+    if (!response.ok) {
+      throw new Error(`Failed to save comment: ${response.status}`)
     }
   } catch (error) {
     console.error("Failed to save comment:", error)
-    if (error instanceof DOMException && error.code === 22) {
-      console.error("localStorage quota exceeded")
-    }
+    throw error
   }
 }
 

@@ -2,11 +2,15 @@ import { Connection, PublicKey, SystemProgram } from "@solana/web3.js"
 import * as anchor from "@coral-xyz/anchor"
 import { getProgram, getMarketPda, getMarketVaultPda, PROGRAM_ID } from "./program"
 import type { MemebetArena } from "../../target/types/memebet_arena"
+import { getTokenMetadata } from "../utils/token-metadata"
 
 export interface MarketData {
   marketId: number
   marketPda: PublicKey
   tokenMint: PublicKey
+  tokenSymbol: string
+  tokenName: string
+  tokenImage?: string
   targetMarketCap: anchor.BN
   endTimestamp: anchor.BN
   resolved: boolean
@@ -88,10 +92,28 @@ export async function fetchMarketByPda(
     const outcomeByte = data[105]
     const outcome = outcomeByte === 0 ? null : outcomeByte === 1 ? false : true
 
+    // Fetch token metadata
+    let tokenSymbol = 'UNKNOWN'
+    let tokenName = 'Unknown Token'
+    let tokenImage: string | undefined
+
+    try {
+      const tokenMetadata = await getTokenMetadata(tokenMint.toString())
+      tokenSymbol = tokenMetadata.symbol
+      tokenName = tokenMetadata.name
+      tokenImage = tokenMetadata.image
+    } catch (error) {
+      console.warn(`Failed to fetch token metadata for ${tokenMint.toString()}:`, error)
+      // Continue with UNKNOWN values
+    }
+
     return {
       marketId: 0, // Not used with PDA-based markets
       marketPda,
       tokenMint,
+      tokenSymbol,
+      tokenName,
+      tokenImage,
       targetMarketCap: new anchor.BN(targetMarketCap.toString()),
       endTimestamp: new anchor.BN(endTimestamp.toString()),
       resolved,

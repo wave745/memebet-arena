@@ -1,36 +1,76 @@
 generator client {
   provider = "prisma-client"
+  output = "../node_modules/.prisma/client"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Market {
-  pda           String   @id
-  tokenMint     String
-  ticker        String?
-  category      String   @default("new")
-  targetCap     String
-  endTimestamp  Int      // Unix timestamp in seconds
-  createdAt     DateTime @default(now())
-  resolved      Boolean  @default(false)
-  outcome       Boolean? // true = YES, false = NO, null = Unresolved
+  id           String   @id @default(uuid())
+  pda          String   @unique
+  tokenMint    String
+  tokenSymbol  String?
+  tokenName    String?
+  tokenImage   String?
+  category     String   @default("new")
+  targetCap    String
+  endTimestamp BigInt   // Unix timestamp in seconds
+  createdAt    DateTime @default(now())
+  resolved     Boolean  @default(false)
+  outcome      Boolean? // true = YES, false = NO, null = Unresolved
+  finalMarketCap String?
 
-  activities    Activity[]
+  activities   Activity[]
+  comments     Comment[]
 }
 
 model Activity {
   id        String   @id @default(uuid())
   txHash    String   @unique
-  slot      Int
-  timestamp Int      // Block time
+  slot      BigInt
+  timestamp BigInt   // Block time
   type      String   // CREATE, BET_YES, BET_NO, RESOLVE, REDEEM, SELL
-  marketPda String
+  marketId  String   // Reference to Market.id (not pda)
   user      String
   amount    String
-  
-  market    Market   @relation(fields: [marketPda], references: [pda])
+
+  market    Market   @relation(fields: [marketId], references: [id])
 
   @@index([timestamp(sort: Desc)])
+  @@index([marketId])
+  @@index([user])
+  @@index([type])
+}
+
+model UserStats {
+  id          String   @id @default(uuid())
+  user        String   @unique
+  totalVolume String   @default("0") // Total SOL traded
+  totalBets   Int      @default(0)
+  wins        Int      @default(0)
+  losses      Int      @default(0)
+  pnl         String   @default("0") // Net profit/loss in SOL
+  lastActive  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([totalVolume(sort: Desc)])
+  @@index([pnl(sort: Desc)])
+  @@index([lastActive(sort: Desc)])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  marketId  String
+  user      String
+  content   String
+  isHolder  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  market    Market   @relation(fields: [marketId], references: [id])
+
+  @@index([marketId])
+  @@index([createdAt(sort: Desc)])
+  @@index([user])
 }

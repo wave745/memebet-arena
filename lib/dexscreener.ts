@@ -2,6 +2,10 @@ export interface TokenData {
   marketCap: number;
   image?: string;
   symbol?: string;
+  price?: number;
+  name?: string;
+  liquidity?: number;
+  volume24h?: number;
 }
 
 export interface DexScreenerPair {
@@ -124,6 +128,10 @@ export async function getTokenData(mint: string): Promise<TokenData | null> {
       marketCap,
       image: bestPair.info?.imageUrl,
       symbol: bestPair.baseToken.symbol,
+      price: bestPair.priceUsd ? parseFloat(bestPair.priceUsd) : undefined,
+      name: bestPair.baseToken.name,
+      liquidity: bestPair.liquidity?.usd,
+      volume24h: bestPair.volume?.h24,
     };
   } catch (error) {
     console.error(`Failed to fetch token data for ${mint}:`, error);
@@ -191,6 +199,10 @@ export async function getBatchTokenData(mints: string[]): Promise<Map<string, To
           marketCap,
           image: bestPair.info?.imageUrl,
           symbol: bestPair.baseToken.symbol,
+          price: bestPair.priceUsd ? parseFloat(bestPair.priceUsd) : undefined,
+          name: bestPair.baseToken.name,
+          liquidity: bestPair.liquidity?.usd,
+          volume24h: bestPair.volume?.h24,
         });
       }
     }

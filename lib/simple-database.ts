@@ -1,56 +1,23 @@
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { Pool } from '@neondatabase/serverless'
 
-// Prevent multiple instances of Prisma Client in development
-const globalForPrisma = globalThis as unknown as {
-  prisma: any
-}
+// Simple database client that avoids complex Prisma types
+class SimpleDatabase {
+  private prisma: any = null
 
-// Lazy load Prisma client to avoid Next.js build issues
-let prismaPromise: Promise<any> | null = null
-
-const getPrismaClient = async () => {
-  if (globalForPrisma.prisma) {
-    return globalForPrisma.prisma
-  }
-
-  if (!prismaPromise) {
-    prismaPromise = (async () => {
-      // Dynamic import to avoid build-time parsing issues
+  private async getClient() {
+    if (!this.prisma) {
+      // Use dynamic import to avoid Next.js build issues
       const { PrismaClient } = await import('../node_modules/.prisma/client/client')
-      const client = new PrismaClient({
+      this.prisma = new PrismaClient({
         adapter: new PrismaNeon(new Pool({ connectionString: process.env.DATABASE_URL }) as any),
         log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
       })
-
-      if (process.env.NODE_ENV !== 'production') {
-        globalForPrisma.prisma = client
-      }
-
-      return client
-    })()
-  }
-
-  return prismaPromise
-}
-
-export const prisma = new Proxy({}, {
-  get: (target, prop) => {
-    return async (...args: any[]) => {
-      const client = await getPrismaClient()
-      const method = client[prop as keyof typeof client]
-      if (typeof method === 'function') {
-        return method.apply(client, args)
-      }
-      return method
     }
+    return this.prisma
   }
-}) as any
 
-// Database helper functions
-export class DatabaseService {
-  // Market operations
-  static async upsertMarket(marketData: {
+  async upsertMarket(marketData: {
     pda: string
     tokenMint: string
     tokenSymbol?: string
@@ -62,8 +29,9 @@ export class DatabaseService {
     outcome?: boolean | null
     finalMarketCap?: string
   }) {
+    const client = await this.getClient()
     try {
-      return await prisma.market.upsert({
+      return await client.market.upsert({
         where: { pda: marketData.pda },
         update: {
           tokenSymbol: marketData.tokenSymbol,
@@ -92,9 +60,10 @@ export class DatabaseService {
     }
   }
 
-  static async getMarket(pda: string) {
+  async getMarket(pda: string) {
+    const client = await this.getClient()
     try {
-      return await prisma.market.findUnique({
+      return await client.market.findUnique({
         where: { pda },
       })
     } catch (error) {
@@ -103,9 +72,10 @@ export class DatabaseService {
     }
   }
 
-  static async getAllMarkets(limit = 100, offset = 0) {
+  async getAllMarkets(limit = 100, offset = 0) {
+    const client = await this.getClient()
     try {
-      return await prisma.market.findMany({
+      return await client.market.findMany({
         orderBy: { createdAt: 'desc' },
         take: limit,
         skip: offset,
@@ -116,8 +86,7 @@ export class DatabaseService {
     }
   }
 
-  // Activity operations
-  static async createActivity(activityData: {
+  async createActivity(activityData: {
     txHash: string
     type: string
     marketId: string
@@ -126,10 +95,11 @@ export class DatabaseService {
     slot?: bigint
     timestamp?: bigint
   }) {
+    const client = await this.getClient()
     try {
       // Get market ID from PDA if needed
       let marketId = activityData.marketId
-      const market = await prisma.market.findUnique({
+      const market = await client.market.findUnique({
         where: { pda: activityData.marketId },
         select: { id: true }
       })
@@ -138,7 +108,7 @@ export class DatabaseService {
         marketId = market.id
       }
 
-      return await prisma.activity.create({
+      return await client.activity.create({
         data: {
           txHash: activityData.txHash,
           type: activityData.type,
@@ -155,13 +125,14 @@ export class DatabaseService {
     }
   }
 
-  static async getActivities(limit = 50, marketId?: string, user?: string, types?: string[]) {
+  async getActivities(limit = 50, marketId?: string, user?: string, types?: string[]) {
+    const client = await this.getClient()
     try {
       const where: any = {}
 
       if (marketId) {
         // If marketId is a PDA, find the actual market ID
-        const market = await prisma.market.findUnique({
+        const market = await client.market.findUnique({
           where: { pda: marketId },
           select: { id: true }
         })
@@ -176,7 +147,7 @@ export class DatabaseService {
         where.type = { in: types }
       }
 
-      return await prisma.activity.findMany({
+      return await client.activity.findMany({
         where,
         include: {
           market: true,
@@ -190,19 +161,19 @@ export class DatabaseService {
     }
   }
 
-  // User stats operations
-  static async updateUserStats(user: string, activityType: string, amount: string, isWin?: boolean) {
+  async updateUserStats(user: string, activityType: string, amount: string, isWin?: boolean) {
+    const client = await this.getClient()
     try {
       const amountNum = parseFloat(amount) / 1_000_000_000 // Convert lamports to SOL
 
       // Get current stats
-      let userStats = await prisma.userStats.findUnique({
+      let userStats = await client.userStats.findUnique({
         where: { user }
       })
 
       if (!userStats) {
         // Create new user stats
-        userStats = await prisma.userStats.create({
+        userStats = await client.userStats.create({
           data: {
             user,
             totalVolume: amount,
@@ -226,7 +197,7 @@ export class DatabaseService {
           newPnl = currentPnl + amountNum
         }
 
-        await prisma.userStats.update({
+        await client.userStats.update({
           where: { user },
           data: {
             totalVolume: (currentVolume + amountNum).toString(),
@@ -246,7 +217,8 @@ export class DatabaseService {
     }
   }
 
-  static async getLeaderboard(limit = 50, sortBy: 'volume' | 'pnl' | 'wins' = 'volume') {
+  async getLeaderboard(limit = 50, sortBy: 'volume' | 'pnl' | 'wins' = 'volume') {
+    const client = await this.getClient()
     try {
       const orderBy: any = {}
 
@@ -262,7 +234,7 @@ export class DatabaseService {
           break
       }
 
-      return await prisma.userStats.findMany({
+      return await client.userStats.findMany({
         orderBy,
         take: limit,
       })
@@ -272,17 +244,17 @@ export class DatabaseService {
     }
   }
 
-  // Comment operations
-  static async createComment(commentData: {
+  async createComment(commentData: {
     marketId: string
     user: string
     content: string
     isHolder?: boolean
   }) {
+    const client = await this.getClient()
     try {
       // Get market ID from PDA if needed
       let marketId = commentData.marketId
-      const market = await prisma.market.findUnique({
+      const market = await client.market.findUnique({
         where: { pda: commentData.marketId },
         select: { id: true }
       })
@@ -291,7 +263,7 @@ export class DatabaseService {
         marketId = market.id
       }
 
-      return await prisma.comment.create({
+      return await client.comment.create({
         data: {
           marketId,
           user: commentData.user,
@@ -305,11 +277,12 @@ export class DatabaseService {
     }
   }
 
-  static async getComments(marketId: string, limit = 100) {
+  async getComments(marketId: string, limit = 100) {
+    const client = await this.getClient()
     try {
       // Get market ID from PDA if needed
       let actualMarketId = marketId
-      const market = await prisma.market.findUnique({
+      const market = await client.market.findUnique({
         where: { pda: marketId },
         select: { id: true }
       })
@@ -318,7 +291,7 @@ export class DatabaseService {
         actualMarketId = market.id
       }
 
-      return await prisma.comment.findMany({
+      return await client.comment.findMany({
         where: { marketId: actualMarketId },
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -329,3 +302,6 @@ export class DatabaseService {
     }
   }
 }
+
+// Export a singleton instance
+export const simpleDatabase = new SimpleDatabase()
