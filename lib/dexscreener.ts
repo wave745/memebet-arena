@@ -83,22 +83,58 @@ export interface DexScreenerResponse {
   pairs: DexScreenerPair[];
 }
 
+// Simple cache to avoid repeated API calls
+const tokenDataCache = new Map<string, { data: TokenData; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Rate limiting
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL = 100; // Minimum 100ms between requests
+
 /**
  * Fetch token data from DexScreener v3 API
  * @param mint - Token mint address
- * @returns TokenData or null if not found
+ * @returns TokenData - always returns basic data, enhanced with DexScreener if available
  */
-export async function getTokenData(mint: string): Promise<TokenData | null> {
+export async function getTokenData(mint: string): Promise<TokenData> {
   try {
+    // Validate mint address format
+    if (!mint || typeof mint !== 'string' || mint.length < 32 || mint.length > 44) {
+      console.warn(`Invalid token mint address: ${mint}`);
+      return null;
+    }
+
+    // Check cache first
+    const cached = tokenDataCache.get(mint);
+    if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+      console.log(`Using cached token data for ${mint}`);
+      return cached.data;
+    }
+
+    // Rate limiting
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+      await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest));
+    }
+    lastRequestTime = Date.now();
+
     const url = `https://api.dexscreener.com/tokens/v1/solana/${mint}`;
+
+    console.log(`Fetching token data for ${mint} from: ${url}`);
+
     const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'User-Agent': 'MemebetArena/1.0',
+        'Accept': 'application/json',
       },
+      // Add timeout and abort controller for better error handling
+      signal: AbortSignal.timeout(10000), // 10 second timeout
     });
 
     if (!response.ok) {
-      console.warn(`DexScreener API error for ${mint}: ${response.status}`);
+      console.warn(`DexScreener API error for ${mint}: ${response.status} ${response.statusText}`);
       return null;
     }
 
@@ -119,12 +155,10 @@ export async function getTokenData(mint: string): Promise<TokenData | null> {
 
     const marketCap = bestPair.marketCap || (bestPair.fdv || 0);
 
-    if (!marketCap) {
-      console.warn(`No market cap found for token ${mint}`);
-      return null;
-    }
+    // For tokens without market cap (like SOL), we still want to return the data
+    // Just use 0 as market cap and continue
 
-    return {
+    const result = {
       marketCap,
       image: bestPair.info?.imageUrl,
       symbol: bestPair.baseToken.symbol,
@@ -133,9 +167,39 @@ export async function getTokenData(mint: string): Promise<TokenData | null> {
       liquidity: bestPair.liquidity?.usd,
       volume24h: bestPair.volume?.h24,
     };
-  } catch (error) {
-    console.error(`Failed to fetch token data for ${mint}:`, error);
-    return null;
+
+    // Cache the result
+    tokenDataCache.set(mint, { data: result, timestamp: Date.now() });
+
+    return result;
+  } catch (error: any) {
+    console.error(`Failed to fetch token data for ${mint}:`, {
+      error: error.message || error,
+      type: error.name,
+      url: `https://api.dexscreener.com/tokens/v1/solana/${mint}`,
+      isNetworkError: error.message?.includes('fetch') || error.name === 'TypeError',
+      isTimeout: error.name === 'TimeoutError' || error.message?.includes('timeout'),
+      isAbort: error.name === 'AbortError'
+    });
+
+    // Return cached data if available, even if expired
+    const cached = tokenDataCache.get(mint);
+    if (cached) {
+      console.log(`Using expired cached data for ${mint} due to API failure`);
+      return cached.data;
+    }
+
+    // Return basic token data on API failure
+    console.warn(`API failure for ${mint}, returning basic data`);
+    return {
+      marketCap: 0,
+      image: undefined,
+      symbol: 'UNKNOWN',
+      price: undefined,
+      name: 'Unknown Token',
+      liquidity: undefined,
+      volume24h: undefined,
+    };
   }
 }
 

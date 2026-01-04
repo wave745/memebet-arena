@@ -51,21 +51,27 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
   // Always use Mainnet for production deployment
   const network = WalletAdapterNetwork.Mainnet
 
-  // RPC endpoint with fallback options for reliability
+  // RPC endpoint from environment variable only
   const getEndpoint = () => {
-    // Use environment variable if set
+    // Use the RPC URL from environment variable
     if (process.env.NEXT_PUBLIC_RPC_URL) {
+      // If it's a Helius URL, ensure API key is included
+      if (process.env.NEXT_PUBLIC_RPC_URL.includes('helius')) {
+        // Check if API key is already in the URL
+        if (process.env.NEXT_PUBLIC_RPC_URL.includes('api-key')) {
+          return process.env.NEXT_PUBLIC_RPC_URL
+        }
+        // If not, add the API key
+        if (process.env.NEXT_PUBLIC_HELIUS_API_KEY) {
+          return `${process.env.NEXT_PUBLIC_RPC_URL}?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`
+        }
+      }
       return process.env.NEXT_PUBLIC_RPC_URL
     }
 
-    // Production mainnet - require paid RPC provider
-    if (network === WalletAdapterNetwork.Mainnet) {
-      console.warn("⚠️ Using default mainnet RPC. For production, set NEXT_PUBLIC_RPC_URL to a paid provider like Helius!")
-      return "https://api.mainnet-beta.solana.com"
-    }
-
-    // Development - use devnet
-    return "https://api.devnet.solana.com"
+    // If no RPC URL is set, use the default mainnet endpoint
+    console.warn("⚠️ No NEXT_PUBLIC_RPC_URL set, using default mainnet RPC")
+    return "https://api.mainnet-beta.solana.com"
   }
 
   const endpoint = getEndpoint()

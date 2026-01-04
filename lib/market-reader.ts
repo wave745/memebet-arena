@@ -1,0 +1,126 @@
+import { Connection, PublicKey } from "@solana/web3.js"
+
+// Simple market reader that avoids complex Anchor dependencies
+export interface SimpleMarketData {
+  marketPda: PublicKey
+  tokenMint: PublicKey
+  tokenSymbol: string
+  tokenName: string
+  tokenImage?: string
+  targetMarketCap: bigint
+  endTimestamp: bigint
+  resolved: boolean
+  outcome: boolean | null
+  yesPool: bigint
+  noPool: bigint
+  creator: PublicKey
+}
+
+// Market account discriminator (first 8 bytes of sha256("account:Market"))
+const MARKET_DISCRIMINATOR = Buffer.from([219, 190, 213, 55, 0, 227, 198, 154])
+
+/**
+ * Parse market account data from raw Solana account bytes
+ */
+function parseMarketAccount(accountData: Buffer): SimpleMarketData | null {
+  try {
+    // Check discriminator
+    const discriminator = accountData.subarray(0, 8)
+    if (!discriminator.equals(MARKET_DISCRIMINATOR)) {
+      return null // Not a market account
+    }
+
+    // Parse account data according to Market struct
+    let offset = 8 // Skip discriminator
+
+    // creator: Pubkey (32 bytes)
+    const creator = new PublicKey(accountData.subarray(offset, offset + 32))
+    offset += 32
+
+    // token_mint: Pubkey (32 bytes)
+    const tokenMint = new PublicKey(accountData.subarray(offset, offset + 32))
+    offset += 32
+
+    // target_market_cap: u64 (8 bytes, little-endian)
+    const targetMarketCap = accountData.readBigUInt64LE(offset)
+    offset += 8
+
+    // end_timestamp: i64 (8 bytes, little-endian)
+    const endTimestamp = accountData.readBigInt64LE(offset)
+    offset += 8
+
+    // yes_pool: u64 (8 bytes, little-endian)
+    const yesPool = accountData.readBigUInt64LE(offset)
+    offset += 8
+
+    // no_pool: u64 (8 bytes, little-endian)
+    const noPool = accountData.readBigUInt64LE(offset)
+    offset += 8
+
+    // resolved: bool (1 byte)
+    const resolved = accountData[offset] !== 0
+    offset += 1
+
+    // outcome: Option<bool> (1 byte enum discriminator + optional bool)
+    let outcome: boolean | null = null
+    const outcomeEnum = accountData[offset]
+    offset += 1
+    if (outcomeEnum === 1) { // Some variant
+      outcome = accountData[offset] !== 0
+      offset += 1
+    }
+
+    return {
+      marketPda: PublicKey.default, // Will be set by caller
+      tokenMint,
+      tokenSymbol: 'UNKNOWN',
+      tokenName: 'Unknown Token',
+      tokenImage: undefined,
+      targetMarketCap,
+      endTimestamp,
+      resolved,
+      outcome,
+      yesPool,
+      noPool,
+      creator
+    }
+  } catch (error) {
+    console.warn("Failed to parse market account:", error)
+    return null
+  }
+}
+
+/**
+ * Fetch market data by PDA
+ */
+export async function fetchMarketByPdaSimple(
+  connection: Connection,
+  marketPda: PublicKey
+): Promise<SimpleMarketData | null> {
+  try {
+    console.log(`Fetching market account: ${marketPda.toString()}`)
+    const accountInfo = await connection.getAccountInfo(marketPda)
+
+    if (!accountInfo) {
+      console.log(`Market account not found: ${marketPda.toString()}`)
+      return null
+    }
+
+    const marketData = parseMarketAccount(accountInfo.data)
+    if (marketData) {
+      marketData.marketPda = marketPda
+      return marketData
+    }
+
+    return null
+  } catch (error: any) {
+    console.error(`Failed to fetch market ${marketPda.toString()}:`, error.message || error)
+
+    // Check if it's an RPC/network error
+    if (error.message?.includes('Failed to fetch') || error.message?.includes('fetch')) {
+      console.error('RPC endpoint may be unreachable. Check NEXT_PUBLIC_RPC_URL configuration.')
+    }
+
+    return null
+  }
+}

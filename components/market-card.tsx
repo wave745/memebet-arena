@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { X, Copy, Check } from "lucide-react"
 import { SolanaLogo } from "./solana-logo"
 import { formatMarketCapShort } from "@/lib/utils/format-market-cap"
-import { getTokenData, type TokenData } from "@/lib/dexscreener"
+import { type TokenData } from "@/lib/dexscreener"
 
 interface MarketCardProps {
   pda: string
@@ -61,17 +61,24 @@ export function MarketCard({
     }
   }, [error])
 
-  // Fetch token data from DexScreener
+  // Fetch token data from API route (avoids CORS issues)
   useEffect(() => {
     const fetchTokenData = async () => {
       if (!tokenMint) return
 
       setTokenDataLoading(true)
       try {
-        const data = await getTokenData(tokenMint)
-        setTokenData(data)
+        const response = await fetch(`/api/token-data?mint=${encodeURIComponent(tokenMint)}`)
+        if (response.ok) {
+          const data = await response.json()
+          setTokenData(data)
+        } else {
+          console.warn(`Failed to fetch token data: ${response.status}`)
+          setTokenData(null)
+        }
       } catch (error) {
         console.warn('Failed to fetch token data:', error)
+        setTokenData(null)
       } finally {
         setTokenDataLoading(false)
       }
@@ -80,7 +87,7 @@ export function MarketCard({
     // Initial fetch
     fetchTokenData()
 
-    // Poll for live price updates every 10 seconds
+    // Poll for live price updates every 30 seconds
     const interval = setInterval(fetchTokenData, 30000)
 
     return () => clearInterval(interval)

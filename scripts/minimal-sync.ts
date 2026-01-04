@@ -251,11 +251,29 @@ async function syncMarketsToDatabase(connection: Connection, discoveredMarkets: 
 async function runMarketSync() {
   console.log("🚀 Starting minimal market sync...")
 
-  // Initialize connection
-  const connection = new Connection(
-    process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl("mainnet-beta"),
-    "confirmed"
-  )
+  // Initialize connection using the same RPC logic as the frontend
+  const getRpcUrl = () => {
+    if (process.env.NEXT_PUBLIC_RPC_URL) {
+      // If it's a Helius URL, ensure API key is included
+      if (process.env.NEXT_PUBLIC_RPC_URL.includes('helius')) {
+        // Check if API key is already in the URL
+        if (process.env.NEXT_PUBLIC_RPC_URL.includes('api-key')) {
+          return process.env.NEXT_PUBLIC_RPC_URL
+        }
+        // If not, add the API key
+        if (process.env.NEXT_PUBLIC_HELIUS_API_KEY) {
+          return `${process.env.NEXT_PUBLIC_RPC_URL}?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`
+        }
+      }
+      return process.env.NEXT_PUBLIC_RPC_URL
+    }
+    return clusterApiUrl("mainnet-beta")
+  }
+
+  const rpcUrl = getRpcUrl()
+  console.log("Using RPC URL:", rpcUrl)
+
+  const connection = new Connection(rpcUrl, "confirmed")
 
   try {
     // Discover markets from blockchain

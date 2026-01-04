@@ -7,7 +7,7 @@ import { WalletModal } from "@/components/wallet-modal"
 import { useWallet } from "@/components/wallet-provider"
 import { Button } from "@/components/ui/button"
 import { PublicKey } from "@solana/web3.js"
-import { fetchMarketByPda } from "@/lib/anchor/markets"
+import { fetchMarketByPdaFrontend } from "@/lib/market-frontend"
 import * as anchor from "@coral-xyz/anchor"
 import { LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { TrendingUp, TrendingDown, MessageSquare, Link, Reply, Copy, Check, BarChart3 } from "lucide-react"
@@ -97,7 +97,7 @@ export default function MarketPage() {
       setError(null)
 
       const marketPda = new PublicKey(id)
-      const marketData = await fetchMarketByPda(connection, wallet, marketPda)
+      const marketData = await fetchMarketByPdaFrontend(connection, marketPda)
 
       if (!marketData) {
         if (isInitialLoad) {

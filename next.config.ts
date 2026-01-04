@@ -11,9 +11,9 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
 
-  // DISABLE TypeScript checking in development for MAXIMUM speed
+  // Temporarily enable TypeScript checking to see build errors
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 };
 

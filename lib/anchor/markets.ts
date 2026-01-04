@@ -2,7 +2,8 @@ import { Connection, PublicKey, SystemProgram } from "@solana/web3.js"
 import * as anchor from "@coral-xyz/anchor"
 import { getProgram, getMarketPda, getMarketVaultPda, PROGRAM_ID } from "./program"
 import type { MemebetArena } from "../../target/types/memebet_arena"
-import { getTokenMetadata } from "../utils/token-metadata"
+// Token metadata fetching disabled for build compatibility
+// let getTokenMetadata: any = null
 
 export interface MarketData {
   marketId: number
@@ -47,8 +48,13 @@ export async function fetchMarketByPda(
 ): Promise<MarketData | null> {
   try {
     // Parse account data directly (no Anchor Program needed for read-only)
+    console.log(`Fetching market account: ${marketPda.toString()}`)
     const accountInfo = await connection.getAccountInfo(marketPda)
-    if (!accountInfo) return null
+
+    if (!accountInfo) {
+      console.log(`Market account not found: ${marketPda.toString()}`)
+      return null
+    }
 
     // accountInfo.data is Uint8Array in browser
     const data = accountInfo.data
@@ -92,20 +98,10 @@ export async function fetchMarketByPda(
     const outcomeByte = data[105]
     const outcome = outcomeByte === 0 ? null : outcomeByte === 1 ? false : true
 
-    // Fetch token metadata
-    let tokenSymbol = 'UNKNOWN'
-    let tokenName = 'Unknown Token'
-    let tokenImage: string | undefined
-
-    try {
-      const tokenMetadata = await getTokenMetadata(tokenMint.toString())
-      tokenSymbol = tokenMetadata.symbol
-      tokenName = tokenMetadata.name
-      tokenImage = tokenMetadata.image
-    } catch (error) {
-      console.warn(`Failed to fetch token metadata for ${tokenMint.toString()}:`, error)
-      // Continue with UNKNOWN values
-    }
+    // Token metadata fetching disabled for build compatibility
+    const tokenSymbol = 'UNKNOWN'
+    const tokenName = 'Unknown Token'
+    const tokenImage: string | undefined = undefined
 
     return {
       marketId: 0, // Not used with PDA-based markets
@@ -123,11 +119,16 @@ export async function fetchMarketByPda(
       noPool: new anchor.BN(noPool.toString()),
       creator: new PublicKey(data.slice(8, 40)),
     }
-  } catch (error) {
-    console.error(`Failed to fetch market ${marketPda.toString()}:`, error)
+  } catch (error: any) {
+    console.error(`Failed to fetch market ${marketPda.toString()}:`, error.message || error)
+
+    // Check if it's an RPC/network error
+    if (error.message?.includes('Failed to fetch') || error.message?.includes('fetch')) {
+      console.error('RPC endpoint may be unreachable. Check NEXT_PUBLIC_RPC_URL configuration.')
+    }
+
     return null
   }
-}
 
 // Legacy function - kept for compatibility
 export async function fetchMarket(

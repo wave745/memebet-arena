@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react"
 import { useWallet } from "./wallet-provider"
-import { fetchMarketByPda } from "@/lib/anchor/markets"
+import { fetchMarketByPdaFrontend } from "@/lib/market-frontend"
 import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { MarketCard } from "@/components/market-card"
 import * as anchor from "@coral-xyz/anchor"
@@ -97,6 +97,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
     }
 
     console.log("Starting fetchMarkets...")
+    console.log("RPC Endpoint:", connection?.rpcEndpoint)
 
     // Prevent overlapping fetches could be handled with a ref, but for now just rely on the interval
     try {
@@ -115,7 +116,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
             }
 
             const marketPda = new PublicKey(pda)
-            const market = await fetchMarketByPda(connection, null, marketPda)
+            const market = await fetchMarketByPdaFrontend(connection, marketPda)
             if (market) {
               return {
                 pda: marketPda.toString(),
@@ -132,6 +133,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
             }
           } catch (error) {
             console.error(`Failed to fetch market ${pda}:`, error)
+            // Continue with other markets - don't let one failure stop the whole process
           }
           return null
         })

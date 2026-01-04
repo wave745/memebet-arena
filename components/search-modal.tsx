@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, TrendingUp, Sparkles, ArrowRight, Zap } from "lucide-react"
 import { useWallet } from "./wallet-provider"
-import { fetchMarketByPda } from "@/lib/anchor/markets"
+import { fetchMarketByPdaFrontend } from "@/lib/market-frontend"
 import { PublicKey } from "@solana/web3.js"
 import { useRouter } from "next/navigation"
 import bs58 from "bs58"
@@ -86,7 +86,7 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
             }
 
             const marketPda = new PublicKey(market.pda)
-            const blockchainData = await fetchMarketByPda(connection, null, marketPda)
+            const blockchainData = await fetchMarketByPdaFrontend(connection, marketPda)
             if (blockchainData) {
             marketData.push({
                 pda: market.pda,
