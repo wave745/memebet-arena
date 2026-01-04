@@ -87,10 +87,8 @@ export default function DocsPage() {
             </div>
             <div className="flex items-center gap-4">
               <a
-                href="https://arena.trench-market.fun"
+                href="/app"
                 className="text-sm font-medium text-neon-green hover:text-neon-green/80 transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 Enter Arena →
               </a>
