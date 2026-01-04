@@ -75,21 +75,25 @@ export default function DocsPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link
-                href="/"
+              <a
+                href="https://www.trench-market.fun"
                 className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span className="text-sm font-medium">Back to Home</span>
-              </Link>
+              </a>
             </div>
             <div className="flex items-center gap-4">
-              <Link
-                href="/"
+              <a
+                href="https://arena.trench-market.fun"
                 className="text-sm font-medium text-neon-green hover:text-neon-green/80 transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Enter Arena →
-              </Link>
+              </a>
             </div>
           </div>
         </div>
