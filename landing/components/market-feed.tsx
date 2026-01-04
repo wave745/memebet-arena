@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react"
 import { useWallet } from "./wallet-provider"
-import { fetchMarketByPda } from "@/lib/anchor/markets"
+import { fetchMarketByPdaFrontend } from "@/lib/market-frontend"
 import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { MarketCard } from "@/components/market-card"
 import * as anchor from "@coral-xyz/anchor"
@@ -67,7 +67,7 @@ export function MarketFeed({ searchQuery, categoryFilter }: MarketFeedProps) {
         allMarketsList.map(async ({ pda, ticker }) => {
           try {
             const marketPda = new PublicKey(pda)
-            const market = await fetchMarketByPda(connection, null, marketPda)
+            const market = await fetchMarketByPdaFrontend(connection, marketPda)
             if (market) {
               return {
                 pda: marketPda.toString(),

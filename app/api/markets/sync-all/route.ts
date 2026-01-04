@@ -1,11 +1,34 @@
 import { NextResponse } from "next/server"
 import { Connection, clusterApiUrl } from "@solana/web3.js"
-import { runMarketSync } from "../../../../scripts/simple-sync"
-import { basicDatabase } from "../../../lib/basic-database"
+
+// Conditionally import database and sync modules (not available in Vercel build)
+let runMarketSync: any = null
+let basicDatabase: any = null
+
+try {
+    // Only import in Node.js environment with database access
+    if (typeof window === 'undefined' && process.env.DATABASE_URL) {
+        const syncModule = require("../../../../scripts/simple-sync")
+        runMarketSync = syncModule.runMarketSync
+
+        const dbModule = require("../../../lib/basic-database")
+        basicDatabase = dbModule.basicDatabase
+    }
+} catch (error) {
+    console.warn("Database modules not available:", error)
+}
 
 export async function POST(request: Request) {
     try {
         console.log("🔄 Starting market sync via API...")
+
+        // Check if required modules are available
+        if (!runMarketSync || !basicDatabase) {
+            return NextResponse.json({
+                success: false,
+                error: "Market sync not available in this environment"
+            }, { status: 503 })
+        }
 
         // Check if database is configured
         if (!process.env.DATABASE_URL) {

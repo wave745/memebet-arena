@@ -20,7 +20,16 @@ import {
     ChevronRight,
     Eye
 } from "lucide-react"
-import { createMarket } from "@/lib/anchor/markets"
+// Conditionally import createMarket to avoid build issues
+let createMarket: any = null
+try {
+  if (typeof window === 'undefined') {
+    const marketModule = require("@/lib/anchor/markets")
+    createMarket = marketModule.createMarket
+  }
+} catch (error) {
+  console.warn("createMarket import failed:", error)
+}
 import { getMarketPda } from "@/lib/anchor/program"
 import * as anchor from "@coral-xyz/anchor"
 import Link from "next/link"
@@ -254,6 +263,10 @@ export default function AdminPage() {
 
             // Get the PDA before creating
             const [marketPda] = getMarketPda(mintPubkey, capBN, endBN)
+
+            if (!createMarket) {
+                throw new Error("Market creation not available in this environment")
+            }
 
             const tx = await createMarket(connection, wallet, mintPubkey, capBN, endBN)
 

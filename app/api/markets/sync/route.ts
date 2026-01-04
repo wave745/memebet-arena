@@ -74,29 +74,47 @@ export async function POST(request: Request) {
             finalMarketCap
         } = body
 
-        // Sync to Neon database
-        const market = await basicDatabase.upsertMarket({
-            pda,
-            tokenMint,
-            tokenSymbol: tokenSymbol || ticker,
-            tokenName,
-            tokenImage,
-            targetCap: targetCap?.toString() || '0',
-            endTimestamp: BigInt(Math.floor(Number(endTimestamp))),
-            resolved: !!resolved,
-            outcome: outcome !== undefined ? outcome : null,
-            finalMarketCap: finalMarketCap?.toString()
-        })
+        // Sync to Neon database using direct SQL
+        const upsertQuery = `
+          INSERT INTO "Market" (
+            pda, "tokenMint", "tokenSymbol", "tokenName", "tokenImage",
+            "targetCap", "endTimestamp", resolved, outcome, "finalMarketCap"
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          ON CONFLICT (pda) DO UPDATE SET
+            "tokenSymbol" = EXCLUDED."tokenSymbol",
+            "tokenName" = EXCLUDED."tokenName",
+            "tokenImage" = EXCLUDED."tokenImage",
+            resolved = EXCLUDED.resolved,
+            outcome = EXCLUDED.outcome,
+            "finalMarketCap" = EXCLUDED."finalMarketCap"
+          RETURNING *
+        `
 
-        console.log("Market synced to database:", pda, "ID:", market.id)
+        const upsertValues = [
+          pda,
+          tokenMint,
+          tokenSymbol || ticker,
+          tokenName,
+          tokenImage,
+          targetCap?.toString() || '0',
+          Math.floor(Number(endTimestamp)).toString(),
+          !!resolved,
+          outcome !== undefined ? outcome : null,
+          finalMarketCap?.toString()
+        ]
+
+        const market = await client.query(upsertQuery, upsertValues)
+
+        const marketRow = market.rows[0]
+        console.log("Market synced to database:", pda, "ID:", marketRow.id)
         return NextResponse.json({
-            id: market.id,
-            pda: market.pda,
-            tokenMint: market.tokenMint,
-            tokenSymbol: market.tokenSymbol,
-            tokenName: market.tokenName,
-            tokenImage: market.tokenImage,
-            ticker: market.tokenSymbol,
+            id: marketRow.id,
+            pda: marketRow.pda,
+            tokenMint: marketRow.tokenMint,
+            tokenSymbol: marketRow.tokenSymbol,
+            tokenName: marketRow.tokenName,
+            tokenImage: marketRow.tokenImage,
+            ticker: marketRow.tokenSymbol,
             category: market.category,
             targetCap: market.targetCap,
             endTimestamp: Number(market.endTimestamp),

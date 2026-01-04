@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, TrendingUp, Sparkles, ArrowRight, Zap } from "lucide-react"
 import { useWallet } from "./wallet-provider"
-import { fetchMarketByPda } from "@/lib/anchor/markets"
+import { fetchMarketByPdaFrontend } from "@/lib/market-frontend"
 import { PublicKey } from "@solana/web3.js"
 import { useRouter } from "next/navigation"
 import { XLogo } from "./x-logo"
@@ -68,7 +68,7 @@ export function SearchModal({ isOpen, onClose, searchQuery, onSearchChange, onCa
       for (const pdaStr of SEEDED_MARKET_PDAS) {
         try {
           const marketPda = new PublicKey(pdaStr)
-          const market = await fetchMarketByPda(connection, null, marketPda)
+          const market = await fetchMarketByPdaFrontend(connection, marketPda)
           if (market) {
             marketData.push({
               pda: marketPda.toString(),

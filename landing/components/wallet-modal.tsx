@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { fetchUserPositions, type PositionData } from "@/lib/solana/positions"
-import { fetchMarketByPda } from "@/lib/anchor/markets"
+import { fetchMarketByPdaFrontend } from "@/lib/market-frontend"
 import { useWallet } from "./wallet-provider"
 import { Copy, ExternalLink, ArrowUpRight, ArrowDownRight, Share2 } from "lucide-react"
 import { SolanaLogo } from "./solana-logo"
@@ -120,7 +120,7 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
       const marketPromises = uniqueMarketPdas.map(async (marketPdaStr) => {
         try {
           const marketPda = new PublicKey(marketPdaStr)
-          const market = await fetchMarketByPda(connection, null, marketPda)
+          const market = await fetchMarketByPdaFrontend(connection, marketPda)
           return market ? [marketPdaStr, market] as const : null
         } catch (e) {
           console.warn("Failed to fetch market:", marketPdaStr)

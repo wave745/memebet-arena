@@ -13,13 +13,18 @@ export async function GET() {
     // Test basic database import
     try {
         console.log("Debug: Testing database import...")
-        const { simpleDB } = await import("../../../lib/simple-db")
-        console.log("Debug: Database import successful")
+        // Only try to import in environments where pg is available
+        if (typeof window === 'undefined') {
+            const { simpleDB } = await import("../../../lib/simple-db")
+            console.log("Debug: Database import successful")
 
-        // Now try to actually connect and query
-        console.log("Debug: Testing database connection...")
-        const markets = await simpleDB.getAllMarkets(10)
-        console.log("Debug: Database query successful, got", markets.length, "markets")
+            // Now try to actually connect and query
+            console.log("Debug: Testing database connection...")
+            const markets = await simpleDB.getAllMarkets(10)
+            console.log("Debug: Database query successful, got", markets.length, "markets")
+        } else {
+            console.log("Debug: Skipping database test in browser environment")
+        }
 
         return NextResponse.json({
             success: true,
