@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { XLogo } from "@/components/x-logo"
+import { FileText } from "lucide-react"
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -101,6 +102,17 @@ export default function Home() {
           >
             <DiscordIcon className="w-4 h-4 sm:w-5 sm:h-5 text-neon-magenta group-hover:text-neon-magenta/80 transition-colors flex-shrink-0" />
             <span className="text-sm sm:text-sm font-medium whitespace-nowrap">Join Discord</span>
+          </a>
+        </div>
+
+        {/* Docs Link */}
+        <div className="mt-4 sm:mt-6 md:mt-8">
+          <a
+            href="/docs"
+            className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-neon-cyan/50 transition-all duration-300 group active:scale-95 touch-manipulation text-sm sm:text-sm text-muted-foreground hover:text-neon-cyan"
+          >
+            <FileText className="w-4 h-4 sm:w-4 sm:h-4 group-hover:text-neon-cyan transition-colors flex-shrink-0" />
+            <span className="font-medium whitespace-nowrap">Documentation</span>
           </a>
         </div>
       </div>
