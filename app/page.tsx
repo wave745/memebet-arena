@@ -3,6 +3,53 @@
 import { Button } from "@/components/ui/button"
 import { XLogo } from "@/components/x-logo"
 
+function DocsIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M14 2V8H20"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M16 13H8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M16 17H8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10 9H8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function DiscordIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -101,6 +148,17 @@ export default function Home() {
           >
             <DiscordIcon className="w-5 h-5 group-hover:text-neon-magenta transition-colors" />
             <span className="text-sm sm:text-base font-medium underline underline-offset-4 decoration-1 hover:decoration-neon-magenta transition-all">Join Discord</span>
+          </a>
+        </div>
+
+        {/* Docs Link */}
+        <div className="mt-6 sm:mt-8">
+          <a
+            href="/docs"
+            className="flex items-center gap-2 text-muted-foreground hover:text-neon-cyan transition-colors duration-300 group"
+          >
+            <DocsIcon className="w-5 h-5 group-hover:text-neon-cyan transition-colors" />
+            <span className="text-sm sm:text-base font-medium underline underline-offset-4 decoration-1 hover:decoration-neon-cyan transition-all">Documentation</span>
           </a>
         </div>
       </div>
