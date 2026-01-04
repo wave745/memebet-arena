@@ -14,8 +14,13 @@ export async function GET(request: Request) {
 
         // Get comments from Neon database inline
         const pool = new Pool({
-            connectionString: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_DFs85ANlpHJC@ep-royal-paper-ahfywd90-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+            connectionString: process.env.DATABASE_URL,
         })
+
+        if (!process.env.DATABASE_URL) {
+            console.error("DATABASE_URL environment variable not set")
+            return NextResponse.json({ error: "Database configuration error" }, { status: 500 })
+        }
 
         const client = await pool.connect()
 
@@ -77,8 +82,13 @@ export async function POST(request: Request) {
 
         // Create comment in database inline
         const pool = new Pool({
-            connectionString: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_DFs85ANlpHJC@ep-royal-paper-ahfywd90-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+            connectionString: process.env.DATABASE_URL,
         })
+
+        if (!process.env.DATABASE_URL) {
+            console.error("DATABASE_URL environment variable not set")
+            return NextResponse.json({ error: "Database configuration error" }, { status: 500 })
+        }
 
         const client = await pool.connect()
 

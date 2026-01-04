@@ -50,6 +50,12 @@ export default function MarketPage() {
   const [market, setMarket] = useState<ChainMarketData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration mismatches
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
@@ -893,6 +899,16 @@ export default function MarketPage() {
   // Check if user is admin
   const ADMIN_PUBKEY = "3zAjK7AzN7Wdor2i3kzcNrdRJc8PzysspjbgG8awp5NB"
   const isAdmin = walletAddress?.toLowerCase() === ADMIN_PUBKEY.toLowerCase()
+
+  // Prevent hydration mismatches by not rendering until mounted
+  if (!mounted) {
+    return (
+      <main className="flex flex-col items-center justify-center py-16 space-y-4">
+        <div className="text-6xl animate-pulse">👾</div>
+        <p className="text-muted-foreground">Loading market...</p>
+      </main>
+    )
+  }
 
   return (
     <>
