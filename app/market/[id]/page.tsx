@@ -322,7 +322,7 @@ export default function MarketPage() {
 
 
 
-  const tokenDisplay = market ? market.tokenSymbol : "Loading..."
+  const tokenDisplay = market ? (tokenData?.symbol || market.tokenSymbol) : "Loading..."
 
   const question = market
     ? `Will ${tokenDisplay} hit $${formatMarketCapShort(Number(market.targetMarketCap))}?`
