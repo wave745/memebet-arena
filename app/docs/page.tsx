@@ -4,6 +4,28 @@ import { Button } from "@/components/ui/button"
 import { XLogo } from "@/components/x-logo"
 import { ArrowLeft, BookOpen, Zap, Shield, Users, TrendingUp, Target, Clock, DollarSign, AlertTriangle, CheckCircle, ExternalLink } from "lucide-react"
 import Link from "next/link"
+import { useEffect, useRef, useState } from "react"
+
+// Custom animations
+const customStyles = `
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes gradient-x {
+    0%, 100% { background-size: 200% 200%; background-position: left center; }
+    50% { background-size: 200% 200%; background-position: right center; }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-gradient-x {
+    animation: gradient-x 3s ease infinite;
+  }
+`
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -19,8 +41,35 @@ function DiscordIcon({ className }: { className?: string }) {
 }
 
 export default function DocsPage() {
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
+  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.getAttribute('data-section')
+            if (sectionId) {
+              setVisibleSections(prev => new Set(prev).add(sectionId))
+            }
+          }
+        })
+      },
+      { threshold: 0.1, rootMargin: '-50px' }
+    )
+
+    // Observe all sections
+    const sections = document.querySelectorAll('[data-section]')
+    sections.forEach(section => observer.observe(section))
+
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -48,73 +97,103 @@ export default function DocsPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         {/* Hero Section */}
-        <div className="text-center mb-12 sm:mb-16">
-          <div className="mb-6">
+        <div className="text-center mb-12 sm:mb-16 relative">
+          {/* Background animated elements */}
+          <div className="absolute inset-0 -z-10 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-neon-green rounded-full animate-ping opacity-20"></div>
+            <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-neon-cyan rounded-full animate-ping opacity-30" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-neon-magenta rounded-full animate-ping opacity-25" style={{ animationDelay: '2s' }}></div>
+          </div>
+
+          <div className="mb-6 animate-float">
             <img
               src="/trench-market-logo1.png"
               alt="Trenchmarket Logo"
-              className="w-16 h-16 sm:w-20 sm:h-20 mx-auto opacity-80"
+              className="w-16 h-16 sm:w-20 sm:h-20 mx-auto opacity-80 hover:opacity-100 transition-opacity duration-300 hover:scale-110 transform-gpu"
             />
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-4 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-4 bg-gradient-to-r from-neon-green via-neon-cyan to-neon-magenta bg-clip-text text-transparent animate-gradient-x hover:scale-105 transition-transform duration-500">
             Documentation
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto hover:text-foreground/80 transition-colors duration-300">
             Everything you need to know about Trenchmarket - the fastest prediction market on Solana.
           </p>
+
+          {/* Animated accent line */}
+          <div className="mt-6 mx-auto w-24 h-0.5 bg-gradient-to-r from-transparent via-neon-cyan to-transparent animate-pulse"></div>
         </div>
 
         {/* Quick Start */}
-        <section className="mb-12 sm:mb-16">
+        <section
+          data-section="quick-start"
+          ref={el => el && sectionRefs.current.set('quick-start', el)}
+          className={`mb-12 sm:mb-16 transition-all duration-1000 ${
+            visibleSections.has('quick-start')
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="flex items-center gap-3 mb-6">
-            <Zap className="w-6 h-6 text-neon-green" />
-            <h2 className="text-2xl sm:text-3xl font-bold">Quick Start</h2>
+            <Zap className={`w-6 h-6 text-neon-green transition-all duration-500 ${
+              visibleSections.has('quick-start') ? 'scale-100 rotate-0' : 'scale-75 rotate-12'
+            }`} />
+            <h2 className={`text-2xl sm:text-3xl font-bold transition-all duration-700 delay-200 ${
+              visibleSections.has('quick-start') ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+            }`}>Quick Start</h2>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-3 text-neon-green">1. Connect Wallet</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className={`glass p-6 rounded-xl transition-all duration-700 delay-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-neon-green/20 group ${
+              visibleSections.has('quick-start') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+            }`}>
+              <h3 className="text-lg font-semibold mb-3 text-neon-green group-hover:text-neon-green/90 transition-colors">1. Connect Wallet</h3>
+              <p className="text-muted-foreground mb-4 group-hover:text-foreground/80 transition-colors">
                 Connect your Solana wallet (Phantom, Solflare, etc.) to start trading.
               </p>
-              <div className="bg-black/20 rounded-lg p-3 border border-neon-green/20">
-                <p className="text-sm text-neon-green font-mono">
+              <div className="bg-black/20 rounded-lg p-3 border border-neon-green/20 group-hover:border-neon-green/40 transition-all duration-300 group-hover:bg-black/30">
+                <p className="text-sm text-neon-green font-mono group-hover:text-neon-green/90 transition-colors">
                   Supported: Phantom, Solflare, Backpack, Glow
                 </p>
               </div>
             </div>
 
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-3 text-neon-cyan">2. Choose a Market</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className={`glass p-6 rounded-xl transition-all duration-700 delay-400 hover:scale-[1.02] hover:shadow-lg hover:shadow-neon-cyan/20 group ${
+              visibleSections.has('quick-start') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+            }`}>
+              <h3 className="text-lg font-semibold mb-3 text-neon-cyan group-hover:text-neon-cyan/90 transition-colors">2. Choose a Market</h3>
+              <p className="text-muted-foreground mb-4 group-hover:text-foreground/80 transition-colors">
                 Browse active prediction markets on trending memecoins.
               </p>
-              <div className="bg-black/20 rounded-lg p-3 border border-neon-cyan/20">
-                <p className="text-sm text-neon-cyan font-mono">
+              <div className="bg-black/20 rounded-lg p-3 border border-neon-cyan/20 group-hover:border-neon-cyan/40 transition-all duration-300 group-hover:bg-black/30">
+                <p className="text-sm text-neon-cyan font-mono group-hover:text-neon-cyan/90 transition-colors">
                   Markets resolve based on real market data
                 </p>
               </div>
             </div>
 
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-3 text-neon-magenta">3. Place Your Bet</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className={`glass p-6 rounded-xl transition-all duration-700 delay-500 hover:scale-[1.02] hover:shadow-lg hover:shadow-neon-magenta/20 group ${
+              visibleSections.has('quick-start') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+            }`}>
+              <h3 className="text-lg font-semibold mb-3 text-neon-magenta group-hover:text-neon-magenta/90 transition-colors">3. Place Your Bet</h3>
+              <p className="text-muted-foreground mb-4 group-hover:text-foreground/80 transition-colors">
                 Bet YES or NO on whether the token will hit its target market cap.
               </p>
-              <div className="bg-black/20 rounded-lg p-3 border border-neon-magenta/20">
-                <p className="text-sm text-neon-magenta font-mono">
+              <div className="bg-black/20 rounded-lg p-3 border border-neon-magenta/20 group-hover:border-neon-magenta/40 transition-all duration-300 group-hover:bg-black/30">
+                <p className="text-sm text-neon-magenta font-mono group-hover:text-neon-magenta/90 transition-colors">
                   Minimum bet: 0.01 SOL
                 </p>
               </div>
             </div>
 
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-3 text-yellow-400">4. Win & Claim</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className={`glass p-6 rounded-xl transition-all duration-700 delay-600 hover:scale-[1.02] hover:shadow-lg hover:shadow-yellow-400/20 group ${
+              visibleSections.has('quick-start') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+            }`}>
+              <h3 className="text-lg font-semibold mb-3 text-yellow-400 group-hover:text-yellow-400/90 transition-colors">4. Win & Claim</h3>
+              <p className="text-muted-foreground mb-4 group-hover:text-foreground/80 transition-colors">
                 If your prediction is correct, claim your winnings when the market resolves.
               </p>
-              <div className="bg-black/20 rounded-lg p-3 border border-yellow-400/20">
-                <p className="text-sm text-yellow-400 font-mono">
+              <div className="bg-black/20 rounded-lg p-3 border border-yellow-400/20 group-hover:border-yellow-400/40 transition-all duration-300 group-hover:bg-black/30">
+                <p className="text-sm text-yellow-400 font-mono group-hover:text-yellow-400/90 transition-colors">
                   Markets auto-resolve at expiration
                 </p>
               </div>
@@ -123,37 +202,54 @@ export default function DocsPage() {
         </section>
 
         {/* How It Works */}
-        <section className="mb-12 sm:mb-16">
+        <section
+          data-section="how-it-works"
+          className={`mb-12 sm:mb-16 transition-all duration-1000 ${
+            visibleSections.has('how-it-works')
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="flex items-center gap-3 mb-6">
-            <Target className="w-6 h-6 text-neon-cyan" />
-            <h2 className="text-2xl sm:text-3xl font-bold">How It Works</h2>
+            <Target className={`w-6 h-6 text-neon-cyan transition-all duration-500 ${
+              visibleSections.has('how-it-works') ? 'scale-100 rotate-0' : 'scale-75 rotate-12'
+            }`} />
+            <h2 className={`text-2xl sm:text-3xl font-bold transition-all duration-700 delay-200 ${
+              visibleSections.has('how-it-works') ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+            }`}>How It Works</h2>
           </div>
 
-          <div className="glass p-6 sm:p-8 rounded-xl">
+          <div className="glass p-6 sm:p-8 rounded-xl hover:shadow-2xl hover:shadow-neon-cyan/10 transition-all duration-500 group">
             <div className="grid gap-6 lg:grid-cols-2">
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Prediction Markets</h3>
-                <p className="text-muted-foreground mb-6">
+              <div className={`transition-all duration-700 delay-300 ${
+                visibleSections.has('how-it-works') ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'
+              }`}>
+                <h3 className="text-xl font-semibold mb-4 group-hover:text-neon-green transition-colors">Prediction Markets</h3>
+                <p className="text-muted-foreground mb-6 group-hover:text-foreground/90 transition-colors">
                   Trenchmarket allows you to bet on whether memecoins will reach specific market cap targets.
                   Each market has a clear question, deadline, and resolution criteria.
                 </p>
 
                 <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                  <div className={`flex items-start gap-3 p-3 rounded-lg hover:bg-neon-green/5 transition-all duration-300 group/item ${
+                    visibleSections.has('how-it-works') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                  }`} style={{ transitionDelay: '0.6s' }}>
+                    <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0 group-hover/item:scale-110 transition-transform" />
                     <div>
-                      <h4 className="font-medium">YES Position</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <h4 className="font-medium group-hover/item:text-neon-green transition-colors">YES Position</h4>
+                      <p className="text-sm text-muted-foreground group-hover/item:text-foreground/80 transition-colors">
                         Bet that the token WILL reach the target market cap
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                  <div className={`flex items-start gap-3 p-3 rounded-lg hover:bg-neon-magenta/5 transition-all duration-300 group/item ${
+                    visibleSections.has('how-it-works') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                  }`} style={{ transitionDelay: '0.8s' }}>
+                    <CheckCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0 group-hover/item:scale-110 transition-transform" />
                     <div>
-                      <h4 className="font-medium">NO Position</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <h4 className="font-medium group-hover/item:text-neon-magenta transition-colors">NO Position</h4>
+                      <p className="text-sm text-muted-foreground group-hover/item:text-foreground/80 transition-colors">
                         Bet that the token will NOT reach the target market cap
                       </p>
                     </div>
@@ -161,20 +257,34 @@ export default function DocsPage() {
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Market Resolution</h3>
-                <p className="text-muted-foreground mb-6">
+              <div className={`transition-all duration-700 delay-500 ${
+                visibleSections.has('how-it-works') ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-6'
+              }`}>
+                <h3 className="text-xl font-semibold mb-4 group-hover:text-neon-cyan transition-colors">Market Resolution</h3>
+                <p className="text-muted-foreground mb-6 group-hover:text-foreground/90 transition-colors">
                   Markets are resolved using data from multiple trusted sources like
                   CoinGecko, CoinMarketCap, and DexScreener.
                 </p>
 
-                <div className="bg-black/20 rounded-lg p-4 border border-neon-green/20">
-                  <h4 className="font-medium mb-2 text-neon-green">Resolution Sources</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• CoinGecko API</li>
-                    <li>• CoinMarketCap API</li>
-                    <li>• DexScreener API</li>
-                    <li>• Birdeye API</li>
+                <div className="bg-black/20 rounded-lg p-4 border border-neon-green/20 hover:border-neon-green/40 hover:bg-black/30 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-neon-green/10">
+                  <h4 className="font-medium mb-2 text-neon-green group-hover:text-neon-green/90 transition-colors">Resolution Sources</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1 group-hover:text-foreground/80 transition-colors">
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-neon-green rounded-full animate-pulse"></div>
+                      CoinGecko API
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-neon-cyan rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                      CoinMarketCap API
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-neon-magenta rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                      DexScreener API
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                      Birdeye API
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -183,51 +293,66 @@ export default function DocsPage() {
         </section>
 
         {/* Trading Mechanics */}
-        <section className="mb-12 sm:mb-16">
+        <section
+          data-section="trading-mechanics"
+          className={`mb-12 sm:mb-16 transition-all duration-1000 ${
+            visibleSections.has('trading-mechanics')
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="flex items-center gap-3 mb-6">
-            <TrendingUp className="w-6 h-6 text-neon-magenta" />
-            <h2 className="text-2xl sm:text-3xl font-bold">Trading Mechanics</h2>
+            <TrendingUp className={`w-6 h-6 text-neon-magenta transition-all duration-500 ${
+              visibleSections.has('trading-mechanics') ? 'scale-100 rotate-0' : 'scale-75 -rotate-12'
+            }`} />
+            <h2 className={`text-2xl sm:text-3xl font-bold transition-all duration-700 delay-200 ${
+              visibleSections.has('trading-mechanics') ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+            }`}>Trading Mechanics</h2>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-4">Automated Market Maker (AMM)</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className={`glass p-6 rounded-xl hover:scale-[1.02] hover:shadow-xl hover:shadow-neon-cyan/20 transition-all duration-500 group ${
+              visibleSections.has('trading-mechanics') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+            }`} style={{ transitionDelay: '0.3s' }}>
+              <h3 className="text-lg font-semibold mb-4 group-hover:text-neon-cyan transition-colors">Automated Market Maker (AMM)</h3>
+              <p className="text-muted-foreground mb-4 group-hover:text-foreground/90 transition-colors">
                 Our AMM ensures fair pricing and constant liquidity for all positions.
               </p>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
+                <div className="flex justify-between p-2 rounded hover:bg-white/5 transition-colors">
                   <span className="text-muted-foreground">Formula:</span>
-                  <code className="text-neon-cyan">constant_product(x * y = k)</code>
+                  <code className="text-neon-cyan group-hover:text-neon-cyan/90 transition-colors font-bold">constant_product(x * y = k)</code>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between p-2 rounded hover:bg-white/5 transition-colors">
                   <span className="text-muted-foreground">Slippage:</span>
-                  <span className="text-neon-green">Dynamic</span>
+                  <span className="text-neon-green group-hover:text-neon-green/90 transition-colors font-semibold">Dynamic</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between p-2 rounded hover:bg-white/5 transition-colors">
                   <span className="text-muted-foreground">Liquidity:</span>
-                  <span className="text-neon-magenta">Constant</span>
+                  <span className="text-neon-magenta group-hover:text-neon-magenta/90 transition-colors font-semibold">Constant</span>
                 </div>
               </div>
             </div>
 
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-4">Position Management</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className={`glass p-6 rounded-xl hover:scale-[1.02] hover:shadow-xl hover:shadow-neon-magenta/20 transition-all duration-500 group ${
+              visibleSections.has('trading-mechanics') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+            }`} style={{ transitionDelay: '0.5s' }}>
+              <h3 className="text-lg font-semibold mb-4 group-hover:text-neon-magenta transition-colors">Position Management</h3>
+              <p className="text-muted-foreground mb-4 group-hover:text-foreground/90 transition-colors">
                 Manage your positions with advanced trading features.
               </p>
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-neon-green rounded-full"></div>
-                  <span className="text-sm">Buy YES/NO positions</span>
+                <div className="flex items-center gap-3 p-2 rounded hover:bg-neon-green/5 transition-all duration-300 group/item">
+                  <div className="w-2 h-2 bg-neon-green rounded-full group-hover/item:scale-125 transition-transform animate-pulse"></div>
+                  <span className="text-sm group-hover/item:text-neon-green transition-colors">Buy YES/NO positions</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-neon-magenta rounded-full"></div>
-                  <span className="text-sm">Sell existing positions</span>
+                <div className="flex items-center gap-3 p-2 rounded hover:bg-neon-magenta/5 transition-all duration-300 group/item">
+                  <div className="w-2 h-2 bg-neon-magenta rounded-full group-hover/item:scale-125 transition-transform animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  <span className="text-sm group-hover/item:text-neon-magenta transition-colors">Sell existing positions</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                  <span className="text-sm">Claim winnings after resolution</span>
+                <div className="flex items-center gap-3 p-2 rounded hover:bg-yellow-400/5 transition-all duration-300 group/item">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full group-hover/item:scale-125 transition-transform animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                  <span className="text-sm group-hover/item:text-yellow-400 transition-colors">Claim winnings after resolution</span>
                 </div>
               </div>
             </div>
@@ -353,63 +478,77 @@ export default function DocsPage() {
                 <div className="flex items-start gap-3">
                   <CheckCircle className="w-4 h-4 text-green-400 mt-1 flex-shrink-0" />
                   <div>
-                    <h4 className="font-medium">Open Source</h4>
-                    <p className="text-sm text-muted-foreground">
-                      All code is publicly auditable on GitHub.
+                    <h4 className="font-medium">Program ID</h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Official Trenchmarket smart contract address:
                     </p>
+                    <code className="text-xs bg-black/40 px-2 py-1 rounded font-mono text-neon-green break-all">
+                      ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL
+                    </code>
                   </div>
                 </div>
+
               </div>
             </div>
           </div>
         </section>
 
         {/* FAQ */}
-        <section className="mb-12 sm:mb-16">
+        <section
+          data-section="faq"
+          className={`mb-12 sm:mb-16 transition-all duration-1000 ${
+            visibleSections.has('faq')
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 translate-y-8'
+          }`}
+        >
           <div className="flex items-center gap-3 mb-6">
-            <BookOpen className="w-6 h-6 text-neon-cyan" />
-            <h2 className="text-2xl sm:text-3xl font-bold">Frequently Asked Questions</h2>
+            <BookOpen className={`w-6 h-6 text-neon-cyan transition-all duration-500 ${
+              visibleSections.has('faq') ? 'scale-100 rotate-0' : 'scale-75 rotate-12'
+            }`} />
+            <h2 className={`text-2xl sm:text-3xl font-bold transition-all duration-700 delay-200 ${
+              visibleSections.has('faq') ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+            }`}>Frequently Asked Questions</h2>
           </div>
 
           <div className="space-y-4">
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-2">What makes Trenchmarket different?</h3>
-              <p className="text-muted-foreground">
+            <div className={`glass p-6 rounded-xl hover:scale-[1.01] hover:shadow-lg hover:shadow-neon-green/10 transition-all duration-300 group cursor-pointer ${
+              visibleSections.has('faq') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`} style={{ transitionDelay: '0.3s' }}>
+              <h3 className="text-lg font-semibold mb-2 group-hover:text-neon-green transition-colors">What makes Trenchmarket different?</h3>
+              <p className="text-muted-foreground group-hover:text-foreground/90 transition-colors">
                 Trenchmarket is built specifically for memecoin prediction markets on Solana.
                 We offer zero platform fees, instant settlements, and focus exclusively on the
                 most volatile and exciting part of crypto markets.
               </p>
             </div>
 
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-2">How are markets resolved?</h3>
-              <p className="text-muted-foreground">
+            <div className={`glass p-6 rounded-xl hover:scale-[1.01] hover:shadow-lg hover:shadow-neon-cyan/10 transition-all duration-300 group cursor-pointer ${
+              visibleSections.has('faq') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`} style={{ transitionDelay: '0.5s' }}>
+              <h3 className="text-lg font-semibold mb-2 group-hover:text-neon-cyan transition-colors">How are markets resolved?</h3>
+              <p className="text-muted-foreground group-hover:text-foreground/90 transition-colors">
                 Markets are resolved using data from multiple trusted sources (CoinGecko,
                 CoinMarketCap, DexScreener, Birdeye). If there's any discrepancy, the market
                 creator makes the final determination based on the most reliable data available.
               </p>
             </div>
 
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-2">Can I lose money?</h3>
-              <p className="text-muted-foreground">
-                <strong>Yes, absolutely.</strong> Prediction markets are high-risk, high-reward.
-                You can lose your entire investment if your prediction is wrong. Only trade
-                with money you can afford to lose completely.
-              </p>
-            </div>
-
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-2">What's the minimum bet?</h3>
-              <p className="text-muted-foreground">
+            <div className={`glass p-6 rounded-xl hover:scale-[1.01] hover:shadow-lg hover:shadow-neon-magenta/10 transition-all duration-300 group cursor-pointer ${
+              visibleSections.has('faq') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`} style={{ transitionDelay: '0.7s' }}>
+              <h3 className="text-lg font-semibold mb-2 group-hover:text-neon-magenta transition-colors">What's the minimum bet?</h3>
+              <p className="text-muted-foreground group-hover:text-foreground/90 transition-colors">
                 The minimum bet is 0.01 SOL. This covers Solana network fees and ensures
                 meaningful position sizes for market calculations.
               </p>
             </div>
 
-            <div className="glass p-6 rounded-xl">
-              <h3 className="text-lg font-semibold mb-2">Are there time limits on markets?</h3>
-              <p className="text-muted-foreground">
+            <div className={`glass p-6 rounded-xl hover:scale-[1.01] hover:shadow-lg hover:shadow-yellow-400/10 transition-all duration-300 group cursor-pointer ${
+              visibleSections.has('faq') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`} style={{ transitionDelay: '0.9s' }}>
+              <h3 className="text-lg font-semibold mb-2 group-hover:text-yellow-400 transition-colors">Are there time limits on markets?</h3>
+              <p className="text-muted-foreground group-hover:text-foreground/90 transition-colors">
                 Each market has a clear expiration date. Markets can only be traded before
                 this date. After expiration, the market resolves automatically based on
                 the predefined criteria.
@@ -463,26 +602,11 @@ export default function DocsPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-4">Resources</h3>
                 <div className="space-y-4">
-                  <a
-                    href="https://github.com/wave745/memebet-arena"
-                    className="flex items-center gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-neon-green/50 transition-all duration-300 group"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <svg className="w-6 h-6 text-neon-green group-hover:text-neon-green/80 transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                    <div>
-                      <h4 className="font-medium">GitHub Repository</h4>
-                      <p className="text-sm text-muted-foreground">View source code and contribute</p>
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-neon-green transition-colors ml-auto" />
-                  </a>
 
                   <div className="p-4 rounded-lg bg-gradient-to-r from-neon-green/10 to-neon-cyan/10 border border-neon-green/20">
                     <h4 className="font-medium text-neon-green mb-2">Need Help?</h4>
                     <p className="text-sm text-muted-foreground">
-                      Check our Discord for quick support, or create an issue on GitHub for technical problems.
+                      Join our Discord community for support and discussions.
                     </p>
                   </div>
                 </div>
@@ -491,27 +615,8 @@ export default function DocsPage() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="text-center pt-8 border-t border-border/50">
-          <p className="text-muted-foreground mb-4">
-            Built with ❤️ for the Solana ecosystem
-          </p>
-          <div className="flex justify-center gap-6">
-            <Link
-              href="/"
-              className="text-neon-green hover:text-neon-green/80 transition-colors font-medium"
-            >
-              Enter Arena
-            </Link>
-            <Link
-              href="/"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Back to Home
-            </Link>
-          </div>
-        </footer>
       </div>
     </div>
+    </>
   )
 }
