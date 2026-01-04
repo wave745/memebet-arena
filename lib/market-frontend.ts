@@ -24,9 +24,16 @@ const MARKET_DISCRIMINATOR = Buffer.from([219, 190, 213, 55, 0, 227, 198, 154])
  */
 function parseMarketAccount(accountData: Uint8Array): FrontendMarketData | null {
   try {
+    console.log(`Parsing account data, length: ${accountData.length}`)
+    console.log(`Account data type: ${typeof accountData}, constructor: ${accountData.constructor.name}`)
+
     // Check discriminator
     const discriminator = accountData.subarray(0, 8)
+    console.log(`Discriminator: ${Array.from(discriminator).map(b => b.toString(16).padStart(2, '0')).join('')}`)
+    console.log(`Expected: ${Array.from(MARKET_DISCRIMINATOR).map(b => b.toString(16).padStart(2, '0')).join('')}`)
+
     if (!discriminator.every((byte, i) => byte === MARKET_DISCRIMINATOR[i])) {
+      console.warn(`Invalid discriminator, not a market account`)
       return null // Not a market account
     }
 
@@ -113,6 +120,8 @@ export async function fetchMarketByPdaFrontend(
       console.log(`Market account not found: ${marketPda.toString()}`)
       return null
     }
+
+    console.log(`Account info: owner=${accountInfo.owner?.toString()}, space=${accountInfo.space}, data length=${accountInfo.data.length}`)
 
     const marketData = parseMarketAccount(accountInfo.data)
     if (marketData) {
