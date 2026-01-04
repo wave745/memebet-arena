@@ -30,7 +30,7 @@ async function getAllMarkets(): Promise<{ pda: string; ticker: string; category:
   try {
     // First, fetch markets from the database API
     console.log("Fetching markets from API...")
-    const response = await fetch(window.location.origin + '/api/markets/sync')
+    const response = await fetch(window.location.origin + '/api/markets')
     console.log("API response status:", response.status)
     if (response.ok) {
       const dbMarkets = await response.json()
@@ -40,8 +40,8 @@ async function getAllMarkets(): Promise<{ pda: string; ticker: string; category:
         if (market.pda && isValidSolanaAddress(market.pda)) {
           allMarkets.push({
             pda: market.pda,
-            ticker: market.ticker,
-            category: market.category || 'new'
+            ticker: market.tokenSymbol || 'UNKNOWN',
+            category: 'new' // All markets from DB are categorized as 'new'
           })
         } else {
           console.warn("Skipping invalid PDA from API:", market.pda)

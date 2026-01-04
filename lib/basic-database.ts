@@ -1,6 +1,9 @@
+'use server'
+
 import { Pool } from '@neondatabase/serverless'
 
 // Basic database client using raw SQL to avoid Prisma type issues
+// SERVER-ONLY: This file must NEVER be imported in client components
 class BasicDatabase {
   private pool: Pool
 

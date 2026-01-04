@@ -1,6 +1,9 @@
+'use server'
+
 import { Client } from 'pg'
 
 // Simple database client using basic pg client
+// SERVER-ONLY: This file must NEVER be imported in client components
 class SimpleDB {
   private client: Client | null = null
 

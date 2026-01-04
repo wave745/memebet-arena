@@ -20,16 +20,8 @@ import {
     ChevronRight,
     Eye
 } from "lucide-react"
-// Conditionally import createMarket to avoid build issues
-let createMarket: any = null
-try {
-  if (typeof window === 'undefined') {
-    const marketModule = require("@/lib/anchor/markets")
-    createMarket = marketModule.createMarket
-  }
-} catch (error) {
-  console.warn("createMarket import failed:", error)
-}
+// Market creation is not available in Vercel/serverless environment
+const createMarket = null
 import { getMarketPda } from "@/lib/anchor/program"
 import * as anchor from "@coral-xyz/anchor"
 import Link from "next/link"
@@ -264,11 +256,8 @@ export default function AdminPage() {
             // Get the PDA before creating
             const [marketPda] = getMarketPda(mintPubkey, capBN, endBN)
 
-            if (!createMarket) {
-                throw new Error("Market creation not available in this environment")
-            }
-
-            const tx = await createMarket(connection, wallet, mintPubkey, capBN, endBN)
+            // Market creation is not available in Vercel/serverless environment
+            throw new Error("Market creation is only available in development/local environment. Use the local development server to create markets on the blockchain.")
 
             // Save to localStorage so it appears on the main page
             saveCreatedMarket(marketPda.toString(), ticker || tokenMint.slice(0, 6), category)
