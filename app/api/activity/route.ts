@@ -79,21 +79,40 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json()
+        console.log('📨 POST request received at /api/activity')
+        const rawBody = await request.text()
+        console.log('📄 Raw request body:', rawBody)
 
-        // Handle market resolution requests
-        if (body.action === 'resolve_market') {
-            return handleResolveMarket(body)
+        let body
+        try {
+            body = JSON.parse(rawBody)
+            console.log('📦 Parsed body:', body)
+        } catch (parseError) {
+            console.error('❌ Failed to parse JSON:', parseError)
+            return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
         }
 
-        // Handle bulk resolution requests
-        console.log('🔍 Checking action:', body.action)
+        // Handle bulk resolution requests first
         if (body.action === 'bulk_resolve_all') {
             console.log('🎯 Routing to bulk resolution handler')
             return handleBulkResolveAll(body)
         }
 
+        // Handle market resolution requests
+        if (body.action === 'resolve_market') {
+            console.log('🎯 Routing to single resolution handler')
+            return handleResolveMarket(body)
+        }
+
+        // Handle regular activity creation
+        console.log('📝 Processing as regular activity creation')
         const { txHash, type, marketPda, user, amount, outcome, timestamp, marketInfo } = body
+
+        if (!txHash || !type) {
+            console.error('❌ Missing required fields for activity creation')
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+        }
+
         console.log('📥 Activity POST received:', { txHash, type, marketPda, user, amount })
 
         const activityTimestamp = BigInt(timestamp || Math.floor(Date.now() / 1000))
