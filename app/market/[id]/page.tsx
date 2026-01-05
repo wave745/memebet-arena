@@ -1230,7 +1230,7 @@ export default function MarketPage() {
 
 Market cap will be determined by the highest reliable source available (CoinGecko, CoinMarketCap, Birdeye, DexScreener) at the exact resolution time.
 
-If the token is delisted, rugged, or data becomes unreliable, the market creator will determine fair resolution based on last known valid data.
+If the token is delisted, rugged, or data becomes unreliable, the admin resolver wallet will determine fair resolution based on last known valid data.
 
 Resolution time is final — no appeals. The market will automatically resolve based on the target market cap threshold.`
 
@@ -1244,8 +1244,8 @@ Resolution time is final — no appeals. The market will automatically resolve b
                           return `${addrStr.slice(0, 6)}...${addrStr.slice(-6)}`
                         }
 
-                        // Use the actual creator from chain data (resolver)
-                        const resolverAddress = market.creator || market.marketPda
+                        // Use the admin resolver wallet (hardcoded in smart contract)
+                        const resolverAddress = "3zAjK7AzN7Wdor2i3kzcNrdRJc8PzysspjbgG8awp5NB"
 
                         return (
                           <>
@@ -1259,13 +1259,14 @@ Resolution time is final — no appeals. The market will automatically resolve b
                                 <div className="flex items-center gap-3">
                                   <span className="text-red-500 font-semibold text-sm">Resolver</span>
                                   <a
-                                    href={`https://solscan.io/account/${resolverAddress.toString()}`}
+                                    href={`https://solscan.io/account/${resolverAddress}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-[#3BA4FF] font-mono text-sm hover:text-[#5BB5FF] transition-colors"
                                   >
                                     {shortenAddress(resolverAddress)}
                                   </a>
+                                  <span className="text-xs text-gray-400">(Admin Wallet)</span>
                                 </div>
                               </div>
                             )}
