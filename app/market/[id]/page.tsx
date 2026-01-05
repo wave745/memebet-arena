@@ -748,6 +748,13 @@ export default function MarketPage() {
       return
     }
 
+    // Check if user is the admin resolver
+    const ADMIN_WALLET = "3zAjK7AzN7Wdor2i3kzcNrdRJc8PzysspjbgG8awp5NB"
+    if (walletAddress !== ADMIN_WALLET) {
+      setResolveError("Only the admin wallet can resolve markets")
+      return
+    }
+
     const marketCapValue = parseFloat(finalMarketCap)
     if (!finalMarketCap || marketCapValue <= 0 || isNaN(marketCapValue)) {
       setResolveError("Enter a valid final market cap")
@@ -772,6 +779,31 @@ export default function MarketPage() {
     try {
       const userPubkey = new PublicKey(walletAddress)
       const marketPda = market.marketPda
+
+      console.log('🔍 Resolving market:', {
+        marketPda: marketPda.toString(),
+        resolver: walletAddress,
+        finalMarketCap: marketCapValue
+      })
+
+      // Check if market account exists and can be read
+      const marketAccountInfo = await connection.getAccountInfo(marketPda)
+      if (!marketAccountInfo) {
+        setResolveError("Market account not found")
+        return
+      }
+
+      console.log('📊 Market account info:', {
+        owner: marketAccountInfo.owner.toString(),
+        lamports: marketAccountInfo.lamports,
+        dataLength: marketAccountInfo.data.length,
+        executable: marketAccountInfo.executable
+      })
+
+      // Log first 16 bytes of account data for debugging
+      const dataPreview = Array.from(marketAccountInfo.data.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' ')
+      console.log('🔍 Account data preview:', dataPreview)
+      console.log('🔍 Expected discriminator: dbbed53700e3c69a')
 
       // Convert market cap to base units (raw dollar value)
       const finalMarketCapLamports = BigInt(Math.floor(marketCapValue))
