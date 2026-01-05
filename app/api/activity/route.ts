@@ -87,7 +87,9 @@ export async function POST(request: Request) {
         }
 
         // Handle bulk resolution requests
+        console.log('🔍 Checking action:', body.action)
         if (body.action === 'bulk_resolve_all') {
+            console.log('🎯 Routing to bulk resolution handler')
             return handleBulkResolveAll(body)
         }
 
@@ -400,6 +402,7 @@ async function handleBulkResolveAll(body: any) {
 
         // Check for admin private key in environment
         const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY
+        console.log('🔑 ADMIN_PRIVATE_KEY present:', !!adminPrivateKey)
         if (!adminPrivateKey) {
             console.error('❌ ADMIN_PRIVATE_KEY not configured')
             return NextResponse.json({ error: "Admin wallet not configured" }, { status: 500 })
@@ -437,10 +440,21 @@ async function handleBulkResolveAll(body: any) {
                 ORDER BY "endTimestamp" ASC
             `
             const now = Math.floor(Date.now() / 1000)
+            console.log('🔍 Querying for expired markets before:', new Date(now * 1000).toISOString())
+
             const expiredMarketsResult = await client.query(expiredMarketsQuery, [now.toString()])
 
             const expiredMarkets = expiredMarketsResult.rows
             console.log(`📊 Found ${expiredMarkets.length} expired markets to resolve`)
+
+            if (expiredMarkets.length > 0) {
+                console.log('📋 Markets to resolve:', expiredMarkets.map(m => ({
+                    pda: m.pda,
+                    token: m.tokenSymbol,
+                    endTime: new Date(Number(m.endTimestamp) * 1000).toISOString(),
+                    targetCap: m.targetCap
+                })))
+            }
 
             if (expiredMarkets.length === 0) {
                 return NextResponse.json({

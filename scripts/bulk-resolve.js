@@ -24,6 +24,9 @@ async function bulkResolveMarkets() {
             })
         });
 
+        console.log('📡 API Response Status:', response.status);
+        console.log('📡 API Response Headers:', Object.fromEntries(response.headers.entries()));
+
         const result = await response.json();
 
         if (!response.ok) {
