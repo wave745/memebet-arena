@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "ts-node": "ts-node --esm",
     "sync-markets": "npm run ts-node scripts/minimal-sync.ts",
-    "sync-markets:continuous": "npm run ts-node scripts/simple-sync.ts continuous"
+    "sync-markets:continuous": "npm run ts-node scripts/simple-sync.ts continuous",
+    "bulk-resolve": "node scripts/bulk-resolve.js"
   },
   "dependencies": {
     "@babel/runtime": "^7.28.4",
