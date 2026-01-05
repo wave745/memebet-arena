@@ -76,7 +76,24 @@ export async function POST(request: Request) {
             finalMarketCap
         } = body
 
+        // DEVELOPMENT ONLY: Block sync in production for security
+        if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+            console.log("Market sync blocked: Production environment")
+            return NextResponse.json({
+                error: "Market sync is only available in development/local environment"
+            }, { status: 403 })
+        }
+
         // Sync to Neon database using direct SQL
+        console.log("API: Creating database connection for sync...")
+        const dbUrl = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_DFs85ANlpHJC@ep-royal-paper-ahfywd90-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+        const pool = new Pool({
+            connectionString: dbUrl,
+        })
+
+        const client = await pool.connect()
+        console.log("API: Connected to database for sync")
+
         const upsertQuery = `
           INSERT INTO "Market" (
             pda, "tokenMint", "tokenSymbol", "tokenName", "tokenImage",
@@ -109,6 +126,10 @@ export async function POST(request: Request) {
 
         const marketRow = market.rows[0]
         console.log("Market synced to database:", pda, "ID:", marketRow.id)
+
+        client.release()
+        await pool.end()
+
         return NextResponse.json({
             id: marketRow.id,
             pda: marketRow.pda,
@@ -127,6 +148,6 @@ export async function POST(request: Request) {
         })
     } catch (e) {
         console.error("Sync failed:", e)
-        return NextResponse.json({ error: "Sync failed" }, { status: 500 })
+        return NextResponse.json({ error: "Sync failed: " + e.message }, { status: 500 })
     }
 }
