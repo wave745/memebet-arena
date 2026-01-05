@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { useWallet } from "@/components/wallet-provider"
-import { PublicKey } from "@solana/web3.js"
+import { PublicKey, Transaction, Connection } from "@solana/web3.js"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,7 +22,8 @@ import {
 } from "lucide-react"
 // Market creation is not available in Vercel/serverless environment
 const createMarket = null
-import { getMarketPda } from "@/lib/anchor/program"
+import { getMarketPda, getMarketVaultPda } from "@/lib/anchor/program"
+import { buildCreateMarketInstruction } from "@/lib/solana/instructions"
 import * as anchor from "@coral-xyz/anchor"
 import Link from "next/link"
 import { XLogo } from "@/components/x-logo"
@@ -253,12 +254,48 @@ export default function AdminPage() {
             const capBN = new anchor.BN(parseFloat(targetCap))
             const endBN = new anchor.BN(Math.floor(selectedDate.getTime() / 1000))
 
-            // Get the PDA before creating
-            const [marketPda] = getMarketPda(mintPubkey, capBN, endBN)
+            // Get the PDAs and bumps
+            const [marketPda, marketBump] = getMarketPda(mintPubkey, capBN, endBN)
+            const [marketVaultPda, vaultBump] = getMarketVaultPda(mintPubkey, capBN, endBN)
 
-            // TODO: Add actual blockchain market creation transaction here
-            // For now, we'll create the market metadata and sync to database
-            console.log("Market PDA calculated:", marketPda.toString())
+            console.log("Market PDA:", marketPda.toString())
+            console.log("Market Vault PDA:", marketVaultPda.toString())
+            console.log("Market bump:", marketBump, "Vault bump:", vaultBump)
+
+            // Create the market on Solana blockchain
+            console.log("Creating market on blockchain...")
+            const instruction = buildCreateMarketInstruction(
+                marketPda,
+                marketVaultPda,
+                new PublicKey(walletAddress),
+                mintPubkey,
+                BigInt(capBN.toString()),
+                BigInt(endBN.toString()),
+                marketBump,
+                vaultBump
+            )
+
+            const transaction = new Transaction().add(instruction)
+            transaction.feePayer = new PublicKey(walletAddress)
+
+            // Get recent blockhash
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+            transaction.recentBlockhash = blockhash
+
+            // Sign and send transaction
+            console.log("Signing transaction...")
+            const signedTransaction = await wallet.signTransaction(transaction)
+
+            console.log("Sending transaction...")
+            const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+                skipPreflight: false,
+                maxRetries: 3,
+            })
+
+            console.log("Confirming transaction...")
+            await connection.confirmTransaction(signature, "confirmed")
+
+            console.log("Market created successfully! Signature:", signature)
 
             // Save to localStorage so it appears on the main page
             saveCreatedMarket(marketPda.toString(), ticker || tokenMint.slice(0, 6), category)
@@ -280,15 +317,14 @@ export default function AdminPage() {
             })
             console.log("Sync response:", syncResponse.status, await syncResponse.text())
 
-            // Use PDA as placeholder transaction hash since no actual transaction yet
-            const tx = marketPda.toString()
+            // Use the actual transaction signature
 
             // Notify Activity Backend
             fetch('/api/activity', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    txHash: tx,
+                    txHash: signature,
                     type: 'CREATE',
                     marketPda: marketPda.toString(),
                     user: walletAddress,
@@ -306,7 +342,8 @@ export default function AdminPage() {
 
             setStatus({
                 type: 'success',
-                msg: `MARKET_CREATED! PDA: ${marketPda.toString().slice(0, 12)}...`
+                msg: `Market created successfully! Transaction: ${signature.slice(0, 8)}...${signature.slice(-8)}`,
+                txHash: signature
             })
 
             setTokenMint("")

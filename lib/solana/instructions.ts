@@ -13,6 +13,10 @@ const REDEEM_DISCRIMINATOR = Buffer.from([184, 12, 86, 149, 70, 196, 97, 225])
 const SELL_SHARES_DISCRIMINATOR = Buffer.from([184, 164, 169, 16, 231, 158, 199, 196])
 // Computed: sha256("global:resolve_market")[0..8]
 const RESOLVE_MARKET_DISCRIMINATOR = Buffer.from([155, 23, 80, 173, 46, 74, 23, 239])
+// Computed: sha256("global:create_market")[0..8]
+const CREATE_MARKET_DISCRIMINATOR = Buffer.from([165, 8, 73, 177, 168, 99, 169, 96])
+// Computed: sha256("global:create_market")[0..8]
+const CREATE_MARKET_DISCRIMINATOR = Buffer.from([165, 8, 73, 177, 168, 99, 169, 96])
 
 /**
  * Serialize place_bet instruction args manually (Borsh format)
@@ -289,7 +293,111 @@ export function buildResolveMarketInstruction(
       isWritable: false,
     },
   ]
-  
+
+  return new TransactionInstruction({
+    programId: PROGRAM_ID,
+    keys,
+    data,
+  })
+}
+
+/**
+ * Serialize create_market instruction args manually (Borsh format)
+ * Args: (token_mint: Pubkey, target_market_cap: u64, end_timestamp: i64, market_bump: u8, vault_bump: u8)
+ * - token_mint: Pubkey (32 bytes)
+ * - target_market_cap: u64 (8 bytes, little-endian)
+ * - end_timestamp: i64 (8 bytes, little-endian)
+ * - market_bump: u8 (1 byte)
+ * - vault_bump: u8 (1 byte)
+ */
+function serializeCreateMarketArgs(
+  tokenMint: PublicKey,
+  targetMarketCap: bigint,
+  endTimestamp: bigint,
+  marketBump: number,
+  vaultBump: number
+): Buffer {
+  const buffer = Buffer.allocUnsafe(32 + 8 + 8 + 1 + 1) // 32 + 8 + 8 + 1 + 1 = 50 bytes
+
+  let offset = 0
+
+  // Write token_mint (32 bytes)
+  tokenMint.toBuffer().copy(buffer, offset)
+  offset += 32
+
+  // Write target_market_cap as u64 little-endian
+  let remaining = targetMarketCap
+  for (let i = 0; i < 8; i++) {
+    buffer[offset + i] = Number(remaining & 0xffn)
+    remaining = remaining >> 8n
+  }
+  offset += 8
+
+  // Write end_timestamp as i64 little-endian
+  remaining = endTimestamp
+  for (let i = 0; i < 8; i++) {
+    buffer[offset + i] = Number(remaining & 0xffn)
+    remaining = remaining >> 8n
+  }
+  offset += 8
+
+  // Write market_bump as u8
+  buffer[offset] = marketBump
+  offset += 1
+
+  // Write vault_bump as u8
+  buffer[offset] = vaultBump
+
+  return buffer
+}
+
+/**
+ * Build a raw create_market instruction
+ *
+ * Account order (must match CreateMarket struct in Rust):
+ * 0. market (writable, Account<Market> - PDA to create)
+ * 1. market_vault (writable, Account - PDA to create)
+ * 2. creator (signer, writable)
+ * 3. system_program (Program<System>)
+ */
+export function buildCreateMarketInstruction(
+  marketPda: PublicKey,
+  marketVaultPda: PublicKey,
+  creator: PublicKey,
+  tokenMint: PublicKey,
+  targetMarketCap: bigint,
+  endTimestamp: bigint,
+  marketBump: number,
+  vaultBump: number
+): TransactionInstruction {
+  const data = Buffer.concat([
+    CREATE_MARKET_DISCRIMINATOR,
+    serializeCreateMarketArgs(tokenMint, targetMarketCap, endTimestamp, marketBump, vaultBump)
+  ])
+
+  const keys = [
+    {
+      pubkey: marketPda,
+      isSigner: false,
+      isWritable: true,
+    },
+    {
+      pubkey: marketVaultPda,
+      isSigner: false,
+      isWritable: true,
+    },
+    {
+      pubkey: creator,
+      isSigner: true,
+      isWritable: true,
+    },
+    {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    },
+  ]
+
   return new TransactionInstruction({
     programId: PROGRAM_ID,
     keys,
