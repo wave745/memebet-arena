@@ -347,30 +347,20 @@ export default function MarketPage() {
     }
   }
 
-  // Calculate potential payout in SOL (matches smart contract precision)
+  // Calculate potential "To Win" amount using LMSR formula (preview before bet)
   const calculatePayout = (side: "YES" | "NO", betAmount: number) => {
-    if (betAmount <= 0) return 0
+    if (betAmount <= 0 || totalPool === 0) return 0
 
-    // Convert to lamports for precise calculation
-    const betAmountLamports = BigInt(Math.floor(betAmount * LAMPORTS_PER_SOL))
-    const yesPoolLamports = BigInt(Math.floor(yesPoolSol * LAMPORTS_PER_SOL))
-    const noPoolLamports = BigInt(Math.floor(noPoolSol * LAMPORTS_PER_SOL))
+    // LMSR Formula: toWin = betAmount * (totalPool / targetPool)
+    const targetPool = side === "YES" ? yesPoolSol : noPoolSol
 
-    const yourPool = side === "YES" ? yesPoolLamports : noPoolLamports
-    const otherPool = side === "YES" ? noPoolLamports : yesPoolLamports
+    // If target pool is 0, show infinite potential (market too thin)
+    if (targetPool === 0) return Infinity
 
-    // If no one on your side, you get 1:1 payout
-    if (yourPool === 0n) {
-      return betAmount
-    }
+    const toWin = betAmount * (totalPool / targetPool)
 
-    // Prediction market math: payout = betAmount + (betAmount * otherPool / (yourPool + betAmount))
-    const totalAfterBet = yourPool + betAmountLamports
-    const yourShare = (betAmountLamports * otherPool) / totalAfterBet
-    const totalPayoutLamports = betAmountLamports + yourShare
-
-    // Convert back to SOL
-    return Number(totalPayoutLamports) / LAMPORTS_PER_SOL
+    // Round to 4 decimal places for display
+    return Number(toWin.toFixed(4))
   }
 
   const calculateSellRefund = (side: "YES" | "NO", sellAmount: number) => {
@@ -1741,11 +1731,19 @@ Resolution time is final — no appeals. The market will automatically resolve b
                       </button>
                     </div>
                     {betAmount > 0 && tradeSide && !tradeLoading && !tradeSubmitted && (
-                      <div className="mt-3 text-xs text-[#8A8A8A] text-center">
-                        To win: <span className="font-mono text-[#E5E5E5] flex items-center justify-center gap-1">
-                          <SolanaLogo size={12} />
-                          {potentialPayout.toFixed(2)} SOL
-                        </span>
+                      <div className="mt-3 text-center space-y-1">
+                        <div className="text-lg font-bold text-neon-green">
+                          To Win: {potentialPayout === Infinity ? '∞' : potentialPayout.toFixed(4)} SOL
+                          {potentialPayout === Infinity && (
+                            <span className="text-xs text-orange-400 block">Market too thin</span>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          Total Payout: {(betAmount + (potentialPayout === Infinity ? 0 : potentialPayout)).toFixed(4)} SOL
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {tradeSide === 'YES' ? '(if YES wins)' : '(if NO wins)'}
+                        </div>
                       </div>
                     )}
                   </div>
