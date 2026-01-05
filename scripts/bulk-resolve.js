@@ -7,7 +7,7 @@
  * Run this from the terminal to process all pending market resolutions.
  */
 
-const fetch = require('node-fetch');
+// Using built-in fetch (Node.js 18+)
 
 async function bulkResolveMarkets() {
     console.log('🚀 Starting bulk market resolution...');
