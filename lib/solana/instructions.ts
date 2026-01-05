@@ -15,8 +15,6 @@ const SELL_SHARES_DISCRIMINATOR = Buffer.from([184, 164, 169, 16, 231, 158, 199,
 const RESOLVE_MARKET_DISCRIMINATOR = Buffer.from([155, 23, 80, 173, 46, 74, 23, 239])
 // Computed: sha256("global:create_market")[0..8]
 const CREATE_MARKET_DISCRIMINATOR = Buffer.from([165, 8, 73, 177, 168, 99, 169, 96])
-// Computed: sha256("global:create_market")[0..8]
-const CREATE_MARKET_DISCRIMINATOR = Buffer.from([165, 8, 73, 177, 168, 99, 169, 96])
 
 /**
  * Serialize place_bet instruction args manually (Borsh format)
