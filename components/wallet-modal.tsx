@@ -641,23 +641,30 @@ function ActiveBetsTab({
         let potentialPayout = amountSol
 
         if (market) {
-          const yesPoolSol = Number(market.yesPool) / LAMPORTS_PER_SOL
-          const noPoolSol = Number(market.noPool) / LAMPORTS_PER_SOL
-          const totalPool = yesPoolSol + noPoolSol
-          const yourPool = position.outcome ? yesPoolSol : noPoolSol
-          const otherPool = position.outcome ? noPoolSol : yesPoolSol
+          // Use exact lamport calculations to match smart contract precision
+          const yesPoolLamports = BigInt(market.yesPool)
+          const noPoolLamports = BigInt(market.noPool)
+          const totalPoolLamports = yesPoolLamports + noPoolLamports
+          const positionAmountLamports = BigInt(position.amount)
 
-          // Calculate probability
-          if (totalPool > 0) {
+          // Calculate probability using lamports for precision
+          if (totalPoolLamports > 0n) {
             probability = position.outcome
-              ? (yesPoolSol / totalPool) * 100
-              : (noPoolSol / totalPool) * 100
+              ? Number((yesPoolLamports * 100n) / totalPoolLamports)
+              : Number((noPoolLamports * 100n) / totalPoolLamports)
           }
 
-          if (yourPool > 0 && otherPool > 0) {
-            // Current value = what you'd get if market resolved now
-            const shareOfOther = (amountSol * otherPool) / yourPool
-            currentValue = amountSol + shareOfOther
+          const yourPool = position.outcome ? yesPoolLamports : noPoolLamports
+          const otherPool = position.outcome ? noPoolLamports : yesPoolLamports
+
+          if (yourPool > 0n && otherPool > 0n) {
+            // Calculate current value using exact smart contract logic:
+            // current_value = position.amount + (position.amount * other_pool / your_pool)
+            const shareOfOther = (positionAmountLamports * otherPool) / yourPool
+            const totalValueLamports = positionAmountLamports + shareOfOther
+
+            // Convert to SOL for display
+            currentValue = Number(totalValueLamports) / LAMPORTS_PER_SOL
             potentialPayout = currentValue
             pnl = currentValue - amountSol
             pnlPercent = amountSol > 0 ? (pnl / amountSol) * 100 : 0
@@ -844,16 +851,22 @@ function HistoryTab({
 
         if (isResolved && outcome !== null) {
           if (userWon) {
-            // Calculate payout: amount + (amount * losing_pool / winning_pool)
-            const yesPoolSol = Number(market.yesPool) / LAMPORTS_PER_SOL
-            const noPoolSol = Number(market.noPool) / LAMPORTS_PER_SOL
-            const winningPool = position.outcome ? yesPoolSol : noPoolSol
-            const losingPool = position.outcome ? noPoolSol : yesPoolSol
+            // Calculate payout exactly like the smart contract: amount + (amount * losing_pool / winning_pool)
+            const yesPoolLamports = BigInt(market.yesPool)
+            const noPoolLamports = BigInt(market.noPool)
+            const positionAmountLamports = BigInt(position.amount)
 
-            if (winningPool > 0 && losingPool > 0) {
-              const shareOfLosingPool = (amountSol * losingPool) / winningPool
-              const payout = amountSol + shareOfLosingPool
-              pnl = payout - amountSol
+            const winningPool = position.outcome ? yesPoolLamports : noPoolLamports
+            const losingPool = position.outcome ? noPoolLamports : yesPoolLamports
+
+            if (winningPool > 0n && losingPool > 0n) {
+              // Exact calculation from smart contract: user_share = (position.amount * losing_pool) / winning_pool
+              const userShare = (positionAmountLamports * losingPool) / winningPool
+              const totalPayout = positionAmountLamports + userShare
+
+              // Convert to SOL for display
+              const payoutSol = Number(totalPayout) / LAMPORTS_PER_SOL
+              pnl = payoutSol - amountSol
               pnlPercent = amountSol > 0 ? (pnl / amountSol) * 100 : 0
               pnlLabel = "Profit"
             }

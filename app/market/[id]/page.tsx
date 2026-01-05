@@ -346,16 +346,27 @@ export default function MarketPage() {
     }
   }
 
-  // Calculate potential payout in SOL
+  // Calculate potential payout in SOL (matches smart contract precision)
   const calculatePayout = (side: "YES" | "NO", betAmount: number) => {
     if (betAmount <= 0 || totalPool === 0) return 0
-    const yourPool = side === "YES" ? yesPoolSol : noPoolSol
-    const otherPool = side === "YES" ? noPoolSol : yesPoolSol
-    if (yourPool === 0) return betAmount // If no one on your side, you get 1:1
-    // Simplified: you get proportional share of other pool
-    const totalAfterBet = yourPool + betAmount
-    const yourShare = betAmount / totalAfterBet
-    return betAmount + (otherPool * yourShare)
+
+    // Convert to lamports for precise calculation
+    const betAmountLamports = BigInt(Math.floor(betAmount * LAMPORTS_PER_SOL))
+    const yesPoolLamports = BigInt(Math.floor(yesPoolSol * LAMPORTS_PER_SOL))
+    const noPoolLamports = BigInt(Math.floor(noPoolSol * LAMPORTS_PER_SOL))
+
+    const yourPool = side === "YES" ? yesPoolLamports : noPoolLamports
+    const otherPool = side === "YES" ? noPoolLamports : yesPoolLamports
+
+    if (yourPool === 0n) return betAmount // If no one on your side, you get 1:1
+
+    // Exact calculation: payout = betAmount + (betAmount * otherPool / (yourPool + betAmount))
+    const totalAfterBet = yourPool + betAmountLamports
+    const yourShare = (betAmountLamports * otherPool) / totalAfterBet
+    const totalPayoutLamports = betAmountLamports + yourShare
+
+    // Convert back to SOL
+    return Number(totalPayoutLamports) / LAMPORTS_PER_SOL
   }
 
   const handleAmountQuickAdd = (add: number) => {
