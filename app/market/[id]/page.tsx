@@ -7,7 +7,7 @@ import { WalletModal } from "@/components/wallet-modal"
 import { useWallet } from "@/components/wallet-provider"
 import { Button } from "@/components/ui/button"
 import { PublicKey } from "@solana/web3.js"
-import { fetchMarketByPdaFrontend } from "@/lib/market-frontend"
+import { fetchMarketByPdaFrontend, parseMarketAccount } from "@/lib/market-frontend"
 import * as anchor from "@coral-xyz/anchor"
 import { LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { TrendingUp, TrendingDown, MessageSquare, Link, Reply, Copy, Check, BarChart3 } from "lucide-react"
@@ -800,10 +800,44 @@ export default function MarketPage() {
         executable: marketAccountInfo.executable
       })
 
+      // Expected account structure: 8 bytes discriminator + 98 bytes Market struct = 106 bytes total
+      const expectedDataLength = 106
+      if (marketAccountInfo.data.length !== expectedDataLength) {
+        console.error(`❌ Account data length mismatch: expected ${expectedDataLength}, got ${marketAccountInfo.data.length}`)
+        setResolveError(`Market account data corrupted (wrong length: ${marketAccountInfo.data.length} bytes)`)
+        return
+      }
+
       // Log first 16 bytes of account data for debugging
       const dataPreview = Array.from(marketAccountInfo.data.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' ')
       console.log('🔍 Account data preview:', dataPreview)
       console.log('🔍 Expected discriminator: dbbed53700e3c69a')
+
+      // Check if discriminator matches
+      const actualDiscriminator = marketAccountInfo.data.slice(0, 8)
+      const expectedDiscriminator = Buffer.from([219, 190, 213, 55, 0, 227, 198, 154])
+      const discriminatorMatches = actualDiscriminator.every((byte, i) => byte === expectedDiscriminator[i])
+
+      console.log('🔍 Discriminator check:', {
+        actual: Array.from(actualDiscriminator).map(b => b.toString(16).padStart(2, '0')).join(''),
+        expected: Array.from(expectedDiscriminator).map(b => b.toString(16).padStart(2, '0')).join(''),
+        matches: discriminatorMatches
+      })
+
+      if (!discriminatorMatches) {
+        setResolveError("Market account discriminator mismatch - account may be from old program version")
+        return
+      }
+
+      // Try to parse the account data to see if it's valid
+      try {
+        const parsedData = parseMarketAccount(marketAccountInfo.data)
+        console.log('✅ Account parsing successful:', parsedData)
+      } catch (parseError) {
+        console.error('❌ Account parsing failed:', parseError)
+        setResolveError("Market account data corrupted - cannot parse account structure")
+        return
+      }
 
       // Convert market cap to base units (raw dollar value)
       const finalMarketCapLamports = BigInt(Math.floor(marketCapValue))
