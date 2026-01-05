@@ -79,6 +79,7 @@ export async function POST(request: Request) {
     try {
         const body = await request.json()
         const { txHash, type, marketPda, user, amount, outcome, timestamp, marketInfo } = body
+        console.log('📥 Activity POST received:', { txHash, type, marketPda, user, amount })
 
         const activityTimestamp = BigInt(timestamp || Math.floor(Date.now() / 1000))
 
@@ -227,14 +228,17 @@ export async function POST(request: Request) {
 
             console.log(`📊 Activity logged to DB: ${type} by ${user} for ${amount} on market ${marketPda}`)
 
-            return NextResponse.json({
+            const response = {
                 id: activity.id,
                 txHash: activity.txHash,
                 type: activity.type,
                 user: activity.user,
                 amount: activity.amount,
                 timestamp: Number(activity.timestamp)
-            })
+            }
+            console.log('📤 Activity API response:', response)
+
+            return NextResponse.json(response)
         } finally {
             client.release()
             await pool.end()

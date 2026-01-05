@@ -533,6 +533,13 @@ export default function MarketPage() {
         ])
 
         // Notify Activity Backend
+        console.log('📤 Sending activity to backend:', {
+          txHash: signature,
+          type: tradeSide === 'YES' ? 'BET_YES' : 'BET_NO',
+          marketPda: market.marketPda.toString(),
+          user: walletAddress,
+          amount: amountLamports.toString()
+        })
         fetch('/api/activity', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -550,7 +557,14 @@ export default function MarketPage() {
               resolved: market.resolved
             }
           })
-        }).catch(console.error)
+        }).then(response => {
+          console.log('📥 Activity API response:', response.status, response.statusText)
+          return response.json()
+        }).then(data => {
+          console.log('✅ Activity created:', data)
+        }).catch(error => {
+          console.error('❌ Activity creation failed:', error)
+        })
 
         // Reset form
         setTradeAmount("")

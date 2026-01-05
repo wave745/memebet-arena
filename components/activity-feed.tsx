@@ -30,9 +30,13 @@ export function ActivityFeed() {
             const res = await fetch("/api/activity?limit=50")
             if (!res.ok) throw new Error(`API error: ${res.status}`)
             const data = await res.json()
+            console.log('📊 Activity fetch result:', { count: data?.length || 0, data })
             if (Array.isArray(data)) {
                 setActivities(data)
                 setLastUpdate(Date.now())
+                if (data.length === 0) {
+                    console.log('⚠️ No activities found in database')
+                }
             }
         } catch (e) {
             console.error("Failed to load activity", e)
