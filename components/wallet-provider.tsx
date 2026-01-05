@@ -196,57 +196,76 @@ const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => 
     }
   }, [publicKey, connected, connection])
 
-  // Auto-connect wallet on page load/navigation with improved error handling
+  // Auto-connect wallet on every page load/navigation with robust retry logic
   useEffect(() => {
-    // Only run this once per page load
-    if (isInitializing) {
-      const autoConnectWallet = async () => {
-        try {
-          // Check for previously connected wallet using correct localStorage key
-          const walletState = localStorage.getItem('trench-market-wallet')
+    const autoConnectWallet = async (retryCount = 0) => {
+      // Ensure we're in browser environment
+      if (typeof window === 'undefined') return
 
-          if (walletState && !connected) {
-            console.log('🔄 Attempting to auto-connect wallet...')
+      try {
+        // Check for previously connected wallet using correct localStorage key
+        const walletState = localStorage.getItem('trench-market-wallet')
 
-            // Parse wallet state to get wallet name
-            const parsedState = JSON.parse(walletState)
-            if (parsedState?.walletName) {
-              console.log(`🔌 Auto-connecting to ${parsedState.walletName}...`)
+        if (walletState && !connected) {
+          console.log(`🔄 Attempting to auto-connect wallet (attempt ${retryCount + 1})...`)
 
-              // Wait for wallet adapter to be ready
-              let attempts = 0
-              const maxAttempts = 10
+          // Parse wallet state to get wallet name
+          const parsedState = JSON.parse(walletState)
+          if (parsedState?.walletName) {
+            console.log(`🔌 Auto-connecting to ${parsedState.walletName}...`)
 
-              while (attempts < maxAttempts && !solanaWallet?.adapter) {
-                await new Promise(resolve => setTimeout(resolve, 200))
-                attempts++
-              }
+            // Wait for wallet adapter to be ready with longer timeout in production
+            let attempts = 0
+            const maxAttempts = 15 // Increased from 10
 
-              if (solanaWallet?.adapter) {
+            while (attempts < maxAttempts && !solanaWallet?.adapter) {
+              await new Promise(resolve => setTimeout(resolve, 300)) // Increased delay
+              attempts++
+            }
+
+            if (solanaWallet?.adapter) {
+              try {
                 await solanaConnect()
                 console.log('✅ Wallet auto-connected successfully')
-              } else {
-                console.warn('⚠️ Wallet adapter not ready for auto-connect')
+              } catch (connectError) {
+                console.warn('❌ Wallet connect failed:', connectError)
+                // If connect fails, try again after a delay (but don't retry too many times)
+                if (retryCount < 2) {
+                  console.log('🔄 Retrying wallet connect in 2 seconds...')
+                  setTimeout(() => autoConnectWallet(retryCount + 1), 2000)
+                  return
+                }
+              }
+            } else {
+              console.warn('⚠️ Wallet adapter not ready for auto-connect')
+              // Retry if adapter not ready and we haven't tried too many times
+              if (retryCount < 3) {
+                console.log('🔄 Retrying auto-connect in 1 second...')
+                setTimeout(() => autoConnectWallet(retryCount + 1), 1000)
+                return
               }
             }
-          } else if (!walletState) {
-            console.log('ℹ️ No previously connected wallet found')
           }
-        } catch (error) {
-          console.warn('❌ Auto-connect failed:', error)
-          // Clear potentially corrupted wallet state
-          localStorage.removeItem('trench-market-wallet')
-        } finally {
-          setIsInitializing(false)
+        } else if (!walletState) {
+          console.log('ℹ️ No previously connected wallet found')
         }
+      } catch (error) {
+        console.warn('❌ Auto-connect failed:', error)
+        // Clear potentially corrupted wallet state only on parsing errors
+        if (error instanceof SyntaxError) {
+          localStorage.removeItem('trench-market-wallet')
+        }
+        // Don't retry on parsing errors
+      } finally {
+        setIsInitializing(false)
       }
-
-      // Delay to ensure all adapters are initialized
-      const timer = setTimeout(autoConnectWallet, 500)
-
-      return () => clearTimeout(timer)
     }
-  }, [connected, solanaConnect, solanaWallet?.adapter, isInitializing])
+
+    // Start auto-connect with a longer initial delay for production
+    const timer = setTimeout(() => autoConnectWallet(0), 1000)
+
+    return () => clearTimeout(timer)
+  }, [connected, solanaConnect, solanaWallet?.adapter])
 
   // Setup Anchor Wallet - Memoize to prevent frequent re-creation
   useEffect(() => {
