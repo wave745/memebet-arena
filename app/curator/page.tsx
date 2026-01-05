@@ -235,7 +235,7 @@ export default function AdminPage() {
             return
         }
 
-        // Check if date is in the future
+        // Check if date is in the future (allow 1 minute minimum)
         const now = new Date()
         if (selectedDate <= now) {
             setStatus({
@@ -542,6 +542,46 @@ export default function AdminPage() {
                                         {dateError && (
                                             <p className="text-xs text-red-400 mt-1">{dateError}</p>
                                         )}
+                                        <p className="text-[9px] text-white/30 mt-1">
+                                            Markets can expire from 1 minute to any future date
+                                        </p>
+
+                                        {/* Quick time buttons */}
+                                        <div className="flex gap-2 mt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const future = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+                                                    setEndDate(future.toISOString().slice(0, 16))
+                                                    setDateError(null)
+                                                }}
+                                                className="px-2 py-1 text-[10px] bg-white/5 hover:bg-neon-green/20 border border-white/10 hover:border-neon-green/30 rounded transition-all"
+                                            >
+                                                +5min
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const future = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+                                                    setEndDate(future.toISOString().slice(0, 16))
+                                                    setDateError(null)
+                                                }}
+                                                className="px-2 py-1 text-[10px] bg-white/5 hover:bg-neon-cyan/20 border border-white/10 hover:border-neon-cyan/30 rounded transition-all"
+                                            >
+                                                +1hr
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const future = new Date(Date.now() + 24 * 60 * 60 * 1000) // 1 day
+                                                    setEndDate(future.toISOString().slice(0, 16))
+                                                    setDateError(null)
+                                                }}
+                                                className="px-2 py-1 text-[10px] bg-white/5 hover:bg-neon-magenta/20 border border-white/10 hover:border-neon-magenta/30 rounded transition-all"
+                                            >
+                                                +1day
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
