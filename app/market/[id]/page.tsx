@@ -284,6 +284,16 @@ export default function MarketPage() {
   const noPoolSol = market ? Number(market.noPool) / LAMPORTS_PER_SOL : 0
   const totalPool = yesPoolSol + noPoolSol
 
+  // Debug market data
+  console.log('🏊 Market pools:', {
+    market: !!market,
+    yesPool: market?.yesPool?.toString(),
+    noPool: market?.noPool?.toString(),
+    yesPoolSol,
+    noPoolSol,
+    totalPool
+  })
+
   const yesPercent = totalPool > 0 ? (yesPoolSol / totalPool) * 100 : 50
   const noPercent = totalPool > 0 ? (noPoolSol / totalPool) * 100 : 50
 
@@ -349,19 +359,36 @@ export default function MarketPage() {
 
   // Calculate potential payout in SOL (matches smart contract precision)
   const calculatePayout = (side: "YES" | "NO", betAmount: number) => {
-    if (betAmount <= 0) return 0
+    console.log('🔢 calculatePayout called:', { side, betAmount, yesPoolSol, noPoolSol })
+
+    if (betAmount <= 0) {
+      console.log('❌ betAmount <= 0, returning 0')
+      return 0
+    }
 
     // Convert to lamports for precise calculation
     const betAmountLamports = BigInt(Math.floor(betAmount * LAMPORTS_PER_SOL))
     const yesPoolLamports = BigInt(Math.floor(yesPoolSol * LAMPORTS_PER_SOL))
     const noPoolLamports = BigInt(Math.floor(noPoolSol * LAMPORTS_PER_SOL))
 
+    console.log('🔢 Converted to lamports:', {
+      betAmountLamports: betAmountLamports.toString(),
+      yesPoolLamports: yesPoolLamports.toString(),
+      noPoolLamports: noPoolLamports.toString()
+    })
 
     const yourPool = side === "YES" ? yesPoolLamports : noPoolLamports
     const otherPool = side === "YES" ? noPoolLamports : yesPoolLamports
 
+    console.log('🔢 Pools:', {
+      side,
+      yourPool: yourPool.toString(),
+      otherPool: otherPool.toString()
+    })
+
     // If no one on your side, you get 1:1 payout
     if (yourPool === 0n) {
+      console.log('🎯 No one on your side, 1:1 payout:', betAmount)
       return betAmount
     }
 
@@ -370,8 +397,16 @@ export default function MarketPage() {
     const yourShare = (betAmountLamports * otherPool) / totalAfterBet
     const totalPayoutLamports = betAmountLamports + yourShare
 
-    // Convert back to SOL
-    return Number(totalPayoutLamports) / LAMPORTS_PER_SOL
+    const payoutSol = Number(totalPayoutLamports) / LAMPORTS_PER_SOL
+
+    console.log('🔢 Final calculation:', {
+      totalAfterBet: totalAfterBet.toString(),
+      yourShare: yourShare.toString(),
+      totalPayoutLamports: totalPayoutLamports.toString(),
+      payoutSol
+    })
+
+    return payoutSol
   }
 
   const calculateSellRefund = (side: "YES" | "NO", sellAmount: number) => {
@@ -715,6 +750,18 @@ export default function MarketPage() {
   const betAmount = parseFloat(tradeAmount) || 0
   const potentialPayout = (tradeAction === "buy" && tradeSide) ? calculatePayout(tradeSide, betAmount) : 0
   const potentialRefund = (tradeAction === "sell" && sellSide) ? calculateSellRefund(sellSide, betAmount) : 0
+
+  // Debug payout calculation
+  console.log('🎯 Payout debug:', {
+    tradeAction,
+    tradeSide,
+    sellSide,
+    betAmount,
+    potentialPayout,
+    potentialRefund,
+    yesPoolSol,
+    noPoolSol
+  })
 
 
   // Handle market resolution
