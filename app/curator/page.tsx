@@ -536,7 +536,6 @@ export default function AdminPage() {
                                             }}
                                             className={`bg-white/5 border-white/10 h-14 focus:border-neon-green/50 transition-all font-bold text-sm ${dateError ? 'border-red-500/50' : ''}`}
                                             required
-                                            min={new Date().toISOString().slice(0, 16)}
                                             step="60"
                                         />
                                         {dateError && (
