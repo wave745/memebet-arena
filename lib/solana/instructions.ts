@@ -56,8 +56,8 @@ export function buildPlaceBetInstruction(
   outcome: boolean,
   amountLamports: bigint,
   tokenMint: PublicKey,
-  targetMarketCap: anchor.BN,
-  endTimestamp: anchor.BN
+  targetMarketCap: anchor.BN | bigint,
+  endTimestamp: anchor.BN | bigint
 ): TransactionInstruction {
   // Serialize instruction args (manual Borsh serialization)
   const argsBuffer = serializePlaceBetArgs(outcome, amountLamports)
@@ -65,8 +65,12 @@ export function buildPlaceBetInstruction(
   // Combine discriminator + args
   const data = Buffer.concat([PLACE_BET_DISCRIMINATOR, argsBuffer])
 
+  // Convert to anchor.BN if needed
+  const targetCapBN = targetMarketCap instanceof anchor.BN ? targetMarketCap : new anchor.BN(targetMarketCap.toString())
+  const endTimeBN = endTimestamp instanceof anchor.BN ? endTimestamp : new anchor.BN(endTimestamp.toString())
+
   // Get the correct vault PDA for market_escrow
-  const [marketVaultPda] = getMarketVaultPda(tokenMint, targetMarketCap, endTimestamp)
+  const [marketVaultPda] = getMarketVaultPda(tokenMint, targetCapBN, endTimeBN)
 
   // Build accounts in exact order (matches PlaceBet struct)
   const keys = [
