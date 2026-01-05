@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 
 import { formatDistanceToNow } from "date-fns"
-import { Loader2, TrendingUp, TrendingDown, Gavel, Plus, DollarSign, Activity as ActivityIcon } from "lucide-react"
+import { Loader2, TrendingUp, TrendingDown, Gavel, Plus, DollarSign, Minus, Activity as ActivityIcon } from "lucide-react"
 
 interface Activity {
     id: string
@@ -92,6 +92,7 @@ export function ActivityFeed() {
                         <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform">
                             {item.type === 'BET_YES' && <TrendingUp className="h-5 w-5 text-neon-green" />}
                             {item.type === 'BET_NO' && <TrendingDown className="h-5 w-5 text-neon-magenta" />}
+                            {item.type === 'SELL' && <Minus className="h-5 w-5 text-red-400" />}
                             {item.type === 'CREATE' && <Plus className="h-5 w-5 text-blue-400" />}
                             {item.type === 'RESOLVE' && <Gavel className="h-5 w-5 text-orange-400" />}
                             {item.type === 'REDEEM' && <DollarSign className="h-5 w-5 text-yellow-400" />}
@@ -102,6 +103,7 @@ export function ActivityFeed() {
                                 <span className="text-xs font-bold text-white uppercase tracking-wider">
                                     {item.type === 'BET_YES' && <span className="text-neon-green">Bought YES</span>}
                                     {item.type === 'BET_NO' && <span className="text-neon-magenta">Bought NO</span>}
+                                    {item.type === 'SELL' && <span className="text-red-400">Sold Shares</span>}
                                     {item.type === 'CREATE' && <span className="text-blue-400">Deployed Market</span>}
                                     {item.type === 'RESOLVE' && <span className="text-orange-400">Resolved Market</span>}
                                     {item.type === 'REDEEM' && <span className="text-yellow-400">Claimed Winnings</span>}
