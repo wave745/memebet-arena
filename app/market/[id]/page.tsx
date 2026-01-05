@@ -1118,6 +1118,49 @@ export default function MarketPage() {
   const ADMIN_PUBKEY = "3zAjK7AzN7Wdor2i3kzcNrdRJc8PzysspjbgG8awp5NB"
   const isAdmin = walletAddress?.toLowerCase() === ADMIN_PUBKEY.toLowerCase()
 
+  // Auto-resolve all expired markets (admin only)
+  const handleAutoResolveAll = async () => {
+    if (!isAdmin) {
+      alert("Only admin can auto-resolve markets")
+      return
+    }
+
+    if (!confirm("This will auto-resolve ALL expired markets. Continue?")) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'auto_resolve_all'
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Auto-resolution failed')
+      }
+
+      alert(`Auto-resolution complete!\n\nResolved: ${result.resolved}\nErrors: ${result.errors}\nTotal: ${result.total}`)
+      console.log('Auto-resolution results:', result)
+
+      // Refresh current market data
+      if (market) {
+        await Promise.all([
+          fetchMarket(false),
+          fetchUserPosition()
+        ])
+      }
+
+    } catch (error: any) {
+      console.error("Auto-resolve error:", error)
+      alert(`Auto-resolution failed: ${error.message}`)
+    }
+  }
+
   // Prevent hydration mismatches by not rendering until mounted
   if (!mounted) {
     return (
@@ -1305,6 +1348,15 @@ export default function MarketPage() {
                           className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                         >
                           {resolving ? "Resolving..." : "Resolve Market"}
+                        </Button>
+
+                        {/* Auto-resolve all expired markets button */}
+                        <Button
+                          onClick={handleAutoResolveAll}
+                          variant="outline"
+                          className="w-full mt-2 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500"
+                        >
+                          ⚡ Auto-Resolve ALL Expired Markets
                         </Button>
                       </div>
                     </div>
