@@ -283,6 +283,7 @@ export default function MarketPage() {
   const yesPoolSol = market ? Number(market.yesPool) / LAMPORTS_PER_SOL : 0
   const noPoolSol = market ? Number(market.noPool) / LAMPORTS_PER_SOL : 0
   const totalPool = yesPoolSol + noPoolSol
+
   const yesPercent = totalPool > 0 ? (yesPoolSol / totalPool) * 100 : 50
   const noPercent = totalPool > 0 ? (noPoolSol / totalPool) * 100 : 50
 
@@ -348,25 +349,71 @@ export default function MarketPage() {
 
   // Calculate potential payout in SOL (matches smart contract precision)
   const calculatePayout = (side: "YES" | "NO", betAmount: number) => {
-    if (betAmount <= 0 || totalPool === 0) return 0
+    if (betAmount <= 0) return 0
 
     // Convert to lamports for precise calculation
     const betAmountLamports = BigInt(Math.floor(betAmount * LAMPORTS_PER_SOL))
     const yesPoolLamports = BigInt(Math.floor(yesPoolSol * LAMPORTS_PER_SOL))
     const noPoolLamports = BigInt(Math.floor(noPoolSol * LAMPORTS_PER_SOL))
 
+
     const yourPool = side === "YES" ? yesPoolLamports : noPoolLamports
     const otherPool = side === "YES" ? noPoolLamports : yesPoolLamports
 
-    if (yourPool === 0n) return betAmount // If no one on your side, you get 1:1
+    // If no one on your side, you get 1:1 payout
+    if (yourPool === 0n) {
+      return betAmount
+    }
 
-    // Exact calculation: payout = betAmount + (betAmount * otherPool / (yourPool + betAmount))
+    // Prediction market math: payout = betAmount + (betAmount * otherPool / (yourPool + betAmount))
     const totalAfterBet = yourPool + betAmountLamports
     const yourShare = (betAmountLamports * otherPool) / totalAfterBet
     const totalPayoutLamports = betAmountLamports + yourShare
 
     // Convert back to SOL
     return Number(totalPayoutLamports) / LAMPORTS_PER_SOL
+  }
+
+  const calculateSellRefund = (side: "YES" | "NO", sellAmount: number) => {
+    if (sellAmount <= 0) return 0
+
+    // Convert to lamports for precise calculation
+    const sellAmountLamports = BigInt(Math.floor(sellAmount * LAMPORTS_PER_SOL))
+    const yesPoolLamports = BigInt(Math.floor(yesPoolSol * LAMPORTS_PER_SOL))
+    const noPoolLamports = BigInt(Math.floor(noPoolSol * LAMPORTS_PER_SOL))
+
+    console.log(`💸 Calculating sell refund for ${side} position of ${sellAmount} SOL`)
+    console.log(`   Pools: YES=${yesPoolSol.toFixed(4)} SOL, NO=${noPoolSol.toFixed(4)} SOL`)
+
+    const yourPool = side === "YES" ? yesPoolLamports : noPoolLamports
+    const otherPool = side === "YES" ? noPoolLamports : yesPoolLamports
+
+    // If your pool is 0 (shouldn't happen for existing positions), return amount
+    if (yourPool === 0n) {
+      console.log(`   Your pool is empty - full refund`)
+      return sellAmount
+    }
+
+    // Smart contract logic: share = sellAmount * otherPool / yourPool
+    const share = (sellAmountLamports * otherPool) / yourPool
+    const totalBeforeFee = sellAmountLamports + share
+
+    // Apply 5% fee (95% of total)
+    const refundAfterFee = (totalBeforeFee * 95n) / 100n
+
+    // Subtract 10 SOL fee (10_000_000 lamports)
+    const fee = 10_000_000n
+    const finalRefund = refundAfterFee > fee ? refundAfterFee - fee : 0n
+
+    // Convert back to SOL
+    const refundSol = Number(finalRefund) / LAMPORTS_PER_SOL
+
+    console.log(`   Calculation: yourPool=${yourPool.toString()}, otherPool=${otherPool.toString()}`)
+    console.log(`   share=${share.toString()}, totalBeforeFee=${totalBeforeFee.toString()}`)
+    console.log(`   refundAfterFee=${refundAfterFee.toString()}, finalRefund=${finalRefund.toString()}`)
+    console.log(`   Final refund: ${refundSol.toFixed(6)} SOL`)
+
+    return refundSol
   }
 
   const handleAmountQuickAdd = (add: number) => {
@@ -666,7 +713,9 @@ export default function MarketPage() {
   }
 
   const betAmount = parseFloat(tradeAmount) || 0
-  const potentialPayout = tradeSide ? calculatePayout(tradeSide, betAmount) : 0
+  const potentialPayout = (tradeAction === "buy" && tradeSide) ? calculatePayout(tradeSide, betAmount) : 0
+  const potentialRefund = (tradeAction === "sell" && sellSide) ? calculateSellRefund(sellSide, betAmount) : 0
+
 
   // Handle market resolution
   const handleResolveMarket = async () => {
