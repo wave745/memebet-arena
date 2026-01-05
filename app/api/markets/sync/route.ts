@@ -76,13 +76,7 @@ export async function POST(request: Request) {
             finalMarketCap
         } = body
 
-        // DEVELOPMENT ONLY: Block sync in production for security
-        if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
-            console.log("Market sync blocked: Production environment")
-            return NextResponse.json({
-                error: "Market sync is only available in development/local environment"
-            }, { status: 403 })
-        }
+        // Market sync available in all environments
 
         // Sync to Neon database using direct SQL
         console.log("API: Creating database connection for sync...")
