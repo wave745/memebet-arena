@@ -2,6 +2,8 @@
 
 import { NextResponse } from "next/server"
 import { Pool } from '@neondatabase/serverless'
+import { Connection, PublicKey, Keypair, Transaction } from "@solana/web3.js"
+import { buildResolveMarketInstruction } from "@/lib/solana/instructions"
 
 export async function GET(request: Request) {
     try {
@@ -78,6 +80,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json()
+
+        // Handle market resolution requests
+        if (body.action === 'resolve_market') {
+            return handleResolveMarket(body)
+        }
+
         const { txHash, type, marketPda, user, amount, outcome, timestamp, marketInfo } = body
         console.log('📥 Activity POST received:', { txHash, type, marketPda, user, amount })
 
@@ -246,5 +254,137 @@ export async function POST(request: Request) {
     } catch (e) {
         console.error("Failed to create activity:", e)
         return NextResponse.json({ error: "Failed to create activity" }, { status: 500 })
+    }
+}
+
+async function handleResolveMarket(body: any) {
+    try {
+        const { marketPda, finalMarketCap } = body
+
+        console.log('🎯 Backend market resolution requested:', { marketPda, finalMarketCap })
+
+        // Validate inputs
+        if (!marketPda || !finalMarketCap) {
+            return NextResponse.json({ error: "Missing marketPda or finalMarketCap" }, { status: 400 })
+        }
+
+        // Check for admin private key in environment
+        const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY
+        if (!adminPrivateKey) {
+            console.error('❌ ADMIN_PRIVATE_KEY not configured')
+            return NextResponse.json({ error: "Admin wallet not configured" }, { status: 500 })
+        }
+
+        // Setup connection
+        const connection = new Connection(
+            process.env.NEXT_PUBLIC_RPC_URL || "https://api.mainnet-beta.solana.com",
+            "confirmed"
+        )
+
+        // Load admin keypair
+        let adminKeypair: Keypair
+        try {
+            const secretKey = Uint8Array.from(JSON.parse(adminPrivateKey))
+            adminKeypair = Keypair.fromSecretKey(secretKey)
+            console.log('✅ Admin wallet loaded:', adminKeypair.publicKey.toString())
+        } catch (error) {
+            console.error('❌ Failed to load admin keypair:', error)
+            return NextResponse.json({ error: "Invalid admin wallet configuration" }, { status: 500 })
+        }
+
+        // Check if market exists and is valid for resolution
+        const marketPubkey = new PublicKey(marketPda)
+        const marketAccount = await connection.getAccountInfo(marketPubkey)
+
+        if (!marketAccount) {
+            return NextResponse.json({ error: "Market not found" }, { status: 404 })
+        }
+
+        console.log('📊 Market account found, size:', marketAccount.data.length)
+
+        // Create resolve instruction
+        const finalMarketCapBigInt = BigInt(Math.floor(parseFloat(finalMarketCap)))
+        const instruction = buildResolveMarketInstruction(
+            marketPubkey,
+            adminKeypair.publicKey,
+            finalMarketCapBigInt
+        )
+
+        // Create and sign transaction
+        const transaction = new Transaction().add(instruction)
+        transaction.feePayer = adminKeypair.publicKey
+
+        const { blockhash } = await connection.getLatestBlockhash("confirmed")
+        transaction.recentBlockhash = blockhash
+
+        transaction.sign(adminKeypair)
+
+        // Send transaction
+        console.log('📤 Sending resolve transaction...')
+        const signature = await connection.sendRawTransaction(
+            transaction.serialize(),
+            { skipPreflight: false, maxRetries: 3 }
+        )
+
+        console.log('⏳ Waiting for confirmation...')
+        await connection.confirmTransaction(signature, "confirmed")
+
+        console.log('✅ Market resolved successfully:', signature)
+
+        // Log the resolution activity
+        const pool = new Pool({
+            connectionString: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_DFs85ANlpHJC@ep-royal-paper-ahfywd90-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+        })
+
+        const client = await pool.connect()
+
+        try {
+            // Update market in database
+            const marketQuery = `
+                UPDATE "Market"
+                SET resolved = true, "finalMarketCap" = $1
+                WHERE pda = $2
+            `
+            await client.query(marketQuery, [finalMarketCap.toString(), marketPda])
+
+            // Create resolution activity
+            const activityQuery = `
+                INSERT INTO "Activity" (
+                  "txHash", type, "marketId", "user", amount, slot, timestamp
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `
+
+            const marketIdQuery = 'SELECT id FROM "Market" WHERE pda = $1'
+            const marketResult = await client.query(marketIdQuery, [marketPda])
+            const marketId = marketResult.rows[0]?.id || marketPda
+
+            await client.query(activityQuery, [
+                signature,
+                'RESOLVE',
+                marketId,
+                adminKeypair.publicKey.toString(),
+                '0',
+                '0',
+                BigInt(Math.floor(Date.now() / 1000)).toString()
+            ])
+
+            console.log('📊 Resolution activity logged')
+        } finally {
+            client.release()
+            await pool.end()
+        }
+
+        return NextResponse.json({
+            success: true,
+            signature,
+            message: "Market resolved successfully"
+        })
+
+    } catch (error: any) {
+        console.error('❌ Market resolution failed:', error)
+        return NextResponse.json({
+            error: "Market resolution failed",
+            details: error.message
+        }, { status: 500 })
     }
 }

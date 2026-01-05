@@ -743,6 +743,74 @@ export default function MarketPage() {
 
   // Handle market resolution
   const handleResolveMarket = async () => {
+    const marketCapValue = parseFloat(finalMarketCap)
+    if (!finalMarketCap || marketCapValue <= 0 || isNaN(marketCapValue)) {
+      setResolveError("Enter a valid final market cap")
+      return
+    }
+
+    if (!market) {
+      setResolveError("Market data not loaded")
+      return
+    }
+
+    if (market.resolved) {
+      setResolveError("Market is already resolved")
+      return
+    }
+
+    // Check if market has expired
+    const now = Math.floor(Date.now() / 1000)
+    if (now < Number(market.endTimestamp)) {
+      setResolveError("Market has not expired yet")
+      return
+    }
+
+    setResolving(true)
+    setResolveError(null)
+
+    try {
+      console.log('🔍 Resolving market via backend:', {
+        marketPda: market.marketPda.toString(),
+        finalMarketCap: marketCapValue
+      })
+
+      // Call backend API to resolve market
+      const response = await fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'resolve_market',
+          marketPda: market.marketPda.toString(),
+          finalMarketCap: marketCapValue.toString()
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Resolution failed')
+      }
+
+      console.log('✅ Market resolved via backend:', result)
+
+      // Refresh market data
+      await Promise.all([
+        fetchMarket(false),
+        fetchUserPosition()
+      ])
+
+      // Reset form
+      setFinalMarketCap("")
+      setResolving(false)
+      setResolveSuccess(`Market resolved successfully! TX: ${result.signature.slice(0, 8)}...`)
+
+    } catch (error: any) {
+      console.error("Resolve error:", error)
+      setResolveError(error.message || "Resolution failed")
+      setResolving(false)
+    }
+  }
     if (!walletConnected || !walletAddress || !connection || !wallet || !market) {
       setResolveError("Connect your wallet")
       return
