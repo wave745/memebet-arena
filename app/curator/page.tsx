@@ -256,8 +256,9 @@ export default function AdminPage() {
             // Get the PDA before creating
             const [marketPda] = getMarketPda(mintPubkey, capBN, endBN)
 
-            // Market creation is not available in Vercel/serverless environment
-            throw new Error("Market creation is only available in development/local environment. Use the local development server to create markets on the blockchain.")
+            // TODO: Add actual blockchain market creation transaction here
+            // For now, we'll create the market metadata and sync to database
+            console.log("Market PDA calculated:", marketPda.toString())
 
             // Save to localStorage so it appears on the main page
             saveCreatedMarket(marketPda.toString(), ticker || tokenMint.slice(0, 6), category)
@@ -278,6 +279,9 @@ export default function AdminPage() {
                 })
             })
             console.log("Sync response:", syncResponse.status, await syncResponse.text())
+
+            // Use PDA as placeholder transaction hash since no actual transaction yet
+            const tx = marketPda.toString()
 
             // Notify Activity Backend
             fetch('/api/activity', {
@@ -302,7 +306,7 @@ export default function AdminPage() {
 
             setStatus({
                 type: 'success',
-                msg: `MARKET_DEPLOYED! PDA: ${marketPda.toString().slice(0, 12)}... TX: ${tx.slice(0, 8)}...`
+                msg: `MARKET_CREATED! PDA: ${marketPda.toString().slice(0, 12)}...`
             })
 
             setTokenMint("")
