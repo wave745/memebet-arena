@@ -22,7 +22,7 @@ const MARKET_DISCRIMINATOR = Buffer.from([219, 190, 213, 55, 0, 227, 198, 154])
 /**
  * Parse market account data from raw Solana account bytes
  */
-function parseMarketAccount(accountData: Uint8Array): FrontendMarketData | null {
+export function parseMarketAccount(accountData: Uint8Array): FrontendMarketData | null {
   try {
     console.log(`Parsing account data, length: ${accountData.length}`)
     console.log(`Account data type: ${typeof accountData}, constructor: ${accountData.constructor.name}`)
