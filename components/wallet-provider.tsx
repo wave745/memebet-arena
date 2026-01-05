@@ -14,6 +14,11 @@ import {
 } from "@solana/wallet-adapter-react-ui"
 import {
   PhantomWalletAdapter,
+  SolflareWalletAdapter,
+  BackpackWalletAdapter,
+  GlowWalletAdapter,
+  BraveWalletAdapter,
+  CoinbaseWalletAdapter,
 } from "@solana/wallet-adapter-wallets"
 import * as anchor from "@coral-xyz/anchor"
 
@@ -291,7 +296,16 @@ const WalletStateWrapper: FC<{ children: React.ReactNode }> = ({ children }) => 
     solBalance,
     connection,
     wallet: anchorWallet,
-    connect: manualReconnect,
+    connect: async () => {
+      console.log('🔗 Attempting wallet connection...')
+      try {
+        await manualReconnect()
+        console.log('✅ Wallet connection successful')
+      } catch (error) {
+        console.error('❌ Wallet connection failed:', error)
+        throw error
+      }
+    },
     disconnect: async () => {
       console.log('🔌 Disconnecting wallet...')
       await solanaDisconnect()
