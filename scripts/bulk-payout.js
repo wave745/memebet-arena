@@ -141,12 +141,6 @@ async function bulkPayout() {
         resolvedMarkets.forEach(market => {
             console.log(`   ${market.tokenSymbol}: ${market.outcome ? 'YES' : 'NO'} wins (Final: $${market.finalMarketCap || 'N/A'})`)
         })
-        }
-
-        console.log(`\n🎉 Bulk payout complete:`)
-        console.log(`   ✅ Positions paid: ${totalPayouts}`)
-        console.log(`   👥 Winners paid: ${totalWinners}`)
-        console.log(`💰 All winnings automatically distributed!`)
 
     } finally {
         client.release()
