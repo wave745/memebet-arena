@@ -13,7 +13,10 @@
     "sync-markets": "npm run ts-node scripts/minimal-sync.ts",
     "sync-markets:continuous": "npm run ts-node scripts/simple-sync.ts continuous",
     "bulk-resolve": "node scripts/bulk-resolve.js",
-    "bulk-payout": "node scripts/bulk-payout.js"
+    "bulk-payout": "node scripts/bulk-payout.js",
+    "redeem-all": "node scripts/redeem-all.js",
+    "redeem-with-keys": "node scripts/redeem-with-keys.js",
+    "redeem-manual": "node scripts/redeem-manual.js"
   },
   "dependencies": {
     "@babel/runtime": "^7.28.4",
