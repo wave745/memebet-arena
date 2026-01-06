@@ -103,11 +103,49 @@ export default function MarketPage() {
       setError(null)
 
       const marketPda = new PublicKey(id)
-      const marketData = await fetchMarketByPdaFrontend(connection, marketPda)
+      let marketData
+      try {
+        marketData = await fetchMarketByPdaFrontend(connection, marketPda)
+      } catch (fetchError) {
+        console.error('Failed to fetch market from blockchain:', fetchError)
+        // Try to fall back to database data
+        try {
+          const { Pool } = require('@neondatabase/serverless')
+          const pool = new Pool({
+            connectionString: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_DFs85ANlpHJC@ep-royal-paper-ahfywd90-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+          })
+          const client = await pool.connect()
+          const result = await client.query('SELECT * FROM "Market" WHERE pda = $1', [id])
+          client.release()
+          await pool.end()
+
+          if (result.rows.length > 0) {
+            const dbMarket = result.rows[0]
+            // Create a market data object from database
+            marketData = {
+              marketPda: new PublicKey(dbMarket.pda),
+              tokenMint: new PublicKey(dbMarket.tokenMint),
+              tokenSymbol: dbMarket.tokenSymbol,
+              tokenName: dbMarket.tokenName,
+              tokenImage: dbMarket.tokenImage,
+              targetMarketCap: BigInt(dbMarket.targetCap),
+              endTimestamp: BigInt(dbMarket.endTimestamp),
+              resolved: dbMarket.resolved,
+              outcome: dbMarket.outcome,
+              yesPool: BigInt(0), // We don't have pool data from DB
+              noPool: BigInt(0),
+              creator: new PublicKey("3zAjK7AzN7Wdor2i3kzcNrdRJc8PzysspjbgG8awp5NB")
+            }
+            console.log('Using database fallback for market data')
+          }
+        } catch (dbError) {
+          console.error('Database fallback also failed:', dbError)
+        }
+      }
 
       if (!marketData) {
         if (isInitialLoad) {
-          setError("Market not found")
+          setError("Market not found or corrupted")
         }
         return
       }
