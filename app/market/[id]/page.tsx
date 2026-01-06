@@ -105,22 +105,31 @@ export default function MarketPage() {
       const marketPda = new PublicKey(id)
       let marketData
       try {
+        console.log('Attempting to fetch market from blockchain:', id)
         marketData = await fetchMarketByPdaFrontend(connection, marketPda)
+        console.log('Successfully fetched market from blockchain')
       } catch (fetchError) {
-        console.error('Failed to fetch market from blockchain:', fetchError)
+        console.error('Failed to fetch market from blockchain:', fetchError.message)
+        console.log('Attempting database fallback...')
+
         // Try to fall back to database data
         try {
           const { Pool } = require('@neondatabase/serverless')
           const pool = new Pool({
             connectionString: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_DFs85ANlpHJC@ep-royal-paper-ahfywd90-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
           })
+          console.log('Database pool created')
+
           const client = await pool.connect()
+          console.log('Database client connected')
+
           const result = await client.query('SELECT * FROM "Market" WHERE pda = $1', [id])
-          client.release()
-          await pool.end()
+          console.log('Database query executed, found', result.rows.length, 'rows')
 
           if (result.rows.length > 0) {
             const dbMarket = result.rows[0]
+            console.log('Creating market data from database:', dbMarket.pda)
+
             // Create a market data object from database
             marketData = {
               marketPda: new PublicKey(dbMarket.pda),
@@ -128,42 +137,65 @@ export default function MarketPage() {
               tokenSymbol: dbMarket.tokenSymbol,
               tokenName: dbMarket.tokenName,
               tokenImage: dbMarket.tokenImage,
-              targetMarketCap: BigInt(dbMarket.targetCap),
-              endTimestamp: BigInt(dbMarket.endTimestamp),
-              resolved: dbMarket.resolved,
+              targetMarketCap: BigInt(dbMarket.targetCap || '0'),
+              endTimestamp: BigInt(dbMarket.endTimestamp || '0'),
+              resolved: dbMarket.resolved || false,
               outcome: dbMarket.outcome,
               yesPool: BigInt(0), // We don't have pool data from DB
               noPool: BigInt(0),
               creator: new PublicKey("3zAjK7AzN7Wdor2i3kzcNrdRJc8PzysspjbgG8awp5NB")
             }
-            console.log('Using database fallback for market data')
+            console.log('✅ Successfully created market data from database')
+          } else {
+            console.log('❌ No market found in database')
           }
+
+          client.release()
+          await pool.end()
+          console.log('Database connection closed')
+
         } catch (dbError) {
-          console.error('Database fallback also failed:', dbError)
+          console.error('❌ Database fallback failed:', dbError.message)
+          console.error('Full error:', dbError)
         }
       }
 
       if (!marketData) {
+        console.error('❌ No market data available after all attempts')
         if (isInitialLoad) {
           setError("Market not found or corrupted")
         }
         return
       }
 
-      setMarket({
-        marketPda: marketData.marketPda,
-        tokenMint: marketData.tokenMint,
-        tokenSymbol: marketData.tokenSymbol,
-        tokenName: marketData.tokenName,
-        tokenImage: marketData.tokenImage,
-        targetMarketCap: marketData.targetMarketCap,
-        endTimestamp: marketData.endTimestamp,
-        resolved: marketData.resolved,
-        yesPool: marketData.yesPool,
-        noPool: marketData.noPool,
-        outcome: marketData.outcome,
-        creator: marketData.creator,
+      console.log('Setting market data:', {
+        pda: marketData.marketPda?.toString(),
+        symbol: marketData.tokenSymbol,
+        resolved: marketData.resolved
       })
+
+      try {
+        setMarket({
+          marketPda: marketData.marketPda,
+          tokenMint: marketData.tokenMint,
+          tokenSymbol: marketData.tokenSymbol,
+          tokenName: marketData.tokenName,
+          tokenImage: marketData.tokenImage,
+          targetMarketCap: marketData.targetMarketCap,
+          endTimestamp: marketData.endTimestamp,
+          resolved: marketData.resolved,
+          yesPool: marketData.yesPool,
+          noPool: marketData.noPool,
+          outcome: marketData.outcome,
+          creator: marketData.creator,
+        })
+        console.log('✅ Market data set successfully')
+      } catch (setError) {
+        console.error('❌ Failed to set market data:', setError)
+        if (isInitialLoad) {
+          setError("Failed to load market data")
+        }
+      }
     } catch (err: any) {
       console.error("Failed to fetch market:", err)
       if (isInitialLoad) {
