@@ -120,7 +120,6 @@ export default function AdminPage() {
     const { walletConnected, walletAddress, connection, wallet } = useWallet()
     const router = useRouter()
     const [loading, setLoading] = useState(false)
-    const [authorized, setAuthorized] = useState<boolean | null>(null)
 
     // Form State
     const [tokenMint, setTokenMint] = useState("")
@@ -169,23 +168,11 @@ export default function AdminPage() {
         }
     }, [])
 
-    // Persistence
+    // Persistence (not functionally gating access)
     const saveWhitelist = (newList: string[]) => {
         setWhitelist(newList)
         localStorage.setItem('tm_whitelist', JSON.stringify(newList))
     }
-
-    useEffect(() => {
-        if (walletConnected && walletAddress) {
-            const isWhitelisted = whitelist.includes(walletAddress)
-            if (walletAddress === ADMIN_PUBKEY || isWhitelisted) {
-                setAuthorized(true)
-            } else {
-                setAuthorized(false)
-                setTimeout(() => router.push("/"), 2000)
-            }
-        }
-    }, [walletConnected, walletAddress, router, whitelist])
 
     // Auto-fetch token data when mint is complete (immediate for better UX)
     useEffect(() => {
@@ -317,7 +304,11 @@ export default function AdminPage() {
             })
             console.log("Sync response:", syncResponse.status, await syncResponse.text())
 
-            // Use the actual transaction signature
+            // Also automatically trigger a full sync to catch any other unsynced markets
+            fetch('/api/markets/sync-all', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => console.log("Auto sync-all result:", data))
+                .catch(err => console.error("Auto sync-all failed:", err))
 
             // Notify Activity Backend
             fetch('/api/activity', {
@@ -378,19 +369,7 @@ export default function AdminPage() {
         }
     }
 
-    if (authorized === false) {
-        return (
-            <div className="min-h-screen bg-[#0B0B0D] flex items-center justify-center p-6">
-                <div className="glass-card p-12 text-center space-y-6 max-w-sm border border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)]">
-                    <div className="flex justify-center">
-                        <ShieldAlert className="h-12 w-12 text-red-500 animate-pulse" />
-                    </div>
-                    <div className="text-red-500 font-black text-2xl uppercase tracking-tighter">SEC_VIOLATION</div>
-                    <div className="text-white/40 text-sm italic">"Your clearance level is insufficient for this sector."</div>
-                </div>
-            </div>
-        )
-    }
+
 
     return (
         <div className="min-h-screen bg-[#060608] text-white selection:bg-neon-green/30 selection:text-black font-sans">
