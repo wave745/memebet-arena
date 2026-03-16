@@ -14,11 +14,6 @@ import {
 } from "@solana/wallet-adapter-react-ui"
 import {
   PhantomWalletAdapter,
-  SolflareWalletAdapter,
-  BackpackWalletAdapter,
-  GlowWalletAdapter,
-  BraveWalletAdapter,
-  CoinbaseWalletAdapter,
 } from "@solana/wallet-adapter-wallets"
 import * as anchor from "@coral-xyz/anchor"
 
@@ -53,8 +48,8 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined)
 
 export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Always use Mainnet for production deployment
-  const network = WalletAdapterNetwork.Mainnet
+  // Switch to Devnet for now
+  const network = WalletAdapterNetwork.Devnet
 
   // RPC endpoint from environment variable only
   const getEndpoint = () => {
@@ -74,9 +69,9 @@ export const WalletProvider: FC<{ children: React.ReactNode }> = ({ children }) 
       return process.env.NEXT_PUBLIC_RPC_URL
     }
 
-    // If no RPC URL is set, use the default mainnet endpoint
-    console.warn("⚠️ No NEXT_PUBLIC_RPC_URL set, using default mainnet RPC")
-    return "https://api.mainnet-beta.solana.com"
+    // If no RPC URL is set, use the default devnet endpoint
+    console.warn("⚠️ No NEXT_PUBLIC_RPC_URL set, using default devnet RPC")
+    return "https://api.devnet.solana.com"
   }
 
   const endpoint = getEndpoint()

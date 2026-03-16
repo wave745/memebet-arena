@@ -236,7 +236,7 @@ export function BetSection({
                   Transaction submitted: {side} <SolanaLogo size={14} />{amount}
                 </p>
                 <a
-                  href={`https://solscan.io/tx/${txSignature}`}
+                  href={`https://solscan.io/tx/${txSignature}?cluster=devnet`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-muted-foreground hover:text-foreground underline block"

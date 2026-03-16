@@ -787,7 +787,7 @@ function ActiveBetsTab({
                   onClick={(e) => {
                     e.stopPropagation() // Prevent card click when clicking external link
                     window.open(
-                      `https://solscan.io/account/${position.marketPda.toString()}`,
+                      `https://solscan.io/account/${position.marketPda.toString()}?cluster=devnet`,
                       "_blank"
                     )
                   }}
@@ -999,7 +999,7 @@ function HistoryTab({
                 size="sm"
                 onClick={() => {
                   window.open(
-                    `https://solscan.io/account/${position.marketPda.toString()}`,
+                    `https://solscan.io/account/${position.marketPda.toString()}?cluster=devnet`,
                     "_blank"
                   )
                 }}
@@ -1133,7 +1133,7 @@ function TransactionsTab({
                 size="sm"
                 onClick={() => {
                   window.open(
-                    `https://solscan.io/tx/${tx.signature}`,
+                    `https://solscan.io/tx/${tx.signature}?cluster=devnet`,
                     "_blank"
                   )
                 }}

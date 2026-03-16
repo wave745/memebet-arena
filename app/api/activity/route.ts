@@ -303,7 +303,7 @@ async function handleResolveMarket(body: any) {
 
         // Setup connection
         const connection = new Connection(
-            process.env.NEXT_PUBLIC_RPC_URL || "https://api.mainnet-beta.solana.com",
+            process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com",
             "confirmed"
         )
 
@@ -429,7 +429,7 @@ async function handleBulkResolveAll(body: any) {
 
         // Setup connection
         const connection = new Connection(
-            process.env.NEXT_PUBLIC_RPC_URL || "https://api.mainnet-beta.solana.com",
+            process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com",
             "confirmed"
         )
 
