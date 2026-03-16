@@ -14,7 +14,7 @@ const { Connection, PublicKey, Keypair, Transaction, SystemProgram, LAMPORTS_PER
 const { Pool } = require('@neondatabase/serverless')
 
 // Program constants and helper functions
-const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
+const PROGRAM_ID = new PublicKey("G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP")
 
 // Admin redeem discriminator - would need to be calculated for deployed program
 // For now, we'll use bulk payout approach

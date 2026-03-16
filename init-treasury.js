@@ -21,7 +21,7 @@ async function main() {
   anchor.setProvider(provider);
 
   // Program ID
-  const programId = new PublicKey('ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL');
+  const programId = new PublicKey('G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP');
 
   console.log('Testing basic program interaction...');
 

@@ -92,7 +92,7 @@ async function adminRedeem() {
 
                 const [vaultPDA] = PublicKey.findProgramAddressSync(
                     vaultSeeds,
-                    new PublicKey('ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL')
+                    new PublicKey('G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP')
                 )
 
                 const marketSeeds = [
@@ -104,7 +104,7 @@ async function adminRedeem() {
 
                 const [marketPDA] = PublicKey.findProgramAddressSync(
                     marketSeeds,
-                    new PublicKey('ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL')
+                    new PublicKey('G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP')
                 )
 
                 // Check vault balance

@@ -8,7 +8,7 @@ import 'dotenv/config'
 import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js"
 
 // Program ID from the code
-const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
+const PROGRAM_ID = new PublicKey("G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP")
 
 async function checkProgram() {
   console.log("🔍 Checking program deployment status...")
@@ -77,14 +77,14 @@ async function checkProgram() {
     // Try to get program accounts (this is what the sync script does)
     console.log("\n📊 Checking for program accounts...")
 
-    console.log("Market struct size:", 8 + 32 + 32 + 8 + 8 + 8 + 8 + 1 + 2)
+    console.log("Market struct size:", 106)
 
     try {
       console.log("Trying dataSize filter...")
       const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
         filters: [
           {
-            dataSize: 8 + 32 + 32 + 8 + 8 + 8 + 8 + 1 + 2, // Market struct size
+            dataSize: 106, // Market struct size
           }
         ]
       })

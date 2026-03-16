@@ -93,7 +93,7 @@ async function redeemAll() {
 
                 const [vaultPDA] = PublicKey.findProgramAddressSync(
                     vaultSeeds,
-                    new PublicKey('ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL')
+                    new PublicKey('G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP')
                 )
 
                 // Check vault balance

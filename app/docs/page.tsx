@@ -485,7 +485,7 @@ export default function DocsPage() {
                       Official Trenchmarket smart contract address:
                     </p>
                     <code className="text-xs bg-black/40 px-2 py-1 rounded font-mono text-neon-green break-all">
-                      ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL
+                      G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP
                     </code>
                   </div>
                 </div>

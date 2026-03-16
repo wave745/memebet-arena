@@ -14,7 +14,7 @@ const { Connection, PublicKey, Keypair, Transaction, TransactionInstruction, LAM
 const { Pool } = require('@neondatabase/serverless')
 
 // Program constants and helper functions (copied from lib/solana/instructions.ts)
-const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
+const PROGRAM_ID = new PublicKey("G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP")
 
 // Computed: sha256("global:redeem")[0..8]
 const REDEEM_DISCRIMINATOR = Buffer.from([184, 12, 86, 149, 70, 196, 97, 225])

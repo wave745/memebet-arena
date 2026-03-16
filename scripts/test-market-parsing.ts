@@ -74,7 +74,7 @@ function parseMarketAccount(accountData: Buffer): any | null {
 
 // Test with a mock market account
 function createMockMarketAccount(): Buffer {
-  const buffer = Buffer.alloc(8 + 32 + 32 + 8 + 8 + 8 + 8 + 1 + 2) // Market struct size
+  const buffer = Buffer.alloc(106) // Market struct size
 
   let offset = 0
 

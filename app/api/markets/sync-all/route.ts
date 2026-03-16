@@ -19,16 +19,17 @@ export async function POST(request: Request) {
         
         // Setup Solana connection
         const { Connection, PublicKey } = await import('@solana/web3.js')
-        const connection = new Connection(
-            process.env.NEXT_PUBLIC_RPC_URL || "https://api.devnet.solana.com",
-            "confirmed"
-        )
-        const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
+        
+        // Force public devnet RPC for stability during seeding
+        const rpcUrl = "https://api.devnet.solana.com"
+        
+        const connection = new Connection(rpcUrl, "confirmed")
+        const PROGRAM_ID = new PublicKey("G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP")
         const MARKET_DISCRIMINATOR = Buffer.from([219, 190, 213, 55, 0, 227, 198, 154])
         
         // Discover markets from blockchain
         const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
-            filters: [{ dataSize: 8 + 32 + 32 + 8 + 8 + 8 + 8 + 1 + 2 }]
+            filters: [{ dataSize: 106 }]
         })
         
         console.log(`Sync-all: Found ${accounts.length} program accounts`)

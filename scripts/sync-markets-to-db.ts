@@ -12,7 +12,7 @@ import { getTokenMetadata } from "../lib/utils/token-metadata"
 import * as anchor from "@coral-xyz/anchor"
 
 // Program ID for the deployed contract
-const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
+const PROGRAM_ID = new PublicKey("G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP")
 
 // Market account discriminator (first 8 bytes of sha256("account:Market"))
 const MARKET_DISCRIMINATOR = Buffer.from([219, 190, 213, 55, 0, 227, 198, 154])
@@ -96,7 +96,7 @@ async function discoverMarkets(connection: Connection): Promise<{ pubkey: Public
       filters: [
         {
           // Filter by account size (Market accounts should be exactly this size)
-          dataSize: 8 + 32 + 32 + 8 + 8 + 8 + 8 + 1 + 2, // discriminator + Market struct
+          dataSize: 106, // discriminator + Market struct
         }
       ]
     })

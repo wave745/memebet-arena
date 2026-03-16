@@ -2,7 +2,7 @@ import { PublicKey, TransactionInstruction, SystemProgram, SYSVAR_RENT_PUBKEY } 
 import * as anchor from "@coral-xyz/anchor"
 import { getMarketVaultPda } from "@/lib/anchor/program"
 
-export const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
+export const PROGRAM_ID = new PublicKey("G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP")
 
 // Instruction discriminators (first 8 bytes of sha256("global:instruction_name"))
 // Computed: sha256("global:place_bet")[0..8]

@@ -13,7 +13,7 @@ const { Pool } = require('@neondatabase/serverless')
 
 // Instruction discriminator for resolve_market
 const RESOLVE_MARKET_DISCRIMINATOR = Buffer.from([155, 23, 80, 173, 46, 74, 23, 239])
-const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
+const PROGRAM_ID = new PublicKey("G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP")
 
 // Simple instruction builder (copied from lib/solana/instructions.ts)
 function serializeResolveMarketArgs(finalMarketCap) {

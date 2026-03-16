@@ -13,7 +13,7 @@ async function main() {
   console.log('Admin:', keypair.publicKey.toString());
 
   // Program ID
-  const programId = new PublicKey('ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL');
+  const programId = new PublicKey('G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP');
 
   // Derive treasury PDA
   const [treasuryPDA] = PublicKey.findProgramAddressSync(
