@@ -114,18 +114,55 @@ function serializeRedeemArgs(outcome: boolean): Buffer {
 }
 
 /**
+ * Derive vault PDA for a market
+ */
+export function deriveVaultPda(
+  tokenMint: PublicKey,
+  targetMarketCap: bigint,
+  endTimestamp: bigint
+): PublicKey {
+  const targetCapBytes = Buffer.alloc(8)
+  targetCapBytes.writeBigUInt64LE(targetMarketCap)
+
+  const endTimestampBytes = Buffer.alloc(8)
+  endTimestampBytes.writeBigInt64LE(endTimestamp)
+
+  const seeds = [
+    Buffer.from('vault'),
+    tokenMint.toBuffer(),
+    targetCapBytes,
+    endTimestampBytes
+  ]
+
+  const [vaultPda] = PublicKey.findProgramAddressSync(seeds, PROGRAM_ID)
+  return vaultPda
+}
+
+/**
+ * Derive treasury PDA
+ */
+export function deriveTreasuryPda(): PublicKey {
+  const seeds = [Buffer.from('treasury')]
+  const [treasuryPda] = PublicKey.findProgramAddressSync(seeds, PROGRAM_ID)
+  return treasuryPda
+}
+
+/**
  * Build a raw redeem instruction (claim winnings after market resolution)
- * 
+ *
  * Account order (must match Redeem struct in Rust):
  * 0. market (mut, Account<Market>)
- * 1. position (mut, Account<Position>, has_one = user, PDA with outcome in seeds)
- * 2. market_escrow (mut, SystemAccount - same as market PDA)
- * 3. user (mut, signer)
- * 
+ * 1. market_vault (mut, SystemAccount - vault PDA)
+ * 2. treasury (mut, Account<Treasury>)
+ * 3. position (mut, Account<Position>)
+ * 4. user (mut, signer)
+ *
  * Args: (outcome: bool)
  */
 export function buildRedeemInstruction(
   marketPda: PublicKey,
+  vaultPda: PublicKey,
+  treasuryPda: PublicKey,
   positionPda: PublicKey,
   user: PublicKey,
   outcome: boolean
@@ -133,7 +170,7 @@ export function buildRedeemInstruction(
   // Serialize instruction args (outcome)
   const argsBuffer = serializeRedeemArgs(outcome)
   const data = Buffer.concat([REDEEM_DISCRIMINATOR, argsBuffer])
-  
+
   // Build accounts in exact order (matches Redeem struct)
   const keys = [
     {
@@ -142,22 +179,27 @@ export function buildRedeemInstruction(
       isWritable: true,
     },
     {
-      pubkey: positionPda,
+      pubkey: vaultPda, // market_vault
       isSigner: false,
       isWritable: true,
     },
     {
-      pubkey: marketPda, // market_escrow is the same as market PDA
+      pubkey: treasuryPda, // treasury
       isSigner: false,
       isWritable: true,
     },
     {
-      pubkey: user,
+      pubkey: positionPda, // position
+      isSigner: false,
+      isWritable: true,
+    },
+    {
+      pubkey: user, // user
       isSigner: true,
       isWritable: true,
     },
   ]
-  
+
   return new TransactionInstruction({
     programId: PROGRAM_ID,
     keys,

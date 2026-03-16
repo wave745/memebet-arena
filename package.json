@@ -16,7 +16,8 @@
     "bulk-payout": "node scripts/bulk-payout.js",
     "redeem-all": "node scripts/redeem-all.js",
     "redeem-with-keys": "node scripts/redeem-with-keys.js",
-    "redeem-manual": "node scripts/redeem-manual.js"
+    "redeem-manual": "node scripts/redeem-manual.js",
+    "close-program": "node scripts/close-program.js"
   },
   "dependencies": {
     "@babel/runtime": "^7.28.4",

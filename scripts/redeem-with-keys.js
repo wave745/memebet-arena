@@ -10,9 +10,99 @@
 // Load environment variables
 require('dotenv').config()
 
-const { Connection, PublicKey, Keypair, Transaction, LAMPORTS_PER_SOL } = require("@solana/web3.js")
+const { Connection, PublicKey, Keypair, Transaction, TransactionInstruction, LAMPORTS_PER_SOL } = require("@solana/web3.js")
 const { Pool } = require('@neondatabase/serverless')
-const { buildRedeemInstruction, deriveVaultPda, deriveTreasuryPda } = require("../lib/solana/instructions")
+
+// Program constants and helper functions (copied from lib/solana/instructions.ts)
+const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
+
+// Computed: sha256("global:redeem")[0..8]
+const REDEEM_DISCRIMINATOR = Buffer.from([184, 12, 86, 149, 70, 196, 97, 225])
+
+/**
+ * Serialize redeem instruction args manually (Borsh format)
+ * Args: (outcome: bool)
+ * - outcome: u8 (1 byte) - 0 for false, 1 for true
+ */
+function serializeRedeemArgs(outcome) {
+  const buffer = Buffer.allocUnsafe(1) // 1 byte (u8)
+  buffer.writeUInt8(outcome ? 1 : 0, 0)
+  return buffer
+}
+
+/**
+ * Derive vault PDA for a market
+ */
+function deriveVaultPda(tokenMint, targetMarketCap, endTimestamp) {
+  const targetCapBytes = Buffer.alloc(8)
+  targetCapBytes.writeBigUInt64LE(BigInt(targetMarketCap))
+
+  const endTimestampBytes = Buffer.alloc(8)
+  endTimestampBytes.writeBigInt64LE(BigInt(endTimestamp))
+
+  const seeds = [
+    Buffer.from('vault'),
+    tokenMint.toBuffer(),
+    targetCapBytes,
+    endTimestampBytes
+  ]
+
+  const [vaultPda] = PublicKey.findProgramAddressSync(seeds, PROGRAM_ID)
+  return vaultPda
+}
+
+/**
+ * Derive treasury PDA
+ */
+function deriveTreasuryPda() {
+  const seeds = [Buffer.from('treasury')]
+  const [treasuryPda] = PublicKey.findProgramAddressSync(seeds, PROGRAM_ID)
+  return treasuryPda
+}
+
+/**
+ * Build a raw redeem instruction (claim winnings after market resolution)
+ */
+function buildRedeemInstruction(marketPda, vaultPda, treasuryPda, positionPda, user, outcome) {
+  // Serialize instruction args (outcome)
+  const argsBuffer = serializeRedeemArgs(outcome)
+  const data = Buffer.concat([REDEEM_DISCRIMINATOR, argsBuffer])
+
+  // Build accounts in exact order (matches Redeem struct)
+  const keys = [
+    {
+      pubkey: marketPda,
+      isSigner: false,
+      isWritable: true,
+    },
+    {
+      pubkey: vaultPda, // market_vault
+      isSigner: false,
+      isWritable: true,
+    },
+    {
+      pubkey: treasuryPda, // treasury
+      isSigner: false,
+      isWritable: true,
+    },
+    {
+      pubkey: positionPda, // position
+      isSigner: false,
+      isWritable: true,
+    },
+    {
+      pubkey: user, // user
+      isSigner: true,
+      isWritable: true,
+    },
+  ]
+
+  return new TransactionInstruction({
+    programId: PROGRAM_ID,
+    keys,
+    data,
+  })
+}
 
 async function redeemWithKeys() {
     console.log('🔑 Starting redemption with private keys...')

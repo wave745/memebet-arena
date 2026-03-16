@@ -22,20 +22,20 @@ async function bulkPayout() {
         "confirmed"
     )
 
-    // Load admin keypair
-    const adminPrivateKey = process.env.ADMIN_PRIVATE_KEY
-    if (!adminPrivateKey) {
-        console.error('❌ ADMIN_PRIVATE_KEY not configured')
+    // Load paying wallet keypair (the wallet that will send the SOL)
+    const payingPrivateKey = process.env.PAYING_PRIVATE_KEY || process.env.ADMIN_PRIVATE_KEY
+    if (!payingPrivateKey) {
+        console.error('❌ PAYING_PRIVATE_KEY or ADMIN_PRIVATE_KEY not configured')
         process.exit(1)
     }
 
-    let adminKeypair
+    let payingKeypair
     try {
-        const secretKey = Uint8Array.from(JSON.parse(adminPrivateKey))
-        adminKeypair = Keypair.fromSecretKey(secretKey)
-        console.log('✅ Admin wallet loaded:', adminKeypair.publicKey.toString())
+        const secretKey = Uint8Array.from(JSON.parse(payingPrivateKey))
+        payingKeypair = Keypair.fromSecretKey(secretKey)
+        console.log('✅ Paying wallet loaded:', payingKeypair.publicKey.toString())
     } catch (error) {
-        console.error('❌ Failed to load admin keypair:', error)
+        console.error('❌ Failed to load paying keypair:', error)
         process.exit(1)
     }
 
@@ -71,9 +71,7 @@ async function bulkPayout() {
         // MANUAL PAYOUT LIST - Add winners here
         // Format: { address: "wallet_address", amount: "amount_in_lamports", market: "market_name" }
         const manualPayouts = [
-            // Example format:
-            // { address: "11111111111111111111111111111112", amount: "1000000", market: "CHILLHOUSE" },
-            // Add your winners here...
+            { address: "6FRFEiBdxYRdNVa6z6rS9Rb7ioGzXz936vxAJjRvZxAS", amount: "9000000", market: "Winner Payout" }, // 0.009 SOL (leaving buffer for rent)
         ]
 
         console.log(`📋 Manual payouts to process: ${manualPayouts.length}`)
@@ -95,19 +93,19 @@ async function bulkPayout() {
 
                 // Create transfer instruction
                 const transferInstruction = SystemProgram.transfer({
-                    fromPubkey: adminKeypair.publicKey,
+                    fromPubkey: payingKeypair.publicKey,
                     toPubkey: userPubkey,
                     lamports: payoutAmount
                 })
 
                 // Create and send transaction
                 const transaction = new Transaction().add(transferInstruction)
-                transaction.feePayer = adminKeypair.publicKey
+                transaction.feePayer = payingKeypair.publicKey
 
                 const { blockhash } = await connection.getLatestBlockhash("confirmed")
                 transaction.recentBlockhash = blockhash
 
-                transaction.sign(adminKeypair)
+                transaction.sign(payingKeypair)
 
                 console.log('📤 Sending payout transaction...')
                 const signature = await connection.sendRawTransaction(

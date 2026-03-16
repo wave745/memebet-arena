@@ -13,6 +13,97 @@ export type MemebetArena = {
   },
   "instructions": [
     {
+      "name": "adminRedeem",
+      "docs": [
+        "Admin redeem - allows admin to claim all remaining funds from a resolved market vault"
+      ],
+      "discriminator": [
+        64,
+        229,
+        246,
+        140,
+        230,
+        210,
+        77,
+        190
+      ],
+      "accounts": [
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.token_mint",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.target_market_cap",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.end_timestamp",
+                "account": "market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "marketVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.token_mint",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.target_market_cap",
+                "account": "market"
+              },
+              {
+                "kind": "account",
+                "path": "market.end_timestamp",
+                "account": "market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "createMarket",
       "discriminator": [
         103,

@@ -7,6 +7,9 @@
  * Run this from the terminal to process all pending market resolutions.
  */
 
+// Load environment variables
+require('dotenv').config()
+
 // Using built-in fetch (Node.js 18+)
 
 async function bulkResolveMarkets() {
@@ -14,15 +17,34 @@ async function bulkResolveMarkets() {
     console.log('⏳ This may take several minutes depending on the number of markets...');
 
     try {
-        const response = await fetch('https://trench-market.fun/api/activity', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'bulk_resolve_all'
-            })
-        });
+        let response;
+
+        // Try localhost first, fallback to production
+        try {
+            console.log('🌐 Trying localhost API...');
+            response = await fetch('http://localhost:3000/api/activity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'bulk_resolve_all'
+                }),
+                signal: AbortSignal.timeout(5000) // 5 second timeout
+            });
+            console.log('✅ Using localhost API');
+        } catch (localError) {
+            console.log('🌐 Localhost not available, trying production...');
+            response = await fetch('https://trench-market.fun/api/activity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'bulk_resolve_all'
+                })
+            });
+        }
 
         console.log('📡 API Response Status:', response.status);
         console.log('📡 API Response Headers:', Object.fromEntries(response.headers.entries()));

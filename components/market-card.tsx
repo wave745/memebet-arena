@@ -12,6 +12,7 @@ import { X, Copy, Check } from "lucide-react"
 import { SolanaLogo } from "./solana-logo"
 import { formatMarketCapShort } from "@/lib/utils/format-market-cap"
 import { type TokenData } from "@/lib/dexscreener"
+import { useRouter } from "next/navigation"
 
 interface MarketCardProps {
   pda: string
@@ -50,6 +51,7 @@ export function MarketCard({
   const [copied, setCopied] = useState(false)
   const [tokenData, setTokenData] = useState<TokenData | null>(null)
   const [tokenDataLoading, setTokenDataLoading] = useState(false)
+  const router = useRouter()
 
   // Auto-dismiss error after 5 seconds
   useEffect(() => {
@@ -341,7 +343,7 @@ export function MarketCard({
             className="text-xs sm:text-sm font-medium text-[#E5E5E5] leading-tight cursor-pointer hover:text-white fluorescent-interactive transition-colors pt-0.5 inline"
             onClick={() => {
               if (typeof window !== 'undefined') {
-                window.location.href = `/market/${pda}`
+                router.push(`/market/${pda}`)
               }
             }}
           >

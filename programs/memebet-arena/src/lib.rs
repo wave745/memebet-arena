@@ -178,6 +178,27 @@ pub mod memebet_arena {
         Ok(())
     }
 
+    /// Admin redeem - allows admin to claim all remaining funds from a resolved market vault
+    pub fn admin_redeem(ctx: Context<AdminRedeem>) -> Result<()> {
+        // SECURITY: Only authorized admin can perform admin redemption
+        require!(
+            ctx.accounts.admin.key() == ADMIN_PUBKEY,
+            MemeBetError::Unauthorized
+        );
+
+        let market = &ctx.accounts.market;
+        require!(market.resolved, MemeBetError::MarketNotResolved);
+
+        // Get the vault balance
+        let vault_balance = **ctx.accounts.market_vault.to_account_info().lamports.borrow();
+
+        // Transfer entire vault balance to admin
+        **ctx.accounts.market_vault.to_account_info().lamports.borrow_mut() -= vault_balance;
+        **ctx.accounts.admin.to_account_info().lamports.borrow_mut() += vault_balance;
+
+        Ok(())
+    }
+
 
 
     /// Redeem winning position
@@ -392,7 +413,7 @@ pub struct Redeem<'info> {
         seeds = [b"vault", market.token_mint.as_ref(), market.target_market_cap.to_le_bytes().as_ref(), market.end_timestamp.to_le_bytes().as_ref()],
         bump
     )]
-    pub market_vault: SystemAccount<'info>,
+    pub market_vault: UncheckedAccount<'info>,
     #[account(
         mut,
         seeds = [b"treasury"],
@@ -411,6 +432,24 @@ pub struct Redeem<'info> {
 }
 
 #[derive(Accounts)]
+pub struct AdminRedeem<'info> {
+    #[account(
+        mut,
+        seeds = [b"market", market.token_mint.as_ref(), market.target_market_cap.to_le_bytes().as_ref(), market.end_timestamp.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub market: Account<'info, Market>,
+    #[account(
+        mut,
+        seeds = [b"vault", market.token_mint.as_ref(), market.target_market_cap.to_le_bytes().as_ref(), market.end_timestamp.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub market_vault: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub admin: Signer<'info>,
+}
+
+#[derive(Accounts)]
 #[instruction(outcome: bool)]
 pub struct SellShares<'info> {
     #[account(
@@ -424,7 +463,7 @@ pub struct SellShares<'info> {
         seeds = [b"vault", market.token_mint.as_ref(), market.target_market_cap.to_le_bytes().as_ref(), market.end_timestamp.to_le_bytes().as_ref()],
         bump
     )]
-    pub market_vault: SystemAccount<'info>,
+    pub market_vault: UncheckedAccount<'info>,
     #[account(
         mut,
         seeds = [b"treasury"],

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { XLogo } from "@/components/x-logo"
+import { useRouter } from "next/navigation"
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -64,6 +65,8 @@ function DocsIcon({ className }: { className?: string }) {
 }
 
 export default function Home() {
+  const router = useRouter()
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-3 sm:px-4 py-2 sm:py-4 md:py-6 text-center">
       {/* Hero Section */}

@@ -1,6 +1,8 @@
 import { Connection, PublicKey } from "@solana/web3.js"
 
 // Frontend-only market reader - no Anchor dependencies
+// Note: In production, this should be replaced with a proper API call
+// For now, we'll simulate database fallback
 export interface FrontendMarketData {
   marketPda: PublicKey
   tokenMint: PublicKey
@@ -72,17 +74,40 @@ export function parseMarketAccount(accountData: Uint8Array): FrontendMarketData 
     const noPool = accountData.subarray(offset, offset + 8).reduce((acc, byte, i) => acc + (BigInt(byte) << BigInt(i * 8)), BigInt(0))
     offset += 8
 
-    // resolved: bool (1 byte)
-    const resolved = accountData[offset] !== 0
+    // resolved: bool (1 byte) - should be 0 or 1
+    const resolvedByte = accountData[offset]
     offset += 1
+
+    // Validate resolved value (should be exactly 0 or 1)
+    if (resolvedByte !== 0 && resolvedByte !== 1) {
+      console.warn(`Invalid resolved byte: ${resolvedByte} (expected 0 or 1). On-chain data corrupted, using database fallback.`)
+      return null // Trigger database fallback
+    }
+
+    const resolved = resolvedByte === 1
 
     // outcome: Option<bool> (1 byte enum discriminator + optional bool)
     let outcome: boolean | null = null
     const outcomeEnum = accountData[offset]
     offset += 1
-    if (outcomeEnum === 1) { // Some variant
-      outcome = accountData[offset] !== 0
-      offset += 1
+
+    // Validate outcome enum (should be 0 for None, 1 for Some)
+    if (outcomeEnum === 0) {
+      // None - correct
+      outcome = null
+    } else if (outcomeEnum === 1) {
+      // Some - check the bool value
+      const outcomeBool = accountData[offset]
+      if (outcomeBool === 0 || outcomeBool === 1) {
+        outcome = outcomeBool !== 0
+        offset += 1
+      } else {
+        console.warn(`Invalid outcome bool value: ${outcomeBool}, expected 0 or 1. Data corrupted, using database fallback.`)
+        return null // Trigger database fallback
+      }
+    } else {
+      console.warn(`Invalid outcome enum: ${outcomeEnum}, expected 0 or 1. Data corrupted, using database fallback.`)
+      return null // Trigger database fallback
     }
 
     return {
@@ -106,7 +131,39 @@ export function parseMarketAccount(accountData: Uint8Array): FrontendMarketData 
 }
 
 /**
- * Fetch market data by PDA (frontend version)
+ * Fetch market data from database API (fallback when on-chain data is corrupted)
+ */
+async function fetchMarketFromDatabase(marketPda: PublicKey): Promise<FrontendMarketData | null> {
+  try {
+    const response = await fetch(`/api/market/${marketPda.toString()}`)
+    if (!response.ok) {
+      return null
+    }
+    const data = await response.json()
+
+    // Convert API response to FrontendMarketData format
+    return {
+      marketPda: new PublicKey(data.marketPda),
+      tokenMint: new PublicKey(data.tokenMint),
+      tokenSymbol: data.tokenSymbol,
+      tokenName: data.tokenName,
+      tokenImage: data.tokenImage,
+      targetMarketCap: BigInt(data.targetMarketCap),
+      endTimestamp: BigInt(data.endTimestamp),
+      resolved: data.resolved,
+      outcome: data.outcome,
+      yesPool: BigInt(data.yesPool || 0),
+      noPool: BigInt(data.noPool || 0),
+      creator: new PublicKey(data.creator),
+    }
+  } catch (error) {
+    console.warn('Failed to fetch market from database:', error)
+    return null
+  }
+}
+
+/**
+ * Fetch market data by PDA (frontend version with database fallback)
  */
 export async function fetchMarketByPdaFrontend(
   connection: Connection,
@@ -117,19 +174,28 @@ export async function fetchMarketByPdaFrontend(
     const accountInfo = await connection.getAccountInfo(marketPda)
 
     if (!accountInfo) {
-      console.log(`Market account not found: ${marketPda.toString()}`)
-      return null
+      console.log(`Market account not found: ${marketPda.toString()}, trying database fallback`)
+      return await fetchMarketFromDatabase(marketPda)
     }
 
     console.log(`Account info: owner=${accountInfo.owner?.toString()}, space=${accountInfo.space}, data length=${accountInfo.data.length}`)
 
     const marketData = parseMarketAccount(accountInfo.data)
     if (marketData) {
+      // Additional validation: check if the data makes sense
+      // If resolved is false but we know this market should be resolved, use database
+      const dbData = await fetchMarketFromDatabase(marketPda)
+      if (dbData && dbData.resolved && !marketData.resolved) {
+        console.log(`On-chain shows unresolved but database shows resolved, using database data`)
+        return dbData
+      }
+
       marketData.marketPda = marketPda
       return marketData
     }
 
-    return null
+    console.log(`On-chain parsing failed, trying database fallback`)
+    return await fetchMarketFromDatabase(marketPda)
   } catch (error: any) {
     console.error(`Failed to fetch market ${marketPda.toString()}:`, error.message || error)
 
@@ -138,6 +204,8 @@ export async function fetchMarketByPdaFrontend(
       console.error('RPC endpoint may be unreachable. Check NEXT_PUBLIC_RPC_URL configuration.')
     }
 
-    return null
+    // Try database fallback
+    console.log('Trying database fallback due to error')
+    return await fetchMarketFromDatabase(marketPda)
   }
 }

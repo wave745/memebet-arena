@@ -14,7 +14,7 @@ import { Copy, ExternalLink, ArrowUpRight, ArrowDownRight, Share2 } from "lucide
 import { SolanaLogo } from "./solana-logo"
 import { generatePnLImage, type PnLData } from "@/lib/pnl-generator"
 import { Transaction } from "@solana/web3.js"
-import { buildRedeemInstruction } from "@/lib/solana/instructions"
+import { buildRedeemInstruction, deriveVaultPda, deriveTreasuryPda } from "@/lib/solana/instructions"
 import { useRouter } from "next/navigation"
 import { SEEDED_MARKETS } from "@/components/market-feed"
 import { formatMarketCapShort } from "@/lib/utils/format-market-cap"
@@ -404,9 +404,19 @@ export function WalletModal({ isOpen, onClose }: WalletModalProps) {
       const marketPdaPubkey = new PublicKey(marketPda)
       const positionPda = new PublicKey(position.positionPda)
 
+      // Derive vault PDA and treasury PDA
+      const vaultPda = deriveVaultPda(
+        new PublicKey(position.marketTokenMint),
+        BigInt(position.marketTargetCap),
+        BigInt(position.marketEndTimestamp)
+      )
+      const treasuryPda = deriveTreasuryPda()
+
       // Build redeem instruction
       const instruction = buildRedeemInstruction(
         marketPdaPubkey,
+        vaultPda,
+        treasuryPda,
         positionPda,
         userPubkey,
         position.outcome

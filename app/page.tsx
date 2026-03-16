@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { XLogo } from "@/components/x-logo"
+import { useRouter } from "next/navigation"
 
 function DocsIcon({ className }: { className?: string }) {
   return (
@@ -64,6 +65,8 @@ function DiscordIcon({ className }: { className?: string }) {
 }
 
 export default function Home() {
+  const router = useRouter()
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-3 sm:px-4 py-2 sm:py-4 md:py-6 text-center">
       {/* Hero Section */}
@@ -108,7 +111,7 @@ export default function Home() {
           <Button
             size="lg"
             className="group relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 hover:border-neon-green/60 text-transparent bg-clip-text font-black text-sm sm:text-base px-5 sm:px-6 py-2.5 sm:py-3 h-auto rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl shadow-black/50 hover:shadow-neon-green/30 transition-all duration-500 sm:duration-700 hover:scale-105 sm:hover:scale-110 hover:-translate-y-0.5 sm:hover:-translate-y-1 overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-neon-green/20 before:to-transparent before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-1000 after:absolute after:inset-0 after:bg-gradient-to-br after:from-neon-green/10 after:via-transparent after:to-neon-cyan/10 after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-500"
-            onClick={() => window.location.href = '/app'}
+            onClick={() => router.push('/app')}
           >
             {/* Animated background particles - simplified for mobile */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
