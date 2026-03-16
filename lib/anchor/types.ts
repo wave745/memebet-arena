@@ -1,13 +1,19 @@
-{
-  "address": "G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP",
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/memebet_arena.json`.
+ */
+export type MemebetArena = {
+  "address": "ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL",
   "metadata": {
-    "name": "memebet_arena",
+    "name": "memebetArena",
     "version": "0.1.0",
     "spec": "0.1.0"
   },
   "instructions": [
     {
-      "name": "admin_redeem",
+      "name": "adminRedeem",
       "docs": [
         "Admin redeem - allows admin to claim all remaining funds from a resolved market vault"
       ],
@@ -41,23 +47,23 @@
               {
                 "kind": "account",
                 "path": "market.token_mint",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.target_market_cap",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.end_timestamp",
-                "account": "Market"
+                "account": "market"
               }
             ]
           }
         },
         {
-          "name": "market_vault",
+          "name": "marketVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -74,17 +80,17 @@
               {
                 "kind": "account",
                 "path": "market.token_mint",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.target_market_cap",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.end_timestamp",
-                "account": "Market"
+                "account": "market"
               }
             ]
           }
@@ -98,7 +104,7 @@
       "args": []
     },
     {
-      "name": "create_market",
+      "name": "createMarket",
       "discriminator": [
         103,
         226,
@@ -128,21 +134,21 @@
               },
               {
                 "kind": "arg",
-                "path": "token_mint"
+                "path": "tokenMint"
               },
               {
                 "kind": "arg",
-                "path": "target_market_cap"
+                "path": "targetMarketCap"
               },
               {
                 "kind": "arg",
-                "path": "end_timestamp"
+                "path": "endTimestamp"
               }
             ]
           }
         },
         {
-          "name": "market_vault",
+          "name": "marketVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -158,15 +164,15 @@
               },
               {
                 "kind": "arg",
-                "path": "token_mint"
+                "path": "tokenMint"
               },
               {
                 "kind": "arg",
-                "path": "target_market_cap"
+                "path": "targetMarketCap"
               },
               {
                 "kind": "arg",
-                "path": "end_timestamp"
+                "path": "endTimestamp"
               }
             ]
           }
@@ -177,35 +183,35 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "token_mint",
+          "name": "tokenMint",
           "type": "pubkey"
         },
         {
-          "name": "target_market_cap",
+          "name": "targetMarketCap",
           "type": "u64"
         },
         {
-          "name": "end_timestamp",
+          "name": "endTimestamp",
           "type": "i64"
         },
         {
-          "name": "market_bump",
+          "name": "marketBump",
           "type": "u8"
         },
         {
-          "name": "vault_bump",
+          "name": "vaultBump",
           "type": "u8"
         }
       ]
     },
     {
-      "name": "initialize_treasury",
+      "name": "initializeTreasury",
       "discriminator": [
         124,
         186,
@@ -244,14 +250,14 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "place_bet",
+      "name": "placeBet",
       "discriminator": [
         222,
         62,
@@ -272,7 +278,7 @@
           "writable": true
         },
         {
-          "name": "market_escrow",
+          "name": "marketEscrow",
           "writable": true
         },
         {
@@ -281,7 +287,7 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -331,23 +337,23 @@
               {
                 "kind": "account",
                 "path": "market.token_mint",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.target_market_cap",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.end_timestamp",
-                "account": "Market"
+                "account": "market"
               }
             ]
           }
         },
         {
-          "name": "market_vault",
+          "name": "marketVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -364,17 +370,17 @@
               {
                 "kind": "account",
                 "path": "market.token_mint",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.target_market_cap",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.end_timestamp",
-                "account": "Market"
+                "account": "market"
               }
             ]
           }
@@ -415,13 +421,13 @@
       ],
       "args": [
         {
-          "name": "_outcome",
+          "name": "outcome",
           "type": "bool"
         }
       ]
     },
     {
-      "name": "resolve_market",
+      "name": "resolveMarket",
       "docs": [
         "Resolve market based on deterministic rules",
         "Anyone can call this. The logic is immutable."
@@ -448,13 +454,13 @@
       ],
       "args": [
         {
-          "name": "final_market_cap",
+          "name": "finalMarketCap",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "sell_shares",
+      "name": "sellShares",
       "discriminator": [
         184,
         164,
@@ -485,23 +491,23 @@
               {
                 "kind": "account",
                 "path": "market.token_mint",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.target_market_cap",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.end_timestamp",
-                "account": "Market"
+                "account": "market"
               }
             ]
           }
         },
         {
-          "name": "market_vault",
+          "name": "marketVault",
           "writable": true,
           "pda": {
             "seeds": [
@@ -518,17 +524,17 @@
               {
                 "kind": "account",
                 "path": "market.token_mint",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.target_market_cap",
-                "account": "Market"
+                "account": "market"
               },
               {
                 "kind": "account",
                 "path": "market.end_timestamp",
-                "account": "Market"
+                "account": "market"
               }
             ]
           }
@@ -567,23 +573,23 @@
           ]
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "_outcome",
+          "name": "outcome",
           "type": "bool"
         },
         {
-          "name": "amount_to_sell",
+          "name": "amountToSell",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "withdraw_from_treasury",
+      "name": "withdrawFromTreasury",
       "docs": [
         "Withdraw from protocol treasury (unlimited, admin only)"
       ],
@@ -625,7 +631,7 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -639,7 +645,7 @@
   ],
   "accounts": [
     {
-      "name": "Market",
+      "name": "market",
       "discriminator": [
         219,
         190,
@@ -652,7 +658,7 @@
       ]
     },
     {
-      "name": "Position",
+      "name": "position",
       "discriminator": [
         170,
         188,
@@ -665,7 +671,7 @@
       ]
     },
     {
-      "name": "Treasury",
+      "name": "treasury",
       "discriminator": [
         238,
         239,
@@ -681,93 +687,93 @@
   "errors": [
     {
       "code": 6000,
-      "name": "MarketResolved",
-      "msg": "Resolved"
+      "name": "marketResolved",
+      "msg": "resolved"
     },
     {
       "code": 6001,
-      "name": "MarketExpired",
-      "msg": "Expired"
+      "name": "marketExpired",
+      "msg": "expired"
     },
     {
       "code": 6002,
-      "name": "AlreadyResolved",
-      "msg": "Done"
+      "name": "alreadyResolved",
+      "msg": "done"
     },
     {
       "code": 6003,
-      "name": "MarketNotEnded",
-      "msg": "Active"
+      "name": "marketNotEnded",
+      "msg": "active"
     },
     {
       "code": 6004,
-      "name": "MarketNotResolved",
-      "msg": "Open"
+      "name": "marketNotResolved",
+      "msg": "open"
     },
     {
       "code": 6005,
-      "name": "AlreadyClaimed",
-      "msg": "Paid"
+      "name": "alreadyClaimed",
+      "msg": "paid"
     },
     {
       "code": 6006,
-      "name": "UserDidNotWin",
-      "msg": "Loss"
+      "name": "userDidNotWin",
+      "msg": "loss"
     },
     {
       "code": 6007,
-      "name": "NoOutcome",
-      "msg": "None"
+      "name": "noOutcome",
+      "msg": "none"
     },
     {
       "code": 6008,
-      "name": "Overflow",
-      "msg": "Math"
+      "name": "overflow",
+      "msg": "math"
     },
     {
       "code": 6009,
-      "name": "InvalidPool",
-      "msg": "Pool"
+      "name": "invalidPool",
+      "msg": "pool"
     },
     {
       "code": 6010,
-      "name": "InvalidEndTimestamp",
-      "msg": "Time"
+      "name": "invalidEndTimestamp",
+      "msg": "time"
     },
     {
       "code": 6011,
-      "name": "InvalidBetAmount",
-      "msg": "Amt"
+      "name": "invalidBetAmount",
+      "msg": "amt"
     },
     {
       "code": 6012,
-      "name": "MarketNotExpired",
-      "msg": "Early"
+      "name": "marketNotExpired",
+      "msg": "early"
     },
     {
       "code": 6013,
-      "name": "PositionNotWinner",
-      "msg": "Wrong"
+      "name": "positionNotWinner",
+      "msg": "wrong"
     },
     {
       "code": 6014,
-      "name": "PositionAlreadyClaimed",
-      "msg": "Paid"
+      "name": "positionAlreadyClaimed",
+      "msg": "paid"
     },
     {
       "code": 6015,
-      "name": "PositionOutcomeMismatch",
-      "msg": "Side"
+      "name": "positionOutcomeMismatch",
+      "msg": "side"
     },
     {
       "code": 6016,
-      "name": "Unauthorized",
-      "msg": "Auth"
+      "name": "unauthorized",
+      "msg": "auth"
     }
   ],
   "types": [
     {
-      "name": "Market",
+      "name": "market",
       "type": {
         "kind": "struct",
         "fields": [
@@ -776,23 +782,23 @@
             "type": "pubkey"
           },
           {
-            "name": "token_mint",
+            "name": "tokenMint",
             "type": "pubkey"
           },
           {
-            "name": "target_market_cap",
+            "name": "targetMarketCap",
             "type": "u64"
           },
           {
-            "name": "end_timestamp",
+            "name": "endTimestamp",
             "type": "i64"
           },
           {
-            "name": "yes_pool",
+            "name": "yesPool",
             "type": "u64"
           },
           {
-            "name": "no_pool",
+            "name": "noPool",
             "type": "u64"
           },
           {
@@ -809,7 +815,7 @@
       }
     },
     {
-      "name": "Position",
+      "name": "position",
       "type": {
         "kind": "struct",
         "fields": [
@@ -837,7 +843,7 @@
       }
     },
     {
-      "name": "Treasury",
+      "name": "treasury",
       "type": {
         "kind": "struct",
         "fields": [
@@ -846,15 +852,15 @@
             "type": "pubkey"
           },
           {
-            "name": "total_fees_collected",
+            "name": "totalFeesCollected",
             "type": "u64"
           },
           {
-            "name": "last_withdrawal",
+            "name": "lastWithdrawal",
             "type": "u32"
           }
         ]
       }
     }
   ]
-}
+};

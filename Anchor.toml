@@ -6,7 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.mainnet]
-memebet_arena = "ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL"
+memebet_arena = "G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP"
+
+[programs.devnet]
+memebet_arena = "G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP"
 
 [registry]
 url = "https://api.apr.dev"

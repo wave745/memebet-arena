@@ -8,9 +8,16 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const require = createRequire(import.meta.url)
 
-const PROGRAM_ID = new PublicKey("ACBgFwUQrHYhfHRWFTowCLGg7FKMnth4Pi7JgHndYvWL")
+const PROGRAM_ID = new PublicKey("G3ctDAx46fPX4cTZgzcgzW1rDCe7e8qCqhCUTSf3a7LP")
 const RPC_URL = process.env.RPC_URL || "https://api.mainnet-beta.solana.com"
 const WALLET_PATH = process.env.WALLET_PATH || "~/.config/solana/id.json"
+
+// Handle BN import issue
+//@ts-ignore
+const BN = anchor.BN || (anchor.default && anchor.default.BN);
+if (!BN) {
+  throw new Error("Could not find BN in anchor import");
+}
 
 interface MarketSeed {
   marketId: number
@@ -39,8 +46,8 @@ const MARKETS: MarketSeed[] = [
     marketId: 3,
     tokenMint: "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr", // POPCAT
     targetMarketCap: 2_000_000_000,
-    endTimestamp: Math.floor(new Date("2026-01-31T23:59:59Z").getTime() / 1000),
-    description: "Will $POPCAT reach $2B market cap by 2026-01-31 23:59 UTC?",
+    endTimestamp: Math.floor(new Date("2026-05-31T23:59:59Z").getTime() / 1000),
+    description: "Will $POPCAT reach $2B market cap by 2026-05-31 23:59 UTC?",
   },
 ]
 
@@ -69,6 +76,25 @@ async function seedMarkets() {
     process.exit(1)
   }
 
+  // Define provider
+  const provider = new anchor.AnchorProvider(
+    connection,
+    {
+      publicKey: wallet.publicKey,
+      signTransaction: async (tx: Transaction) => {
+        tx.sign(wallet)
+        return tx
+      },
+      signAllTransactions: async (txs: Transaction[]) => {
+        return txs.map((tx) => {
+          tx.sign(wallet)
+          return tx
+        })
+      },
+    } as any,
+    { commitment: "confirmed" }
+  )
+
   // Load IDL to get instruction discriminator
   const idlPath = join(__dirname, "../lib/anchor/idl.json")
   const idl = require(idlPath)
@@ -79,48 +105,35 @@ async function seedMarkets() {
     try {
       console.log(`\n📊 Creating market ${market.marketId}: ${market.description}`)
       
-      const [marketPda, bump] = PublicKey.findProgramAddressSync(
-        [Buffer.from("market"), new anchor.BN(market.marketId).toArrayLike(Buffer, "le", 8)],
+      const tokenMintPubkey = new PublicKey(market.tokenMint)
+      const targetMarketCapBN = new BN(market.targetMarketCap)
+      const endTimestampBN = new BN(market.endTimestamp)
+
+      const [marketPda, marketBump] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("market"),
+          tokenMintPubkey.toBuffer(),
+          targetMarketCapBN.toArrayLike(Buffer, "le", 8),
+          endTimestampBN.toArrayLike(Buffer, "le", 8),
+        ],
+        PROGRAM_ID
+      )
+
+      const [vaultPda, vaultBump] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("vault"),
+          tokenMintPubkey.toBuffer(),
+          targetMarketCapBN.toArrayLike(Buffer, "le", 8),
+          endTimestampBN.toArrayLike(Buffer, "le", 8),
+        ],
         PROGRAM_ID
       )
       
-      const tokenMintPubkey = new PublicKey(market.tokenMint)
-      const targetMarketCapBN = new anchor.BN(market.targetMarketCap)
-      const endTimestampBN = new anchor.BN(market.endTimestamp)
-      const marketIdBN = new anchor.BN(market.marketId)
-
-      console.log(`  Market PDA: ${marketPda.toString()}`)
+      console.log(`  Market PDA: ${marketPda.toString()} (bump: ${marketBump})`)
+      console.log(`  Vault PDA: ${vaultPda.toString()} (bump: ${vaultBump})`)
       console.log(`  Token: ${tokenMintPubkey.toString()}`)
       console.log(`  Target: $${market.targetMarketCap.toLocaleString()}`)
       console.log(`  End: ${new Date(market.endTimestamp * 1000).toISOString()}`)
-
-      // Build instruction data
-      const instructionData = Buffer.concat([
-        discriminator,
-        marketIdBN.toArrayLike(Buffer, "le", 8),
-        tokenMintPubkey.toBuffer(),
-        targetMarketCapBN.toArrayLike(Buffer, "le", 8),
-        endTimestampBN.toArrayLike(Buffer, "le", 8),
-      ])
-
-      // Use Anchor program - need to manually handle PDA signing
-      const provider = new anchor.AnchorProvider(
-        connection,
-        {
-          publicKey: wallet.publicKey,
-          signTransaction: async (tx: Transaction) => {
-            tx.sign(wallet)
-            return tx
-          },
-          signAllTransactions: async (txs: Transaction[]) => {
-            return txs.map((tx) => {
-              tx.sign(wallet)
-              return tx
-            })
-          },
-        } as any,
-        { commitment: "confirmed" }
-      )
 
       // Add account sizes to IDL for program creation
       const idlWithSizes = {
@@ -133,34 +146,35 @@ async function seedMarkets() {
           {
             name: "Market",
             discriminator: [219, 190, 213, 55, 0, 227, 198, 154],
-            size: 113, // 8 + 32 + 32 + 8 + 8 + 8 + 8 + 1 + 1
+            size: 113,
           },
           {
             name: "Position",
             discriminator: [170, 188, 143, 228, 122, 64, 247, 208],
-            size: 73, // 8 + 32 + 32 + 1 + 8 + 1
+            size: 73,
           },
+          {
+            name: "Treasury",
+            discriminator: [238, 239, 123, 238, 89, 1, 168, 253],
+            size: 52,
+          }
         ],
       }
 
       const program = new anchor.Program(idlWithSizes as any, provider) as any
 
-      // PDA seeds for signing
-      const seeds = [
-        Buffer.from("market"),
-        marketIdBN.toArrayLike(Buffer, "le", 8),
-      ]
-
-      // Use program.invoke with explicit seeds for PDA signing
+      // Use program.methods with bumps
       const signature = await program.methods
         .createMarket(
-          marketIdBN,
           tokenMintPubkey,
           targetMarketCapBN,
-          endTimestampBN
+          endTimestampBN,
+          marketBump,
+          vaultBump
         )
         .accounts({
           market: marketPda,
+          marketVault: vaultPda,
           creator: wallet.publicKey,
           systemProgram: SystemProgram.programId,
         } as any)
